@@ -1,0 +1,42 @@
+# The parameters argument controls the variables which will be downloaded. The
+# valid value can be "all" or a list of variable names. If "all" is used, then
+# all variables will be downloaded. The available variables can be accessed
+# using TOAR 2 REST API:
+# https://join.fz-juelich.de/services/rest/surfacedata/parameters/
+parameters: [
+    'o3'
+]
+
+# The networks argument controls the networks which will be downloaded. The
+# valid value can be "all" or a list of network names. If "all" is used, then
+# data from all networks will be downloaded. The available networks can be
+# accessed using TOAR 2 REST API:
+# https://join.fz-juelich.de/services/rest/surfacedata/networks/
+networks: [
+    'UBA'
+]
+
+# The stations argument controls the stations which will be downloaded. The
+# valid value can be "all" or a list of station IDs. If "all" is used, then
+# data from all stations will be downloaded. The available station IDs can be
+# accessed using TOAR 2 REST API:
+# https://join.fz-juelich.de/services/rest/surfacedata/stations/
+stations: all
+
+# The metrics argument controls the metrics to be downloaded. The valid value is
+# a list of metrics. The list of metrics can be accessed at the following URL:
+# https://join.fz-juelich.de/services/rest/surfacedata/ (see section 3.3 List
+# of statistics/metrics for stats service)
+metrics: [
+    'perc98',
+    'dma8epa'
+]
+
+# Define the date range for the data set. Date strings with format YYYY-MM-DD hh:mm
+# These two arguments are optional. If they are not provided, then all data sets
+# will be downloaded.
+start_date: '2012-01-01 00:00'
+end_date: '2020-12-31 23:59'
+
+# Valid options include daily, monthly, seasonal, vegseason, summer, annual
+stats_sampling: 'daily'
