@@ -152,6 +152,7 @@ def main(config_file, out_dir, base_url, force_overwrite):
     series_dict = construct_series(parameters, networks, stations, base_url)
 
     # Download data sets
+    out_failed = os.path.join(out_dir, 'failed.txt')
     for param, records in series_dict.items():
         for r in tqdm(records, total=len(records),
                       desc='Downloading %s data sets' % param):
@@ -182,15 +183,16 @@ def main(config_file, out_dir, base_url, force_overwrite):
                 query_url = '%s/stats/?sampling=%s&statistics=%s&daterange=%s&'\
                             'id=%s&format=json' % (base_url, sampling, metrics,
                                                    date_range, id)
-            response = urlopen(query_url)
-            if response.code != 200:
-                print('[WARN] Failed downloading %s. Please verify query URL '
-                      '%s.' % (os.path.basename(out_file), query_url))
-                continue
+            try:
+                response = urlopen(query_url)
+                data = json.load(response)
 
-            data = json.load(response)
-            with open(out_file, 'w') as f:
-                json.dump(data, f)
+                with open(out_file, 'w') as f:
+                    json.dump(data, f)
+            except Exception:
+                with open(out_failed, 'a') as f:
+                    f.write('%s\n' % query_url)
+                continue
 
 
 if __name__ == '__main__':
