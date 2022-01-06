@@ -115,7 +115,7 @@ def main(data_root_dir, parameter, year, month):
             dates_collect.append(dates[mask])
             
     #save
-    data_output_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/processed/summary_dp'
+    data_output_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/processed/TOAR2/summary_dp/'
     ofile = f'toar2_{year}_{month}.h5'
     with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
             f['network'] =  np.hstack(network_collect).astype(np.string_)
@@ -123,7 +123,7 @@ def main(data_root_dir, parameter, year, month):
             f['lon'] = np.hstack(lon_collect)
             f['lat'] = np.hstack(lat_collect)
             f['data'] = np.hstack(data_collect)
-            f['date'] = np.row_stack(dates_collect)
+            f['date'] = np.row_stack(dates_collect).astype(np.string_)
             
 
             
