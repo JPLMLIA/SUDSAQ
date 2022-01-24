@@ -31,6 +31,7 @@ import read_data_momo
 
 
 def main(years, months, inputs, plotting):
+    
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
         root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
@@ -145,7 +146,7 @@ def main(years, months, inputs, plotting):
                 gl.xformatter = LONGITUDE_FORMATTER
                 gl.yformatter = LATITUDE_FORMATTER
                 ax.stock_img()
-                plt.title(f'daily bias (mean(momo 8-4) - toar), year = {year}, month = {month}, day = {d+1}')
+                plt.title(f'daily bias (mean(momo 8-4) - toar), year = {year}, month = {month}, day = {days[d]}')
                 ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
                 plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_{d}.png', 
                             bbox_inches = 'tight')
@@ -166,7 +167,7 @@ def main(years, months, inputs, plotting):
             gl.xformatter = LONGITUDE_FORMATTER
             gl.yformatter = LATITUDE_FORMATTER
             ax.stock_img()
-            plt.title(f'monthly mean bias, year = {year}, month = {month}, day = {d+1}')
+            plt.title(f'monthly mean bias, year = {year}, month = {month}')
             ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
             plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_mean.png', 
                         bbox_inches = 'tight')
@@ -243,7 +244,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #parser.add_argument('data_root_dir', type=str)
     parser.add_argument('--years', default = ['2012'], type=str)
-    parser.add_argument('--months', default = [], type=str)
+    parser.add_argument('--months', default = [], nargs = '*', type=str)
     parser.add_argument('--inputs', type=str, default='all')
     parser.add_argument('--plotting', type=bool, default=True)
     #parser.add_argument('out_file', type=str)
