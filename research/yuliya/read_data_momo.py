@@ -6,7 +6,7 @@ Created on Tue Nov 23 13:57:30 2021
 @author: marchett
 """
 
-import glob
+import glob, os
 import numpy as np
 import h5py
 import netCDF4 as nc4
@@ -38,9 +38,12 @@ def main(outputs, inputs, years, months):
         
     if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
-        
-    momo_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/MOMO/'
-    data_output_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/processed/summary_dp/MOMO/'
+    
+    root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
+    if not os.path.exists(root_dir):
+        root_dir = '/data/MLIA_active_data'
+    momo_root_dir = f'{root_dir}/MOMO/'
+    data_output_dir = f'{root_dir}/processed/summary_dp/MOMO/'
     
     data_dict = {}
     
@@ -141,7 +144,7 @@ if __name__ == '__main__':
     #parser.add_argument('data_root_dir', type=str)
     parser.add_argument('--years', default = ['2012'], type=str)
     parser.add_argument('--months', default = [], type=str)
-    parser.add_argument('--inputs', type=str, default=['t', 'q'])
+    parser.add_argument('--inputs', type=str, default='all')
     parser.add_argument('--outputs', type=str, default='o3')
     #parser.add_argument('out_file', type=str)
 
