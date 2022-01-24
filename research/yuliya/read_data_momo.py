@@ -41,7 +41,7 @@ def main(outputs, inputs, years, months):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
-        root_dir = '/data/MLIA_active_data'
+        root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
     momo_root_dir = f'{root_dir}/MOMO/'
     data_output_dir = f'{root_dir}/processed/summary_dp/MOMO/'
     
