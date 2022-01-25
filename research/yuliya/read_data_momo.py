@@ -110,6 +110,7 @@ def main(outputs, inputs, years, months):
             ofile = f'momo_{year}_{month}.h5'
             with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
                 for k in data_dict.keys():
+                    print(data_dict.keys())
                     f[k] = data_dict[k]
 
 

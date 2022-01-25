@@ -103,8 +103,9 @@ def main(years, months, inputs, plotting):
                                                 toar_data[mask_toar], s, 
                                                 bins=[momo_lat, momo_lon],
                                                 expand_binnumbers = True)
-                  
-                    toar_to_momo[s].append(ret.statistic)
+                    
+                    #TO DO: need to make sure correctly formatted
+                    toar_to_momo[s].append(ret.statistic.T)
                 #momo_to_toar = momo_dat[-1][ret.binnumber[0], ret.binnumber[1]]
                 
         
@@ -121,6 +122,8 @@ def main(years, months, inputs, plotting):
             with closing(h5py.File(new_file, 'w')) as f:
                 for s in summaries:
                     f['toar/' + str(s)] = np.dstack(toar_to_momo[s])
+                f['lon'] = momo['lon']
+                f['lat'] = momo['lat']
                 f['o3'] = momo_dat
                 f['date'] = momo_ud
                 for k in momo_in.keys():
