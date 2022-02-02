@@ -62,7 +62,6 @@ def main(years, months, inputs, plotting):
                     toar_data = f['data'][:]
                     date = f['date'][:].astype(str)
                     station =  f['station'][:].astype(str)
-                    print(toar_data)
             
             momo_file = f'{momo_output}/momo_{year}_{month}.h5' 
             momo = {}
@@ -105,7 +104,7 @@ def main(years, months, inputs, plotting):
                                                 expand_binnumbers = True)
                     
                     #TO DO: need to make sure correctly formatted
-                    toar_to_momo[s].append(ret.statistic.T)
+                    toar_to_momo[s].append(ret.statistic)
                 #momo_to_toar = momo_dat[-1][ret.binnumber[0], ret.binnumber[1]]
                 
         
@@ -113,7 +112,7 @@ def main(years, months, inputs, plotting):
             momo_in = {k: np.dstack(momo_in[k]) for k in momo_in.keys()}
             #toar_to_momo = np.dstack(toar_to_momo)
             momo_ud = np.row_stack(momo_ud)
-            toar_to_momo = {s: np.dstack(toar_to_momo[s]) for s in summaries}
+            #toar_to_momo = {s: toar_to_momo[s] for s in summaries}
             bias = momo_dat - toar_to_momo['mean']
             
            
@@ -128,7 +127,11 @@ def main(years, months, inputs, plotting):
                 f['date'] = momo_ud
                 for k in momo_in.keys():
                     f[k] = momo_in[k]
-                
+            
+             new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_01.h5'
+             with closing(h5py.File(new_file, 'r')) as f:
+                 toar = f['toar']['mean'][:]
+                 
             if plotting:
                 cmin = np.nanmin(bias)
                 cmax = np.nanmax(bias)
@@ -194,7 +197,7 @@ def main(years, months, inputs, plotting):
                 ax.stock_img()
                 plt.title(f'monthly mean bias, year = {year}, month = {month}, day = {d+1}')
                 ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{data_root_dir}/processed/plots/bias_{year}_{month}_std.png', 
+                plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_std.png', 
                             bbox_inches = 'tight')
                 plt.close()
             

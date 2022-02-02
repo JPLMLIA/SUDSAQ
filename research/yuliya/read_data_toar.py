@@ -27,10 +27,15 @@ data_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/TOAR2/'
 
     
 def main(data_root_dir, parameter, year, month):
-    if not os.path.exists:
+    
+    root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
+    if not os.path.exists(root_dir):
+        root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
+    if not os.path.exists(root_dir):
         print('[ERROR] Data root directory does not exist.')
         sys.exit(1)
-
+    
+    data_root_dir = f'{root_dir}/TOAR2/'    
     network_names = [f for f in os.listdir(data_root_dir)
                          if os.path.isdir(os.path.join(data_root_dir, f))]
     
@@ -115,7 +120,7 @@ def main(data_root_dir, parameter, year, month):
             dates_collect.append(dates[mask])
             
     #save
-    data_output_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/processed/TOAR2/summary_dp/'
+    data_output_dir = f'{root_dir}/processed/TOAR2/summary_dp/'
     ofile = f'toar2_{year}_{month}.h5'
     with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
             f['network'] =  np.hstack(network_collect).astype(np.string_)
