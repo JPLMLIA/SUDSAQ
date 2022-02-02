@@ -47,7 +47,7 @@ def main(outputs, inputs, years, months):
         subdirs = glob.glob(momo_root_dir+ '/inputs/*')
         inputs = [x.split('/')[-1] for x in subdirs]
         #inputs = ['t', 'q', 'ps', 'u', 'v']
-        
+    print(f'getting data for: {inputs}')    
     data_dict = {}
     
     for year in years:
