@@ -22,11 +22,10 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 year = '2012'
 parameter = 'o3'
-data_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/TOAR2/'
-    
+#data_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/TOAR2/'
 
-    
-def main(data_root_dir, parameter, year, month):
+
+def main(parameter, years, months):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -34,6 +33,26 @@ def main(data_root_dir, parameter, year, month):
     if not os.path.exists(root_dir):
         print('[ERROR] Data root directory does not exist.')
         sys.exit(1)
+    
+    #data_root_dir = f'{root_dir}/TOAR2/'  
+    if len(months) == 0:
+        months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
+    
+    for year in years:
+        for month in months:
+            dat = get_toar(root_dir, parameter, year, month)
+    
+    
+    
+    
+def get_toar(root_dir, parameter, year, month):
+    
+    # root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
+    # if not os.path.exists(root_dir):
+    #     root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
+    # if not os.path.exists(root_dir):
+    #     print('[ERROR] Data root directory does not exist.')
+    #     sys.exit(1)
     
     data_root_dir = f'{root_dir}/TOAR2/'    
     network_names = [f for f in os.listdir(data_root_dir)
@@ -136,9 +155,9 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('data_root_dir', type=str)
-    parser.add_argument('--year', type=str)
-    parser.add_argument('--month', type=str)
+    parser.add_argument('root_dir', type=str)
+    parser.add_argument('--years', default = ['2012'], type=str)
+    parser.add_argument('--months', default = 'all', type=str)
     parser.add_argument('--parameter', type=str, default=None)
     #parser.add_argument('out_file', type=str)
 
