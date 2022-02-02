@@ -127,10 +127,6 @@ def main(years, months, inputs, plotting):
                 f['date'] = momo_ud
                 for k in momo_in.keys():
                     f[k] = momo_in[k]
-            
-             new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_{month}.h5'
-             with closing(h5py.File(new_file, 'r')) as f:
-                 toar = f['toar']['mean'][:]
                  
             if plotting:
                 cmin = np.nanmin(bias)
