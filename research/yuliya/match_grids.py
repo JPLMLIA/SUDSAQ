@@ -129,7 +129,7 @@ def main(years, months, inputs, plotting):
                 f['date'] = momo_ud
                 for k in momo_in.keys():
                     f[k] = momo_in[k]
-                 
+             
             if plotting:
                 cmin = np.nanmin(bias)
                 cmax = np.nanmax(bias)
@@ -140,7 +140,7 @@ def main(years, months, inputs, plotting):
                     fig = plt.figure(figsize=(18, 9))
                     ax = plt.subplot(projection = ccrs.PlateCarree())
                     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                    #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+                    #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
                     plt.pcolor(x, y, bias[:, :, d], cmap = 'coolwarm')
                     plt.clim((cmin, cmax))
                     plt.colorbar()

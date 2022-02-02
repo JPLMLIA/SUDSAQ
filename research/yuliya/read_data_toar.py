@@ -120,7 +120,7 @@ def main(data_root_dir, parameter, year, month):
             dates_collect.append(dates[mask])
             
     #save
-    data_output_dir = f'{root_dir}/processed/TOAR2/summary_dp/'
+    data_output_dir = f'{root_dir}/processed/summary_dp/TOAR2/'
     ofile = f'toar2_{year}_{month}.h5'
     with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
             f['network'] =  np.hstack(network_collect).astype(np.string_)
