@@ -112,7 +112,7 @@ def main(years, months, inputs, plotting):
             momo_in = {k: np.dstack(momo_in[k]) for k in momo_in.keys()}
             #toar_to_momo = np.dstack(toar_to_momo)
             momo_ud = np.row_stack(momo_ud)
-            #toar_to_momo = {s: toar_to_momo[s] for s in summaries}
+            toar_to_momo = {s: np.dstack(toar_to_momo[s]) for s in summaries}
             bias = momo_dat - toar_to_momo['mean']
             
            
@@ -120,7 +120,7 @@ def main(years, months, inputs, plotting):
             new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_{month}.h5' 
             with closing(h5py.File(new_file, 'w')) as f:
                 for s in summaries:
-                    f['toar/' + str(s)] = np.dstack(toar_to_momo[s])
+                    f['toar/' + str(s)] = toar_to_momo[s]
                 f['lon'] = momo['lon']
                 f['lat'] = momo['lat']
                 f['o3'] = momo_dat
