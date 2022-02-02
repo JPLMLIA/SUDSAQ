@@ -45,10 +45,10 @@ def main(years, months, inputs, plotting):
     summaries = ['mean', 'std', 'count']
     
     if inputs == 'all':
-        subdirs = glob.glob(momo_output + '/inputs/*')
+        subdirs = glob.glob(root_dir + 'MOMO/inputs/*')
         inputs = [x.split('/')[-1] for x in subdirs]
         #inputs = ['t', 'q', 'ps', 'u', 'v']
-    
+    print(f'matching data for inputs: {inputs}') 
     if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
         
