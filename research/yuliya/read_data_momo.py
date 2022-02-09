@@ -33,9 +33,7 @@ def daterange(start_date, end_date):
 
 def main(outputs, inputs, years, months):
     
-    if inputs == 'all':
-        inputs = ['t', 'q', 'ps', 'u', 'v']
-        
+    
     if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
     
@@ -45,6 +43,11 @@ def main(outputs, inputs, years, months):
     momo_root_dir = f'{root_dir}/MOMO/'
     data_output_dir = f'{root_dir}/processed/summary_dp/MOMO/'
     
+    if inputs == 'all':
+        subdirs = glob.glob(momo_root_dir+ '/inputs/*')
+        inputs = [x.split('/')[-1] for x in subdirs]
+        #inputs = ['t', 'q', 'ps', 'u', 'v']
+    print(f'getting data for: {inputs}')    
     data_dict = {}
     
     for year in years:
@@ -60,7 +63,7 @@ def main(outputs, inputs, years, months):
         inputs_dict = {}
         if inputs is not None:
             for v in inputs:
-                input_file = glob.glob(f'{momo_root_dir}/inputs/2hr_{v}_{year}*')[0]
+                input_file = glob.glob(f'{momo_root_dir}/inputs/{v}/2hr_{v}_{year}*')[0]
                 nc_in = netcdf.netcdf_file(input_file,'r')
                 k = list(nc_in.variables.keys())[-1]
                 inputs_dict[v] = nc_in.variables[k][:]
@@ -110,7 +113,6 @@ def main(outputs, inputs, years, months):
             ofile = f'momo_{year}_{month}.h5'
             with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
                 for k in data_dict.keys():
-                    print(data_dict.keys())
                     f[k] = data_dict[k]
 
 

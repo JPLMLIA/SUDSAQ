@@ -45,8 +45,10 @@ def main(years, months, inputs, plotting):
     summaries = ['mean', 'std', 'count']
     
     if inputs == 'all':
-        inputs = ['t', 'q', 'ps', 'u', 'v']
-    
+        subdirs = glob.glob(root_dir + 'MOMO/inputs/*')
+        inputs = [x.split('/')[-1] for x in subdirs]
+        #inputs = ['t', 'q', 'ps', 'u', 'v']
+    print(f'matching data for inputs: {inputs}') 
     if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
         
@@ -62,7 +64,6 @@ def main(years, months, inputs, plotting):
                     toar_data = f['data'][:]
                     date = f['date'][:].astype(str)
                     station =  f['station'][:].astype(str)
-                    print(toar_data)
             
             momo_file = f'{momo_output}/momo_{year}_{month}.h5' 
             momo = {}
@@ -105,7 +106,7 @@ def main(years, months, inputs, plotting):
                                                 expand_binnumbers = True)
                     
                     #TO DO: need to make sure correctly formatted
-                    toar_to_momo[s].append(ret.statistic.T)
+                    toar_to_momo[s].append(ret.statistic)
                 #momo_to_toar = momo_dat[-1][ret.binnumber[0], ret.binnumber[1]]
                 
         
@@ -121,14 +122,14 @@ def main(years, months, inputs, plotting):
             new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_{month}.h5' 
             with closing(h5py.File(new_file, 'w')) as f:
                 for s in summaries:
-                    f['toar/' + str(s)] = np.dstack(toar_to_momo[s])
+                    f['toar/' + str(s)] = toar_to_momo[s]
                 f['lon'] = momo['lon']
                 f['lat'] = momo['lat']
                 f['o3'] = momo_dat
                 f['date'] = momo_ud
                 for k in momo_in.keys():
                     f[k] = momo_in[k]
-                
+             
             if plotting:
                 cmin = np.nanmin(bias)
                 cmax = np.nanmax(bias)
@@ -139,7 +140,7 @@ def main(years, months, inputs, plotting):
                     fig = plt.figure(figsize=(18, 9))
                     ax = plt.subplot(projection = ccrs.PlateCarree())
                     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                    #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+                    #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
                     plt.pcolor(x, y, bias[:, :, d], cmap = 'coolwarm')
                     plt.clim((cmin, cmax))
                     plt.colorbar()
@@ -194,7 +195,7 @@ def main(years, months, inputs, plotting):
                 ax.stock_img()
                 plt.title(f'monthly mean bias, year = {year}, month = {month}, day = {d+1}')
                 ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{data_root_dir}/processed/plots/bias_{year}_{month}_std.png', 
+                plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_std.png', 
                             bbox_inches = 'tight')
                 plt.close()
             
