@@ -11,10 +11,7 @@ import numpy as np
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-
-def mean_squared_error(a, b):
-    return ((a - b)**2).mean()
+from utils import gen_true_pred_plot
 
 
 def main(in_pred_file, out_dir):
@@ -30,8 +27,11 @@ def main(in_pred_file, out_dir):
     mask = ~np.isnan(true_bias)
     true_bias_masked = true_bias[mask]
     pred_bias_masked = pred_bias[mask]
-    mse = mean_squared_error(true_bias_masked, pred_bias_masked)
-    print(f'Mean Squared Error: {mse}')
+
+    # Plot true bias vs predicted bias
+    base_name = os.path.splitext(os.path.basename(in_pred_file))[0]
+    out_plot = os.path.join(out_dir, '%s_plot.png' % base_name)
+    gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot)
 
     # Generate daily bias map
     diff_bias = true_bias - pred_bias
