@@ -37,7 +37,7 @@ def main(years, months, inputs, plotting):
         root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
     #momo_root_dir = f'{root_dir}/MOMO/'
     toar_output = f'{root_dir}/processed/summary_dp/TOAR2/'
-    momo_output = f'{root_dir}/processed/summary_dp/MOMO/'
+    momo_output = f'{root_dir}/processed/summary_dp/MOMO/' 
     
     # years = ['2012']
     # months = ['06', '07', '08']
@@ -51,7 +51,10 @@ def main(years, months, inputs, plotting):
     print(f'matching data for inputs: {inputs}') 
     if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
-        
+    
+    years = np.atleast_1d(years) 
+    months = np.atleast_1d(months)
+    
     for year in years:
         
         for month in tqdm(months):
@@ -80,25 +83,21 @@ def main(years, months, inputs, plotting):
             
             #mdaily daytime average
             days = np.unique(momo['date'][:,2].astype(str))
-            mean_hours = [f'{x}'.zfill(2) for x in np.arange(8, 17)]
+            #mean_hours = [f'{x}'.zfill(2) for x in np.arange(8, 17)]
             
-            momo_in = {k: [] for k in inputs}
-            momo_dat = []
-            momo_ud = []
+            #momo_in = {k: [] for k in inputs}
+            #momo_dat = []
+            #momo_ud = []
             toar_to_momo = {k: [] for k in summaries}
             for d in days:
-                mask_d = np.in1d(momo['date'][:, 2].astype(str), d)
-                mask_h = np.in1d(np.hstack(momo['hour'].astype(str))[mask_d], mean_hours)
-                momo_dat.append(momo['o3'][mask_d, :, :][mask_h, :, :].mean(axis = 0))
-                for k in inputs:
-                    momo_in[k].append(momo[k][mask_d, :, :][mask_h, :, :].mean(axis = 0))
-                momo_ud.append(np.unique(momo['date'][mask_d, :][mask_h, :], axis = 0))
+                #mask_d = np.in1d(momo['date'][:, 2].astype(str), d)
+                #mask_h = np.in1d(np.hstack(momo['hour'].astype(str))[mask_d], mean_hours)
+                #momo_dat.append(momo['o3'][mask_d, :, :][mask_h, :, :].mean(axis = 0))
+                # for k in inputs:
+                #     momo_in[k].append(momo[k][mask_d, :, :][mask_h, :, :].mean(axis = 0))
+                # momo_ud.append(np.unique(momo['date'][mask_d, :][mask_h, :], axis = 0))
             
-                mask_toar = np.in1d(date[:, 2], d)
-                # dlon = np.digitize(lon[mask_toar], momo_lon)
-                # dlat = np.digitize(lat[mask_toar], momo_lat)
-                #momo_matched = momo_da[dlat, dlon]
-                
+                mask_toar = np.in1d(date[:, 2], d)                
                 for s in summaries:
                     ret = stats.binned_statistic_2d(lat[mask_toar], lon[mask_toar], 
                                                 toar_data[mask_toar], s, 
@@ -110,14 +109,13 @@ def main(years, months, inputs, plotting):
                 #momo_to_toar = momo_dat[-1][ret.binnumber[0], ret.binnumber[1]]
                 
         
-            momo_dat = np.dstack(momo_dat)
-            momo_in = {k: np.dstack(momo_in[k]) for k in momo_in.keys()}
+            #momo_dat = np.dstack(momo_dat)
+            #momo_in = {k: np.dstack(momo_in[k]) for k in momo_in.keys()}
             #toar_to_momo = np.dstack(toar_to_momo)
-            momo_ud = np.row_stack(momo_ud)
-            toar_to_momo = {s: np.dstack(toar_to_momo[s]) for s in summaries}
-            bias = momo_dat - toar_to_momo['mean']
+            #momo_ud = np.row_stack(momo_ud)
+            toar_to_momo = {s: np.stack(toar_to_momo[s]) for s in summaries}
+            bias = momo['o3'] - toar_to_momo['mean']
             
-           
             #save matched  
             new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_{month}.h5' 
             with closing(h5py.File(new_file, 'w')) as f:
@@ -125,79 +123,79 @@ def main(years, months, inputs, plotting):
                     f['toar/' + str(s)] = toar_to_momo[s]
                 f['lon'] = momo['lon']
                 f['lat'] = momo['lat']
-                f['o3'] = momo_dat
-                f['date'] = momo_ud
-                for k in momo_in.keys():
-                    f[k] = momo_in[k]
+                f['o3'] = momo['o3']
+                f['date'] = momo['date']
+                for k in inputs:
+                    f[k] = momo[k]
              
-            if plotting:
-                cmin = np.nanmin(bias)
-                cmax = np.nanmax(bias)
-                cmax = np.min(np.abs([cmin, cmax])) *0.5
-                cmin = -cmax
-                x, y = np.meshgrid(momo['lon']-180, momo['lat'])
-                for d in range(bias.shape[2]):
-                    fig = plt.figure(figsize=(18, 9))
-                    ax = plt.subplot(projection = ccrs.PlateCarree())
-                    #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                    #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
-                    plt.pcolor(x, y, bias[:, :, d], cmap = 'coolwarm')
-                    plt.clim((cmin, cmax))
-                    plt.colorbar()
-                    ax.set_global()
-                    ax.coastlines()
-                    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                      linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                    gl.xformatter = LONGITUDE_FORMATTER
-                    gl.yformatter = LATITUDE_FORMATTER
-                    ax.stock_img()
-                    plt.title(f'daily bias (mean(momo 8-4) - toar), year = {year}, month = {month}, day = {days[d]}')
-                    ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                    plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_{d}.png', 
-                                bbox_inches = 'tight')
-                    plt.close()
+            # if plotting:
+            #     cmin = np.nanmin(bias)
+            #     cmax = np.nanmax(bias)
+            #     cmax = np.min(np.abs([cmin, cmax])) *0.5
+            #     cmin = -cmax
+            #     x, y = np.meshgrid(momo['lon']-180, momo['lat'])
+            #     for d in range(bias.shape[0]):
+            #         fig = plt.figure(figsize=(18, 9))
+            #         ax = plt.subplot(projection = ccrs.PlateCarree())
+            #         #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #         #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
+            #         plt.pcolor(x, y, bias[d, :, ], cmap = 'coolwarm')
+            #         plt.clim((cmin, cmax))
+            #         plt.colorbar()
+            #         ax.set_global()
+            #         ax.coastlines()
+            #         gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                           linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #         gl.xformatter = LONGITUDE_FORMATTER
+            #         gl.yformatter = LATITUDE_FORMATTER
+            #         ax.stock_img()
+            #         plt.title(f'daily bias (momo - toar), year = {year}, month = {month}, day = {days[d]}')
+            #         ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #         plt.savefig(f'{root_dir}/processed/plots/bias/bias_{year}_{month}_{days[d]}.png', 
+            #                     bbox_inches = 'tight')
+            #         plt.close()
             
-                #montly mean
-                fig = plt.figure(figsize=(18, 9))
-                ax = plt.subplot(projection = ccrs.PlateCarree())
-                #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
-                plt.pcolor(x, y, np.nanmean(bias, axis = 2), cmap = 'coolwarm')
-                plt.clim(cmin, cmax)
-                plt.colorbar()
-                ax.set_global()
-                ax.coastlines()
-                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                  linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                gl.xformatter = LONGITUDE_FORMATTER
-                gl.yformatter = LATITUDE_FORMATTER
-                ax.stock_img()
-                plt.title(f'monthly mean bias, year = {year}, month = {month}')
-                ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_mean.png', 
-                            bbox_inches = 'tight')
-                plt.close()
+            #     #montly mean
+            #     fig = plt.figure(figsize=(18, 9))
+            #     ax = plt.subplot(projection = ccrs.PlateCarree())
+            #     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #     #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+            #     plt.pcolor(x, y, np.nanmean(bias, axis = 0), cmap = 'coolwarm')
+            #     plt.clim(cmin, cmax)
+            #     plt.colorbar()
+            #     ax.set_global()
+            #     ax.coastlines()
+            #     gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                       linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #     gl.xformatter = LONGITUDE_FORMATTER
+            #     gl.yformatter = LATITUDE_FORMATTER
+            #     ax.stock_img()
+            #     plt.title(f'monthly mean bias (momo - toar), year = {year}, month = {month}')
+            #     ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #     plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_mean.png', 
+            #                 bbox_inches = 'tight')
+            #     plt.close()
                 
-                #montly std
-                fig = plt.figure(figsize=(18, 9))
-                ax = plt.subplot(projection = ccrs.PlateCarree())
-                #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
-                plt.pcolor(x, y, np.nanstd(bias, axis = 2), cmap = 'BuPu')
-                plt.clim(0, cmax*0.5)
-                plt.colorbar()
-                ax.set_global()
-                ax.coastlines()
-                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                  linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                gl.xformatter = LONGITUDE_FORMATTER
-                gl.yformatter = LATITUDE_FORMATTER
-                ax.stock_img()
-                plt.title(f'monthly mean bias, year = {year}, month = {month}, day = {d+1}')
-                ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{root_dir}/processed/plots/bias_{year}_{month}_std.png', 
-                            bbox_inches = 'tight')
-                plt.close()
+            #     #montly std
+            #     fig = plt.figure(figsize=(18, 9))
+            #     ax = plt.subplot(projection = ccrs.PlateCarree())
+            #     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #     #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+            #     plt.pcolor(x, y, np.nanstd(bias, axis = 0), cmap = 'BuPu')
+            #     plt.clim(0, cmax*0.5)
+            #     plt.colorbar()
+            #     ax.set_global()
+            #     ax.coastlines()
+            #     gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                       linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #     gl.xformatter = LONGITUDE_FORMATTER
+            #     gl.yformatter = LATITUDE_FORMATTER
+            #     ax.stock_img()
+            #     plt.title(f'monthly mean bias (momo - toar), year = {year}, month = {month}, day = {d+1}')
+            #     ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #     plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_std.png', 
+            #                 bbox_inches = 'tight')
+            #     plt.close()
             
             
                 #plot monthly average bias maps
@@ -248,7 +246,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     #parser.add_argument('data_root_dir', type=str)
-    parser.add_argument('--years', default = ['2012'], type=str)
+    parser.add_argument('--years', default = ['2012'], nargs = '*', type=str)
     parser.add_argument('--months', default = [], nargs = '*', type=str)
     parser.add_argument('--inputs', type=str, default='all')
     parser.add_argument('--plotting', type=bool, default=True)

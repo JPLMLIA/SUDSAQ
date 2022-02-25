@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan  4 13:12:41 2022
+Created on Thu Feb 17 11:47:09 2022
 
 @author: marchett
 """
+
 import os, glob
 import sys
 import json
@@ -15,10 +16,14 @@ from tqdm import tqdm
 from contextlib import closing
 from datetime import datetime, timedelta, date
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
-import pandas as pd
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
+from scipy import stats
+import read_data_momo
+ 
+ 
 
 year = '2012'
 parameter = 'o3'
@@ -35,49 +40,40 @@ def main(parameter, years, months):
         sys.exit(1)
     
     #data_root_dir = f'{root_dir}/TOAR2/'  
-    if months == 'all':
-        months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
+    # if months == 'all':
+    #     months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
     
-    years = np.atleast_1d(years)
-    months = np.atleast_1d(months)
-    for year in years:
-        for month in months:
-            dat = get_toar(root_dir, parameter, year, month)
+    # years = np.atleast_1d(years)
+    # months = np.atleast_1d(months)
+    # for year in years:
+    #     for month in months:
+    #         dat = get_toar(root_dir, parameter, year, month)
+            
+            
+            
+def get_toar_meta(root_dir, parameter, year, month):
     
-    
-    
-    
-def get_toar(root_dir, parameter, year, month):
-    
-    # root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
-    # if not os.path.exists(root_dir):
-    #     root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
-    # if not os.path.exists(root_dir):
-    #     print('[ERROR] Data root directory does not exist.')
-    #     sys.exit(1)
+    parameter = 'o3'
+    root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
+    if not os.path.exists(root_dir):
+        root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
+    if not os.path.exists(root_dir):
+        print('[ERROR] Data root directory does not exist.')
+        sys.exit(1)
     
     data_root_dir = f'{root_dir}/TOAR2/'    
     network_names = [f for f in os.listdir(data_root_dir)
                          if os.path.isdir(os.path.join(data_root_dir, f))]
     
     
-    lon_collect = []
-    lat_collect = []
-    station_collect = []
-    network_collect = []
-    data_collect = []
-    dates_collect = []
-    
-    meta_names = ['station_alt', 'station_population_density']
-    meta_data = {k: [] for k in meta_names}
-
-    for network_name in tqdm(network_names, desc='Getting networks'):
+    meta_dict = {}
+    for i in range(len(network_names)):
         #data_dict.setdefault(network_name, dict())
-        
+        network_name = network_names[i]
         station_ids = os.listdir(os.path.join(data_root_dir, network_name))
-        for station_id in tqdm(station_ids, desc=network_name):
-            
-        
+        for j in tqdm(range(len(station_ids)), desc=network_name):
+                
+            station_id = station_ids[j]
             data_dir = os.path.join(os.path.abspath(data_root_dir),
                                     '%s/%s' % (network_name, station_id))
     
@@ -112,51 +108,35 @@ def get_toar(root_dir, parameter, year, month):
                 print('[WARN] Station metadata %s does not contain station_lat'
                       'or station_lon field. Skipped.' % station_file)
                 continue
-    
-            station_metadata['station_alt']
-            if 'dma8epa' not in station_data.keys():
-                print('[WARN] Station data %s does not contain ozone EPA 8h mean field. '
-                      'Skipped.' % station_file)
-                continue
-                
-            toar_dat = np.hstack(station_data['dma8epa'])
-            station_date = station_data['datetime']    
-            dates = np.row_stack([a.split(' ')[0].split('-') for a in station_date])
             
-                
-            mask_year = dates[:, 0] == year
-            mask_month = dates[:, 1] == month
-            mask = mask_year & mask_month
-            dat_monthly = toar_dat[mask]
-            
-            network_rep = np.repeat(network_name, mask.sum())
-            station_lon = np.repeat(station_metadata['station_lon'], mask.sum())
-            station_lat = np.repeat(station_metadata['station_lat'], mask.sum())
-            station_rep = np.repeat(station_id, mask.sum())
-            
-            for k in meta_names:
-                meta_key = np.repeat(station_metadata[k], mask.sum())
-                meta_data[k].append(meta_key)
-                
-            data_collect.append(dat_monthly)
-            network_collect.append(network_rep)
-            station_collect.append(station_rep)
-            lon_collect.append(station_lon)
-            lat_collect.append(station_lat)
-            dates_collect.append(dates[mask])
-            
+            for key in list(station_metadata):
+                if (j in [0,1]) & (i in [0]):
+                    meta_dict[key] = [station_metadata[key]]
+                else:
+                    meta_dict[key].append(station_metadata[key])
+                    
+                    
     #save
+    non_valid_names = ['station_name', 'station_state', 'station_comments', 'station_local_id',
+                       'station_country', 'parameter_original_units', 'parameter_calibration',
+                       'parameter_contributor', 'comments', 'parameter_pi']
     data_output_dir = f'{root_dir}/processed/summary_dp/TOAR2/'
-    ofile = f'toar2_{year}_{month}.h5'
+    ofile = f'toar2_metadata.h5'
     with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
-            f['network'] =  np.hstack(network_collect).astype(np.string_)
-            f['station'] =  np.hstack(station_collect).astype(np.string_)
-            f['lon'] = np.hstack(lon_collect)
-            f['lat'] = np.hstack(lat_collect)
-            f['data'] = np.hstack(data_collect)
-            f['date'] = np.row_stack(dates_collect).astype(np.string_)
-            
-
+            for key in meta_dict.keys():
+                if np.in1d(key, non_valid_names):
+                    continue
+                if type(meta_dict[key][0]) == str:
+                    f[key] = np.hstack(meta_dict[key]).astype(np.string_)
+                else:
+                    f[key] = np.hstack(meta_dict[key])
+    
+    # meta_dict = {}        
+    # with closing(h5py.File(data_output_dir + ofile, 'r')) as f:
+    #         for key in list(f):
+    #             meta_dict[key] = f[key][:]
+                    
+                    
             
 if __name__ == '__main__':
     import argparse
@@ -169,7 +149,12 @@ if __name__ == '__main__':
     #parser.add_argument('out_file', type=str)
 
     args = parser.parse_args()
-    main(**vars(args))
-
-
+    main(**vars(args))            
+            
+            
+            
+            
+            
+            
+            
             
