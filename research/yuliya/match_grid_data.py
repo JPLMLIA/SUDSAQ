@@ -128,74 +128,74 @@ def main(years, months, inputs, plotting):
                 for k in inputs:
                     f[k] = momo[k]
              
-            if plotting:
-                cmin = np.nanmin(bias)
-                cmax = np.nanmax(bias)
-                cmax = np.min(np.abs([cmin, cmax])) *0.5
-                cmin = -cmax
-                x, y = np.meshgrid(momo['lon']-180, momo['lat'])
-                for d in range(bias.shape[0]):
-                    fig = plt.figure(figsize=(18, 9))
-                    ax = plt.subplot(projection = ccrs.PlateCarree())
-                    #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                    #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
-                    plt.pcolor(x, y, bias[d, :, ], cmap = 'coolwarm')
-                    plt.clim((cmin, cmax))
-                    plt.colorbar()
-                    ax.set_global()
-                    ax.coastlines()
-                    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                      linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                    gl.xformatter = LONGITUDE_FORMATTER
-                    gl.yformatter = LATITUDE_FORMATTER
-                    ax.stock_img()
-                    plt.title(f'daily bias (mean(momo 8-4) - toar), year = {year}, month = {month}, day = {days[d]}')
-                    ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                    plt.savefig(f'{root_dir}/processed/plots/bias/bias_{year}_{month}_{days[d]}.png', 
-                                bbox_inches = 'tight')
-                    plt.close()
+            # if plotting:
+            #     cmin = np.nanmin(bias)
+            #     cmax = np.nanmax(bias)
+            #     cmax = np.min(np.abs([cmin, cmax])) *0.5
+            #     cmin = -cmax
+            #     x, y = np.meshgrid(momo['lon']-180, momo['lat'])
+            #     for d in range(bias.shape[0]):
+            #         fig = plt.figure(figsize=(18, 9))
+            #         ax = plt.subplot(projection = ccrs.PlateCarree())
+            #         #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #         #plt.pcolor(x, y, toar_to_momo.msssean(axis = 2), cmap = 'coolwarm')
+            #         plt.pcolor(x, y, bias[d, :, ], cmap = 'coolwarm')
+            #         plt.clim((cmin, cmax))
+            #         plt.colorbar()
+            #         ax.set_global()
+            #         ax.coastlines()
+            #         gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                           linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #         gl.xformatter = LONGITUDE_FORMATTER
+            #         gl.yformatter = LATITUDE_FORMATTER
+            #         ax.stock_img()
+            #         plt.title(f'daily bias (momo - toar), year = {year}, month = {month}, day = {days[d]}')
+            #         ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #         plt.savefig(f'{root_dir}/processed/plots/bias/bias_{year}_{month}_{days[d]}.png', 
+            #                     bbox_inches = 'tight')
+            #         plt.close()
             
-                #montly mean
-                fig = plt.figure(figsize=(18, 9))
-                ax = plt.subplot(projection = ccrs.PlateCarree())
-                #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
-                plt.pcolor(x, y, np.nanmean(bias, axis = 0), cmap = 'coolwarm')
-                plt.clim(cmin, cmax)
-                plt.colorbar()
-                ax.set_global()
-                ax.coastlines()
-                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                  linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                gl.xformatter = LONGITUDE_FORMATTER
-                gl.yformatter = LATITUDE_FORMATTER
-                ax.stock_img()
-                plt.title(f'monthly mean bias, year = {year}, month = {month}')
-                ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_mean.png', 
-                            bbox_inches = 'tight')
-                plt.close()
+            #     #montly mean
+            #     fig = plt.figure(figsize=(18, 9))
+            #     ax = plt.subplot(projection = ccrs.PlateCarree())
+            #     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #     #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+            #     plt.pcolor(x, y, np.nanmean(bias, axis = 0), cmap = 'coolwarm')
+            #     plt.clim(cmin, cmax)
+            #     plt.colorbar()
+            #     ax.set_global()
+            #     ax.coastlines()
+            #     gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                       linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #     gl.xformatter = LONGITUDE_FORMATTER
+            #     gl.yformatter = LATITUDE_FORMATTER
+            #     ax.stock_img()
+            #     plt.title(f'monthly mean bias (momo - toar), year = {year}, month = {month}')
+            #     ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #     plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_mean.png', 
+            #                 bbox_inches = 'tight')
+            #     plt.close()
                 
-                #montly std
-                fig = plt.figure(figsize=(18, 9))
-                ax = plt.subplot(projection = ccrs.PlateCarree())
-                #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
-                #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
-                plt.pcolor(x, y, np.nanstd(bias, axis = 0), cmap = 'BuPu')
-                plt.clim(0, cmax*0.5)
-                plt.colorbar()
-                ax.set_global()
-                ax.coastlines()
-                gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                  linewidth=1, color='gray', alpha=0.5, linestyle='--')
-                gl.xformatter = LONGITUDE_FORMATTER
-                gl.yformatter = LATITUDE_FORMATTER
-                ax.stock_img()
-                plt.title(f'monthly mean bias, year = {year}, month = {month}, day = {d+1}')
-                ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_std.png', 
-                            bbox_inches = 'tight')
-                plt.close()
+            #     #montly std
+            #     fig = plt.figure(figsize=(18, 9))
+            #     ax = plt.subplot(projection = ccrs.PlateCarree())
+            #     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
+            #     #plt.pcolor(x, y, toar_to_momo.mean(axis = 2), cmap = 'coolwarm')
+            #     plt.pcolor(x, y, np.nanstd(bias, axis = 0), cmap = 'BuPu')
+            #     plt.clim(0, cmax*0.5)
+            #     plt.colorbar()
+            #     ax.set_global()
+            #     ax.coastlines()
+            #     gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+            #                       linewidth=1, color='gray', alpha=0.5, linestyle='--')
+            #     gl.xformatter = LONGITUDE_FORMATTER
+            #     gl.yformatter = LATITUDE_FORMATTER
+            #     ax.stock_img()
+            #     plt.title(f'monthly mean bias (momo - toar), year = {year}, month = {month}, day = {d+1}')
+            #     ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
+            #     plt.savefig(f'{root_dir}/processed/plots/bias_monthly/bias_{year}_{month}_std.png', 
+            #                 bbox_inches = 'tight')
+            #     plt.close()
             
             
                 #plot monthly average bias maps
