@@ -134,7 +134,7 @@ def main(years, months, inputs, plotting):
                 cmax = np.min(np.abs([cmin, cmax])) *0.5
                 cmin = -cmax
                 x, y = np.meshgrid(momo['lon']-180, momo['lat'])
-                for d in range(bias.shape[2]):
+                for d in range(bias.shape[0]):
                     fig = plt.figure(figsize=(18, 9))
                     ax = plt.subplot(projection = ccrs.PlateCarree())
                     #plt.contourf(lon-180, lat, (momo_dat - means), levels = 50, cmap = 'coolwarm')
