@@ -151,7 +151,7 @@ def main(years, months, inputs, plotting):
                     ax.stock_img()
                     plt.title(f'daily bias (mean(momo 8-4) - toar), year = {year}, month = {month}, day = {days[d]}')
                     ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
-                    plt.savefig(f'{root_dir}/processed/plots/bias/bias_{year}_{month}_{d}.png', 
+                    plt.savefig(f'{root_dir}/processed/plots/bias/bias_{year}_{month}_{days[d]}.png', 
                                 bbox_inches = 'tight')
                     plt.close()
             
