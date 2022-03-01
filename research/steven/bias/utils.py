@@ -57,10 +57,12 @@ def filter_latlon(data, lat_mask, lon_mask):
     assert len(lat_mask.shape) == 1
     assert len(lon_mask.shape) == 1
 
+    data = np.moveaxis(data, 0, 1)
     data = data[lat_mask]
     data = np.moveaxis(data, 0, 1)
+    data = np.moveaxis(data, 2, 0)
     data = data[lon_mask]
-    data = np.moveaxis(data, 0, 1)
+    data = np.moveaxis(data, 0, 2)
 
     return data
 
