@@ -65,7 +65,7 @@ def filter_latlon(data, lat_mask, lon_mask):
     return data
 
 
-def gen_true_pred_plot(true_y, pred_y, out_plot):
+def gen_true_pred_plot(true_y, pred_y, out_plot, sub_sample=False):
     fig, _ = plt.subplots()
     maxx = np.max(true_y)
     maxy = np.max(pred_y)
@@ -76,7 +76,7 @@ def gen_true_pred_plot(true_y, pred_y, out_plot):
     r, _ = stats.pearsonr(true_y, pred_y)
     rmse = mean_squared_error(true_y, pred_y, squared=False)
 
-    if len(true_y) > 10000:
+    if sub_sample and len(true_y) > 10000:
         true_y = true_y[::100]
         pred_y = pred_y[::100]
 

@@ -31,7 +31,8 @@ def main(in_pred_file, out_dir):
     # Plot true bias vs predicted bias
     base_name = os.path.splitext(os.path.basename(in_pred_file))[0]
     out_plot = os.path.join(out_dir, '%s_plot.png' % base_name)
-    gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot)
+    gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot,
+                       sub_sample=False)
 
     # Generate daily bias map
     diff_bias = true_bias - pred_bias
