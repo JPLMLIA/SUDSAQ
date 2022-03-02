@@ -85,9 +85,9 @@ def main(in_dir, out_dir, hyperparameter_tuning):
     else:
         gb_predictor = GradientBoostingRegressor(
             loss='squared_error',
-            learning_rate=0.01,
-            n_estimators=100,
-            max_depth=5
+            learning_rate=0.1,
+            n_estimators=200,
+            max_depth=3
         )
 
     gb_predictor.fit(train_x, train_y)

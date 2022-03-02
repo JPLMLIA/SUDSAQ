@@ -44,7 +44,7 @@ def main(in_pred_file, out_dir):
         day = day.decode('UTF-8')
         fig, ax = plt.subplots(figsize=(18, 9),
                                subplot_kw={'projection': ccrs.PlateCarree()})
-        plt.pcolor(data['lon'], data['lat'], diff_bias[:, :, ind],
+        plt.pcolor(data['lon'], data['lat'], diff_bias[ind, :, :],
                    cmap='coolwarm')
         plt.clim((min_bias, max_bias))
         plt.colorbar()

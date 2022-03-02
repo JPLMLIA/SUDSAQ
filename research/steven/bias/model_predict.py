@@ -48,8 +48,8 @@ def main(in_model, in_data, out_pred_file):
     pred_y = model.predict(test_x)
 
     # Reshape arrays back into 2d
-    test_y = test_y.reshape((len(lat), len(lon), len(data['date'])))
-    pred_y = pred_y.reshape((len(lat), len(lon), len(data['date'])))
+    test_y = test_y.reshape((len(data['date']), len(lat), len(lon)))
+    pred_y = pred_y.reshape((len(data['date']), len(lat), len(lon)))
 
     # Save the predictions
     out_file = h5py.File(out_pred_file, 'w')
