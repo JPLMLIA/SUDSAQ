@@ -6,7 +6,7 @@ Created on Wed Feb 23 14:50:12 2022
 @author: marchett
 """
 import requests
-import json
+import json, os
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
@@ -14,7 +14,7 @@ from tqdm import tqdm
 import numpy as np
 from contextlib import closing
 import h5py
-
+from collections import defaultdict
 
 
 def main(lon_min, lon_max, d = 0.5):
@@ -33,11 +33,11 @@ def main(lon_min, lon_max, d = 0.5):
     # req_type = 'datasets'
     # r = requests.get(url + req_type, headers=dict(token=token))
     # datasetlist = r.json()['results']
-    req_type = 'datatypes'
-    payload = {'datasetid': datasetid, 'limit': 1000}
-    r = requests.get(url + req_type, params = payload, headers=dict(token=token))
-    datasets = r.json()['results']
-    datasets = [x['id'] for x in datasets]
+    # req_type = 'datatypes'
+    # payload = {'datasetid': datasetid, 'limit': 1000}
+    # r = requests.get(url + req_type, params = payload, headers=dict(token=token))
+    # datasets = r.json()['results']
+    # datasets = [x['id'] for x in datasets]
    
     datatypeid = ['TAVG', 'PRCP', 'SNOW', 'SNWD', 'TMAX',
                   'TMIN', 'ACMC', 'ACMH', 'ACSH', 'AWND',
@@ -56,12 +56,12 @@ def main(lon_min, lon_max, d = 0.5):
     #dat_dict = defaultdict(defaultdict(dict))
     for z in tqdm(range(len(lon_edge)-1)):  
         extent = [20, lon_edge[z], 80, lon_edge[z+1]]  
-        dat_dict = defaultdict(lambda: defaultdict(list))
+        dat_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         for t in range(len(datatypeid)):
             dtype = datatypeid[t]
             for year in years:
                 req_type = 'stations'
-                payload = {'datasetid': datasetid, 'stationid': stationid, 
+                payload = {'datasetid': datasetid, 
                            'datatypeid': dtype,
                            'startdate': f'{year}-01-01', 'enddate': f'{year}-12-31',  
                            'extent': extent, 'limit': 1000}
@@ -94,25 +94,41 @@ def main(lon_min, lon_max, d = 0.5):
                     
                     vals = np.hstack([x['value'] for x in results])
                     dates = np.hstack([x['date'] for x in results])
-                    dat_dict[station][dtype].append(vals)
-                    dat_dict[station]['date'].append(dates)
+                    dat_dict[station][dtype]['values'].append(vals)
+                    dat_dict[station][dtype]['date'].append(dates)
                     dat_dict[station]['lon'] = np.atleast_1d(station_lon[s])
                     dat_dict[station]['lat'] = np.atleast_1d(station_lat[s])
                     dat_dict[station]['elev'] = np.atleast_1d(station_elev[s])
         
-        station_keys = dat_dict.keys()
+        station_keys = list(dat_dict)
         print(f'region {z} --> stations {len(station_keys)}')
         for k in station_keys:
             name = k.split(':')[-1]
             ofile = f'{name}.h5'
             with closing(h5py.File(f'{root_dir}/ISD/{datasetid}/{ofile}', 'w')) as f:
-                for subk in dat_dict[k].keys():
-                    try:
-                        f[subk] = np.hstack(dat_dict[k][subk])
-                    except:    
-                        f[subk] = np.hstack(dat_dict[k][subk]).astype(np.string_)
+                f['lon'] = dat_dict[k]['lon']
+                f['lat'] = dat_dict[k]['lat']
+                f['elev'] = dat_dict[k]['elev']
+                dataset_keys = np.hstack(list(dat_dict[k]))
+                mask = np.in1d(dataset_keys, ['lon', 'lat', 'elev'])
+                for subk in dataset_keys[~mask]:
+                    f[f'{subk}/values'] = np.hstack(dat_dict[k][subk]['values'])  
+                    f[f'{subk}/date'] = np.hstack(dat_dict[k][subk]['date']).astype(np.string_)
    
-
+       # test_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+       # with closing(h5py.File(f'{root_dir}/ISD/{datasetid}/{ofile}', 'r')) as f:
+       #     dataset_keys = np.hstack(list(f))
+       #     mask = np.in1d(dataset_keys, ['lon', 'lat', 'elev'])
+       #     for k in dataset_keys:
+       #         if k in dataset_keys[~mask]:
+       #             test_dict[k]['values'] = f[k]['values'][:]
+       #             test_dict[k]['date'] = f[k]['date'][:]
+       #         else:
+       #              test_dict[k] = f[k][:]
+                
+                
+                
+                
 
 if __name__ == '__main__':
     import argparse
