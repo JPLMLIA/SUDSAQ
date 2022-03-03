@@ -31,7 +31,8 @@ def main(in_pred_file, out_dir):
     # Plot true bias vs predicted bias
     base_name = os.path.splitext(os.path.basename(in_pred_file))[0]
     out_plot = os.path.join(out_dir, '%s_plot.png' % base_name)
-    gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot)
+    gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot,
+                       sub_sample=False)
 
     # Generate daily bias map
     diff_bias = true_bias - pred_bias
@@ -43,7 +44,7 @@ def main(in_pred_file, out_dir):
         day = day.decode('UTF-8')
         fig, ax = plt.subplots(figsize=(18, 9),
                                subplot_kw={'projection': ccrs.PlateCarree()})
-        plt.pcolor(data['lon'], data['lat'], diff_bias[:, :, ind],
+        plt.pcolor(data['lon'], data['lat'], diff_bias[ind, :, :],
                    cmap='coolwarm')
         plt.clim((min_bias, max_bias))
         plt.colorbar()

@@ -23,7 +23,7 @@ from utils import format_data
 from utils import gen_true_pred_plot
 
 
-def main(in_dir, out_dir):
+def main(in_dir, out_dir, hyperparameter_tuning):
     if not os.path.exists(in_dir):
         print(f'[ERROR] Input directory does not exist: '
               f'{os.path.abspath(in_dir)}')
@@ -53,34 +53,43 @@ def main(in_dir, out_dir):
         train_y = np.hstack((train_y, data_y))
 
     # Parameter search
-    print('Parameter tuning ...')
-    params = [{
-        'loss': ['squared_error', 'absolute_error'],
-        'learning_rate': [0.001, 0.01, 0.1],
-        'n_estimators': [50, 100, 150, 200],
-        'max_depth': [2, 3, 4]
-    }]
-    kfold = KFold(n_splits=5, shuffle=True, random_state=1234)
-    clf = GridSearchCV(
-        GradientBoostingRegressor(), params, cv=kfold,
-        scoring='neg_root_mean_squared_error', n_jobs=10, error_score='raise'
-    )
-    clf.fit(train_x, train_y)
-    print('Parameter selection:')
-    print(f'loss: {clf.best_params_["loss"]}')
-    print(f'learning_rate: {clf.best_params_["learning_rate"]}')
-    print(f'n_estimators: {clf.best_params_["n_estimators"]}')
-    print(f'max_depth: {clf.best_params_["max_depth"]}')
+    if hyperparameter_tuning:
+        print('Parameter tuning ...')
+        params = [{
+            'loss': ['squared_error', 'absolute_error'],
+            'learning_rate': [0.001, 0.01, 0.1],
+            'n_estimators': [50, 100, 150, 200],
+            'max_depth': [2, 3, 4]
+        }]
+        kfold = KFold(n_splits=5, shuffle=True, random_state=1234)
+        clf = GridSearchCV(
+            GradientBoostingRegressor(), params, cv=kfold,
+            scoring='neg_root_mean_squared_error', n_jobs=10, error_score='raise'
+        )
+        clf.fit(train_x, train_y)
+        print('Parameter selection:')
+        print(f'loss: {clf.best_params_["loss"]}')
+        print(f'learning_rate: {clf.best_params_["learning_rate"]}')
+        print(f'n_estimators: {clf.best_params_["n_estimators"]}')
+        print(f'max_depth: {clf.best_params_["max_depth"]}')
 
-    # Create the Gradient Boosting predictor
-    print('Training ...')
-    gb_predictor = GradientBoostingRegressor(
-        loss=clf.best_params_['loss'],
-        learning_rate=clf.best_params_['learning_rate'],
-        n_estimators=clf.best_params_['n_estimators'],
-        max_depth=clf.best_params_['max_depth'],
-        random_state=1234
-    )
+        # Create the Gradient Boosting predictor
+        print('Training ...')
+        gb_predictor = GradientBoostingRegressor(
+            loss=clf.best_params_['loss'],
+            learning_rate=clf.best_params_['learning_rate'],
+            n_estimators=clf.best_params_['n_estimators'],
+            max_depth=clf.best_params_['max_depth'],
+            random_state=1234
+        )
+    else:
+        gb_predictor = GradientBoostingRegressor(
+            loss='squared_error',
+            learning_rate=0.1,
+            n_estimators=200,
+            max_depth=3
+        )
+
     gb_predictor.fit(train_x, train_y)
 
     # Save trained model
@@ -105,6 +114,9 @@ if __name__ == '__main__':
     parser.add_argument('out_dir', type=str,
                         help='The output directory to save trained model and '
                              'evaluation plot')
+    parser.add_argument('--hyperparameter_tuning', action='store_true',
+                        help='If this parameter is provided, hyperparameter '
+                             'tuning will be enabled. Default is False.')
 
     args = parser.parse_args()
     main(**vars(args))
