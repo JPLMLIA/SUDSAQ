@@ -54,8 +54,7 @@ def main(lon_min, lon_max, d = 0.5):
         
     #dat_dict = defaultdict(lambda: defaultdict(list))
     #dat_dict = defaultdict(defaultdict(dict))
-    for z in tqdm(range(len(lon_edge)-1)):
-    for z in tqdm(range(3)):    
+    for z in tqdm(range(len(lon_edge)-1)):  
         extent = [20, lon_edge[z], 80, lon_edge[z+1]]  
         dat_dict = defaultdict(lambda: defaultdict(list))
         for t in range(len(datatypeid)):
