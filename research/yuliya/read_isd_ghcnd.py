@@ -15,6 +15,34 @@ import numpy as np
 from contextlib import closing
 import h5py
 from collections import defaultdict
+import time
+import pandas as pd
+
+
+
+
+# file = '/Users/marchett/Desktop/isd_2012/725280-14733-2012'
+# import isd.io
+# data_frame = isd.io.read_to_data_frame(file)
+# data_frame.columns
+# data_frame['wind_speed']
+
+
+import shutil
+import urllib.request as request
+from contextlib import closing
+
+ftp_link = 'https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/'
+file = '2012.csv.gz'
+file = 'ghcnd-stations.txt'
+
+stations_file = '/Users/marchett/Documents/SUDS_AQ/stations_file.txt'
+with closing(request.urlopen(f'{ftp_link}{file}')) as r:
+    with open(stations_file, 'wb') as f:
+        shutil.copyfileobj(r, f)
+        
+        
+
 
 
 def main(lon_min, lon_max, d = 0.5):
@@ -49,34 +77,61 @@ def main(lon_min, lon_max, d = 0.5):
                   'WT06', 'WT07', 'WT08', 'WT09', 'WT10',
                   'WT11', 'WT12', 'WT13', 'WT14', 'WT15',
                   'WT16', 'WT17', 'WT18', 'WT19', 'WT20']
+
    
-    years = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
+    #years = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
+    years = ['2012']
         
     #dat_dict = defaultdict(lambda: defaultdict(list))
     #dat_dict = defaultdict(defaultdict(dict))
-    for z in tqdm(range(len(lon_edge)-1)):  
-        extent = [20, lon_edge[z], 80, lon_edge[z+1]]  
+    for z in tqdm(range(12, len(lon_edge)-1)):  
+        extent = [30, lon_edge[z], 60, lon_edge[z+1]]  
         dat_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        for t in range(len(datatypeid)):
+        for t in tqdm(range(len(datatypeid))):
+            print(f'dataset ----> {datatypeid[t]}')
             dtype = datatypeid[t]
             for year in years:
+                print(f'year --> {year}')
                 req_type = 'stations'
                 payload = {'datasetid': datasetid, 
                            'datatypeid': dtype,
                            'startdate': f'{year}-01-01', 'enddate': f'{year}-12-31',  
                            'extent': extent, 'limit': 1000}
+                
+                time.sleep(5)
                 r = requests.get(url + req_type, params = payload, headers=dict(token=token))
+                
+                
+                if r.status_code != 200: 
+                    continue
                 
                 if len(r.json()) < 1:
                     continue
                 
                 results = r.json()['results']
                 
+                keys_results = [list(x) for x in results]
+                mask_elev = np.hstack(['elevation' not in x for x in keys_results])
+                
+                
                 station_ids = np.hstack([x['id'] for x in results])
                 station_lon = np.hstack([x['longitude'] for x in results])
                 station_lat = np.hstack([x['latitude'] for x in results])
-                station_elev = np.hstack([x['elevation'] for x in results])
                 
+                #some stations miss elevation
+                if mask_elev.sum() > 0:
+                    station_elev = np.zeros(len(results), )
+                    
+                    for xi in range(len(results)):
+                        if mask_elev[xi]:
+                            station_elev[xi] = np.nan
+                        else:
+                            station_elev[xi] = results[xi]['elevation']
+                else:    
+                    station_elev = np.hstack([x['elevation'] for x in results]) 
+
+                
+                #print(f'region {z} --> stations {len(station_ids)}')
                 for s in range(len(station_ids)):
                     station = station_ids[s]
                     req_type = 'data'
@@ -85,7 +140,11 @@ def main(lon_min, lon_max, d = 0.5):
                                'startdate': f'{year}-01-01', 'enddate': f'{year}-12-31',  
                                'extent': extent, 'limit': 1000}
                     
+                    time.sleep(5)
                     r = requests.get(url + req_type, params = payload, headers=dict(token=token))
+                    
+                    if r.status_code != 200: 
+                        continue
                     
                     if len(r.json()) < 1:
                         continue
@@ -101,10 +160,9 @@ def main(lon_min, lon_max, d = 0.5):
                     dat_dict[station]['elev'] = np.atleast_1d(station_elev[s])
         
         station_keys = list(dat_dict)
-        print(f'region {z} --> stations {len(station_keys)}')
         for k in station_keys:
             name = k.split(':')[-1]
-            ofile = f'{name}.h5'
+            ofile = f'{name}_{year}.h5'
             with closing(h5py.File(f'{root_dir}/ISD/{datasetid}/{ofile}', 'w')) as f:
                 f['lon'] = dat_dict[k]['lon']
                 f['lat'] = dat_dict[k]['lat']
