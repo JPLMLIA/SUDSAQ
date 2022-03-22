@@ -42,44 +42,48 @@ def main(datatype, year):
     
     #get data for a type
     mask_dtype = dtype == datatype
-    station_dtype = station[mask_dtype]
-    unique_station = np.unique(station_dtype)
     
-    #add coords
-    lons = np.zeros(len(station_dtype))
-    lons[:] = np.nan
-    lats = np.zeros(len(station_dtype))
-    lats[:] = np.nan
-    for u in tqdm(range(len(unique_station)), desc = 'Assigning lon/lat'):
-        mask_u = all_stations == unique_station[u]
-        if mask_u.sum() > 0:
-            mask_i = station_dtype == unique_station[u]
-            lons[mask_i] = station_lons[mask_u]
-            lats[mask_i] = station_lats[mask_u]
-     
-    
-    date_str = date[mask_dtype].astype(str)    
-    station_year = np.hstack([''.join(list(a)[0:4]) for a in date_str])
-    station_month = np.hstack([''.join(list(a)[4:6]) for a in date_str])
-    station_day = np.hstack([''.join(list(a)[6:8]) for a in date_str])
-    
-    data_dtype = np.array(data[3])[mask_dtype]
-    
-    months = np.unique(station_month)
-    data_output_dir = f'{root_dir}/processed/summary_dp/ISD/{datatype}/'
-    if not os.path.exists(data_output_dir):
-        os.makedirs(data_output_dir)
-    for month in months:
-        mask_m = station_month == month  
-        ymd = np.column_stack([station_year[mask_m], station_month[mask_m], station_day[mask_m]])
-        ofile = f'ghcnd_{year}_{month}.h5'
-        with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
-                f['station'] =  np.hstack(station_dtype[mask_m]).astype(np.string_)
-                f['lon'] = lons[mask_m]
-                f['lat'] = lats[mask_m]
-                f['data'] = data_dtype[mask_m]
-                f['date'] = ymd.astype(np.string_)
-
+    if mask_dtype.sum() > 0:
+        station_dtype = station[mask_dtype]
+        unique_station = np.unique(station_dtype)
+        
+        #add coords
+        lons = np.zeros(len(station_dtype))
+        lons[:] = np.nan
+        lats = np.zeros(len(station_dtype))
+        lats[:] = np.nan
+        for u in tqdm(range(len(unique_station)), desc = 'Assigning lon/lat'):
+            mask_u = all_stations == unique_station[u]
+            if mask_u.sum() > 0:
+                mask_i = station_dtype == unique_station[u]
+                lons[mask_i] = station_lons[mask_u]
+                lats[mask_i] = station_lats[mask_u]
+         
+        
+        date_str = date[mask_dtype].astype(str)    
+        station_year = np.hstack([''.join(list(a)[0:4]) for a in date_str])
+        station_month = np.hstack([''.join(list(a)[4:6]) for a in date_str])
+        station_day = np.hstack([''.join(list(a)[6:8]) for a in date_str])
+        
+        data_dtype = np.array(data[3])[mask_dtype]
+        
+        months = np.unique(station_month)
+        data_output_dir = f'{root_dir}/processed/summary_dp/ISD/{datatype}/'
+        if not os.path.exists(data_output_dir):
+            os.makedirs(data_output_dir)
+        for month in months:
+            mask_m = station_month == month  
+            ymd = np.column_stack([station_year[mask_m], station_month[mask_m], station_day[mask_m]])
+            ofile = f'ghcnd_{year}_{month}.h5'
+            with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
+                    f['station'] =  np.hstack(station_dtype[mask_m]).astype(np.string_)
+                    f['lon'] = lons[mask_m]
+                    f['lat'] = lats[mask_m]
+                    f['data'] = data_dtype[mask_m]
+                    f['date'] = ymd.astype(np.string_)
+                    
+    else:
+        print(f'{datatype} not available in dataset')                
 
 
 if __name__ == '__main__':
