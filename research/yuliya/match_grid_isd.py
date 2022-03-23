@@ -54,8 +54,7 @@ def main(years, months, dtype, plotting = True):
     years = np.atleast_1d(years) 
     months = np.atleast_1d(months)
     
- year in years:
-        
+    for year in years:
         for month in tqdm(months):
             #save
             file = f'{isd_output}/ghcnd_{year}_{month}.h5'
@@ -84,18 +83,24 @@ def main(years, months, dtype, plotting = True):
             
             data_to_momo = {k: [] for k in summaries}
             for d in days:
-                mask_data = np.in1d(date[:, 2], d)                
-                for s in summaries:
-                    ret = stats.binned_statistic_2d(lat[mask_data], lon[mask_data], 
-                                                data[mask_data], s, 
-                                                bins=[momo_lat, momo_lon],
-                                                expand_binnumbers = True)
-                    
-                    #TO DO: need to make sure correctly formatted
-                    temp = ret.statistic
-                    temp[temp == 0] = np.nan
-                    data_to_momo[s].append(temp)
-                
+                mask_data = np.in1d(date[:, 2], d)  
+                if mask_data.sum() > 0:
+                    for s in summaries:
+                        ret = stats.binned_statistic_2d(lat[mask_data], lon[mask_data], 
+                                                    data[mask_data], s, 
+                                                    bins=[momo_lat, momo_lon],
+                                                    expand_binnumbers = True)
+                        
+                        #TO DO: need to make sure correctly formatted
+                        temp = ret.statistic
+                        temp[temp == 0] = np.nan
+                        data_to_momo[s].append(temp)
+                else:
+                    for s in summaries:
+                        temp = np.zeros(x.shape)
+                        temp[temp == 0] = np.nan
+                        data_to_momo[s].append(temp)
+            
             data_to_momo = {s: np.stack(data_to_momo[s]) for s in summaries} 
             
             if plotting:

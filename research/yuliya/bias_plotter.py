@@ -22,7 +22,7 @@ import subprocess
 from scipy.ndimage.filters import gaussian_filter
 
 
-def main(years):
+def main(years, which = 'bias'):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -30,16 +30,68 @@ def main(years):
     #momo_root_dir = f'{root_dir}/MOMO/'
     toar_output = f'{root_dir}/processed/summary_dp/TOAR2/'
     momo_output = f'{root_dir}/processed/summary_dp/MOMO/'
+    subdirs = glob.glob(root_dir + 'MOMO/inputs/*')
+    inputs = [x.split('/')[-1] for x in subdirs]
 
     #years = ['2012', '2013', '2014', '2015']
     months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
     years = np.atleast_1d(years)
-    cmin = -20
-    cmax = 20
+    
+    if which == 'bias':
+        plot_bias(years, months, root_dir)
+     
+    if which == 'inputs':
+        plot_inputs(years)
+
+
+
+def plot_inputs(years, months, inputs, root_dir):
+ 
+    momo_lon = []
+    momo_lat = []
+    momo = {}
+    toar_dat = []
+    momo_dat = []
+    momo_ud = [] 
     
     for year in years:
+        new_file = f'{root_dir}/processed/coregistered/momo_matched_{year}_{month}.h5' 
+        with closing(h5py.File(new_file, 'r')) as f:
+            momo_dat.append(f['o3'][:])
+            toar_dat.append(f['toar']['mean'][:])
+            momo_ud.append(f['date'][:])
+            momo_lon.append(f['lon'][:])
+            momo_lat.append(f['lat'][:])
+            for k in inputs:
+                momo[k] = f[k][:]
         
-       
+    momo_dat = np.dstack(momo_dat)
+    momo_ud = np.row_stack(momo_ud) 
+    toar_dat = np.dstack(toar_dat)
+    bias = momo_dat - toar_dat      
+    
+    momo_lon = momo_lon[0]
+    momo_lat = momo_lat[0]
+    
+    days = np.unique(momo_ud[:,2].astype(str))
+    
+    for k in inputs:
+        pdict = {'year': year, 'month': month, 'name': f'momo_{k}'}
+        x, y = np.meshgrid(momo['lon']-180, momo['lat'])
+        Z = momo[k].mean(axis = 0)
+        mask = np.nanmean(bias, axis = 0)
+        Z[np.isnan(mask)] = np.nan 
+        plots.spatial_map(x, y, Z, name_params = pdict, 
+                          subdir = 'inputs/momo/')
+ 
+    
+    
+
+
+def plot_bias(years, months, root_dir):
+    cmin = -20
+    cmax = 20
+    for year in years:
         for month in months:
              
             momo_lon = []
@@ -134,7 +186,6 @@ def main(years):
                         bbox_inches = 'tight')
             plt.close()
 
-
         #movies
         framepath = f'{root_dir}/processed/plots/bias/'
         mp4name = f'bias_movie_{year}'
@@ -166,6 +217,9 @@ def main(years):
             '&'.join(framepath.split('\\&')), 'bias_{year}*.png'))
         for f in filelist:
             os.remove(f)
+
+
+
 
 
 if __name__ == '__main__':

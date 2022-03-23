@@ -22,6 +22,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 from scipy import stats
 import read_data_momo
+import tools_plotting as plots
 
 
 # data_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
@@ -128,6 +129,21 @@ def main(years, months, parameter, inputs, plotting):
                 for k in inputs:
                     f[k] = momo[k]
              
+            
+            if plotting:
+                for k in inputs:
+                    pdict = {'year': year, 'month': month, 'name': f'momo_{k}'}
+                    x, y = np.meshgrid(momo['lon']-180, momo['lat'])
+                    Z = momo[k].mean(axis = 0)
+                    mask = np.nanmean(bias, axis = 0)
+                    Z[np.isnan(mask)] = np.nan 
+                    plots.spatial_map(x, y, Z, name_params = pdict, 
+                                      subdir = 'inputs/momo/')
+            
+                plt.figure()
+                plt.hist(np.hstack(Z), bins = 50, histtype = 'step');
+                plt.grid(ls=':', alpha = 0.5)
+            
             # if plotting:
             #     cmin = np.nanmin(bias)
             #     cmax = np.nanmax(bias)

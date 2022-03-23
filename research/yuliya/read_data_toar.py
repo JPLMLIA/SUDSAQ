@@ -20,8 +20,8 @@ import pandas as pd
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 
-year = '2012'
-parameter = 'o3'
+# year = '2012'
+# parameter = 'o3'
 #data_root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/TOAR2/'
 
 
@@ -35,7 +35,7 @@ def main(parameter, years, months):
         sys.exit(1)
     
     #data_root_dir = f'{root_dir}/TOAR2/'  
-    if months == 'all':
+    if len(months) == 0:
         months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
     
     years = np.atleast_1d(years)
