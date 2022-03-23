@@ -54,7 +54,7 @@ def main(years, months, dtype, plotting = True):
     years = np.atleast_1d(years) 
     months = np.atleast_1d(months)
     
-    for year in years:
+ year in years:
         
         for month in tqdm(months):
             #save

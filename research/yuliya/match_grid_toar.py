@@ -30,7 +30,7 @@ import read_data_momo
 # momo_output = f'{data_root_dir}/processed/summary_dp/MOMO/'
 
 
-def main(years, months, inputs, plotting):
+def main(years, months, parameter, inputs, plotting):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -60,7 +60,7 @@ def main(years, months, inputs, plotting):
         for month in tqdm(months):
             #save
             
-            toar_file = f'{toar_output}/toar2_{year}_{month}.h5'
+            toar_file = f'{toar_output}/toar2_{parameter}_{year}_{month}.h5'
             with closing(h5py.File(toar_file, 'r')) as f:
                     lon = f['lon'][:]
                     lat = f['lat'][:]
