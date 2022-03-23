@@ -40,6 +40,10 @@ def main(years, months, dtype, plotting = True):
     isd_output = f'{root_dir}/processed/summary_dp/ISD/{dtype}'
     momo_output = f'{root_dir}/processed/summary_dp/MOMO/' 
     
+    if not os.path.exists(isd_output):
+        print(f'no {dtype} variable found for matching...')
+        return None
+    
     # years = ['2012']
     # months = ['06', '07', '08']
     # names = ['o3', 't', 'q']
