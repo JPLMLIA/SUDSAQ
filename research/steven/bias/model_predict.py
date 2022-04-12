@@ -12,6 +12,8 @@ import numpy as np
 from joblib import load
 from utils import REQUIRED_VARS
 from utils import format_data
+from treeinterpreter import treeinterpreter as ti
+from sklearn.ensemble import RandomForestRegressor
 
 
 def main(in_model, in_data, out_pred_file):
@@ -45,7 +47,11 @@ def main(in_model, in_data, out_pred_file):
     )
 
     # Make predictions
-    pred_y = model.predict(test_x)
+    if isinstance(model, RandomForestRegressor):
+        pred_y, bias, contribution = ti.predict(model, test_x)
+        pred_y = pred_y.flatten()
+    else:
+        pred_y = model.predict(test_x)
 
     # Reshape arrays back into 2d
     test_y = test_y.reshape((len(data['date']), len(lat), len(lon)))
@@ -58,6 +64,9 @@ def main(in_model, in_data, out_pred_file):
     out_file.create_dataset('lat', data=lat)
     out_file.create_dataset('lon', data=lon)
     out_file.create_dataset('date', data=np.array(data['date']))
+    if isinstance(model, RandomForestRegressor):
+        out_file.create_dataset('bias', data=bias)
+        out_file.create_dataset('contribution', data=contribution)
 
 
 if __name__ == '__main__':

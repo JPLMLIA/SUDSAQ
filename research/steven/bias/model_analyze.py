@@ -12,6 +12,8 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from utils import gen_true_pred_plot
+from utils import TRAIN_FEATURES
+from utils import dendro_plot
 
 
 def main(in_pred_file, out_dir):
@@ -34,6 +36,12 @@ def main(in_pred_file, out_dir):
     gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot,
                        sub_sample=False)
 
+    # Plot feature contribution dendrogram
+    if 'contribution' in data.keys():
+        contribution = np.array(data['contribution'])
+        dendro_plot(contribution, TRAIN_FEATURES, 'Air Quality Bias Predictor')
+        plt.savefig(os.path.join(out_dir, 'feature_contribution.png'))
+
     # Generate daily bias map
     diff_bias = true_bias - pred_bias
     min_bias = np.nanmin(diff_bias)
@@ -42,6 +50,7 @@ def main(in_pred_file, out_dir):
         year = year.decode('UTF-8')
         month = month.decode('UTF-8')
         day = day.decode('UTF-8')
+        plt.clf()
         fig, ax = plt.subplots(figsize=(18, 9),
                                subplot_kw={'projection': ccrs.PlateCarree()})
         plt.pcolor(data['lon'], data['lat'], diff_bias[ind, :, :],

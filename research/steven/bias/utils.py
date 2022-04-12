@@ -8,6 +8,10 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import pairwise_distances
+import matplotlib
+import seaborn as sns
+import scipy.cluster.hierarchy as sch
 
 
 REQUIRED_VARS = ['aero_nh4', 'aero_no3', 'aero_sul', 'ch2o', 'co', 'date',
@@ -16,6 +20,30 @@ REQUIRED_VARS = ['aero_nh4', 'aero_no3', 'aero_sul', 'ch2o', 'co', 'date',
 
 TRAIN_FEATURES = ['aero_nh4', 'aero_no3', 'aero_sul', 'ch2o', 'co', 'hno3',
                   'oh', 'pan', 'ps', 'q', 'so2', 't', 'u', 'v']
+
+
+def dendro_plot(tot_cont, feature_names, label):
+    tot_cont = tot_cont[::100, :]
+    nF = len(feature_names)
+    D = pairwise_distances(tot_cont)
+    H = sch.linkage(D, method='centroid')
+    d1 = sch.dendrogram(H, orientation='right', no_plot=True)
+    idx1 = d1['leaves']
+    X = tot_cont[idx1, :]
+    cmap1 = matplotlib.colors.ListedColormap(sns.color_palette('RdBu_r', 12))
+    fsize = 16
+    fig = plt.figure(figsize=(5, 5))
+    plt.imshow(X.T, aspect='auto', interpolation = 'none', cmap=cmap1)
+    #plt.pcolor(X, cmap=cmap1)
+    plt.yticks(np.arange(nF), feature_names)
+    plt.clim([-0.3, 0.3])
+    plt.xlabel('pixel index', fontsize=fsize)
+    cbar = plt.colorbar()
+    cbar.ax.tick_params(labelsize=fsize)
+    plt.tick_params(labelsize=fsize)
+    plt.title(label + ', n = ' + str(len(tot_cont)) + ', RF contributions')
+    plt.tight_layout()
+    return fig
 
 
 def format_data(data, apply_toar_mask=True, latitude_min=-90, latitude_max=90,
@@ -99,3 +127,6 @@ def gen_true_pred_plot(true_y, pred_y, out_plot, sub_sample=False):
     plt.ylim((0, max_value))
     plt.legend(loc='upper right')
     plt.savefig(out_plot)
+
+
+
