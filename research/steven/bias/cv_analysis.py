@@ -47,8 +47,6 @@ def main(in_pred_files, out_dir):
         gen_true_pred_plot(true_bias_masked, pred_bias_masked, out_plot,
                            sub_sample=False)
     cont_mean = np.mean(cont_arrs, axis=0)
-    min_mean = np.min(cont_mean)
-    max_mean = np.max(cont_mean)
 
     for ind, feature_name in enumerate(TRAIN_FEATURES):
         mean_arr = cont_mean[:, ind].reshape((len(first_data['date']),
@@ -61,9 +59,9 @@ def main(in_pred_files, out_dir):
                                subplot_kw={'projection': ccrs.PlateCarree()})
         plt.pcolor(
             first_data['lon'], first_data['lat'], np.nanmean(mean_arr, axis=0),
-            cmap='jet'
+            cmap='coolwarm'
         )
-        plt.clim((min_mean, max_mean))
+        plt.clim((-15, 15))
         plt.colorbar()
         ax.coastlines()
         ax.stock_img()
