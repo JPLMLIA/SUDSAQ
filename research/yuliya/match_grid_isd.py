@@ -58,6 +58,10 @@ def main(years, months, dtype, plotting = True):
         for month in tqdm(months):
             #save
             file = f'{isd_output}/ghcnd_{year}_{month}.h5'
+            if not os.path.isfile(file):
+                print(f'skip {month}, data not available')
+                continue
+            
             with closing(h5py.File(file, 'r')) as f:
                     lon = f['lon'][:]
                     lat = f['lat'][:]
@@ -130,13 +134,13 @@ def main(years, months, dtype, plotting = True):
                 
             
             #save matched  
-            output_dir = f'{root_dir}/processed/coregistered/inputs/{dtype}/' 
+            output_dir = f'{root_dir}/processed/coregistered/inputs/ISD/' 
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
                 
-            with closing(h5py.File(f'{output_dir}/{dtype}_matched_{year}_{month}.h5', 'w')) as f:
+            with closing(h5py.File(f'{output_dir}/isd_matched_{year}_{month}.h5', 'a')) as f:
                 for s in summaries:
-                    f['data/' + str(s)] = data_to_momo[s]
+                    f['{dtype}/' + str(s)] = data_to_momo[s]
                 f['lon'] = momo['lon']
                 f['lat'] = momo['lat']
                 f['date'] = momo['date']

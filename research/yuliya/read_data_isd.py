@@ -29,7 +29,7 @@ def main(datatype, year):
     #get stations
     stations_file = f'{root_dir}/ISD/stations_file.txt'
     stations_data = pd.read_csv(stations_file, sep="\s+|;|:", header=None, error_bad_lines=False,
-                                warn_bad_lines=False);
+                                warn_bad_lines=False, engine = 'python');
     all_stations = np.array(stations_data[0]).astype(str)
     station_lons =  np.array(stations_data[2])
     station_lats =  np.array(stations_data[1])

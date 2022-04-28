@@ -48,7 +48,9 @@ def main(years, months, plotting):
             output_file = f'{data_output_dir}/{filename}' 
             wget.download(ftp_address + filename, out = output_file)
         
-        
+        if len(months) == 0:
+            months = [f'{x}'.zfill(2) for x in np.arange(1, 13)]
+            
         datatypeid = ['TAVG', 'PRCP', 'SNOW', 'SNWD', 'TMAX',
                     'TMIN', 'ACMC', 'ACMH', 'ACSH', 'AWND',
                     'FRGB', 'FRGT', 'FRTH', 'MNPN', 'MXPN',
@@ -61,6 +63,10 @@ def main(years, months, plotting):
                     'WT16', 'WT17', 'WT18', 'WT19', 'WT20']    
         
         for dt in datatypeid:
+            outdir = f'{root_dir}/processed/summary_dp/ISD/{dt}'
+            dt_files = glob.glob(f'{outdir}/*{year}*')
+            if len(dt_files) == len(months):
+                continue
             print(f'datatype {dt} ----->')
             isd.main(dt, year)
             match.main(year, months, dt, plotting)
