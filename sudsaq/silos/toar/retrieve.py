@@ -53,16 +53,19 @@ def download(parameter):
     resp    = requests.get(f'{config.url}/series/?parameter_name={parameter}&as_dict=True')
     records = resp.json()
 
-    # Only select desired networks, stations, and check for overwrite
+    # Check for overwrite
     files = []
     if not config.overwrite:
         files = glob(f'{config.output}/**/**/{parameter}/*.json')
         files = [os.path.basename(file) for file in files]
-    records = [record for record in records if all(
-        record['network_name'] in config.networks,
-        record['station_id'] in config.stations,
-        not files or f"{record['id']}.json" not in files
-    )]
+
+    # Only select from desired networks and stations, ignore if file present and not overwrite
+    records = [record for record in records if all([
+            record['network_name'] in config.networks,
+            record['station_id'] in config.stations,
+            not files or f"{record['id']}.json" not in files
+        ])
+    ]
     errors = []
     for record in tqdm(records, desc=parameter, position=config.parameters.index(parameter)):
         id, network, station, param = record.values()
