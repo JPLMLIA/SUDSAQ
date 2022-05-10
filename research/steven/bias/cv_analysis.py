@@ -70,7 +70,7 @@ def main(in_pred_files, out_dir):
                           linewidth=1, color='gray', alpha=0.5, linestyle='--')
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        plt.title(f'Feature contribution (2012 - 2015) - {feature_name}')
+        plt.title(f'Feature contribution - {feature_name}')
         plt.savefig(f'{out_dir}/feature-contribution-{feature_name}.png',
                     bbox_inches='tight')
         plt.close()
