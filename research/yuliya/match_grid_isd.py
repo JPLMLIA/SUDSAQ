@@ -140,10 +140,10 @@ def main(years, months, dtype, plotting = True):
                 
             with closing(h5py.File(f'{output_dir}/isd_matched_{year}_{month}.h5', 'a')) as f:
                 for s in summaries:
-                    f['{dtype}/' + str(s)] = data_to_momo[s]
+                    f[dtype + '/' + str(s)] = data_to_momo[s]
                 f['lon'] = momo['lon']
                 f['lat'] = momo['lat']
-                f['date'] = momo['date']
+                f[dtype + '/' + 'date'] = momo['date']
                     
 
 if __name__ == '__main__':

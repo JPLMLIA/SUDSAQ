@@ -82,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--months', default = [], nargs = '*', type=str)
     #parser.add_argument('--dtype', type=str, default='PRCP')
     parser.add_argument('--plotting', type=bool, default=True)
+    #parser.add_argument('--read_first', type=bool, default=True)
     #parser.add_argument('out_file', type=str)
 
     args = parser.parse_args()
