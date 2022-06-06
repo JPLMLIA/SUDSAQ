@@ -45,10 +45,13 @@ def process():
     Logger.debug(f'Reading {config.input}/*.tar.gz: found {len(tars)} files')
 
     for tar in tqdm(tars, desc='Extracting Tars', position=1):
-        ds   = extract_tar(tar)
         file = tar.split('/')[-1][:-7]
-        ds.to_netcdf(f'{config.output}/{file}.nc', engine='scipy')
-        del ds
+        out  = f'{config.output}/{file}.nc'
+
+        if not glob(out) or config.regenerate:
+            ds = extract_tar(tar)
+            ds.to_netcdf(out, engine='scipy')
+            del ds
         # merge.append(ds)
 
     # Now merge these together
