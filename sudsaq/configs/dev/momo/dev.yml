@@ -1,0 +1,8 @@
+default:
+  log:
+    level: info
+  processes: 8
+
+process:
+  input: /Volumes/MLIA_active_data/data_SUDSAQ/MOMO/inputs/
+  output: /Users/jamesmo/projects/suds-air-quality/local/data/dev/momo/

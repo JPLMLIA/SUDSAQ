@@ -1,0 +1,8 @@
+default:
+  log:
+    level: info
+  processes: 8
+
+process:
+  input: /data/MLIA_active_data/data_SUDSAQ/MOMO/inputs/
+  output: /data/MLIA_active_data/data_SUDSAQ/data/momo/

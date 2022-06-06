@@ -176,13 +176,14 @@ class Config():
                 cls._flags.default     = default if default in data else None
 
                 # If there is a default section, deep copy it then override it using the active section
-                if cls._flags._default is not None:
+                if cls._flags.default is not None:
                     cls._flags.active = copy.deepcopy(cls._data[cls._flags.default])
                     cls._flags.active._name = f'[active] {active}'
                     cls.update(cls._data[active], cls._flags.active)
-                # Otherwise set the active section as active
+                # Otherwise copy the active section as active
                 else:
-                    cls._flags.active = cls._data[cls._active]
+                    cls._flags.active = copy.deepcopy(cls._data[cls._flags.active_name])
+                    cls._flags.active._name = f'[active] {active}'
 
                 cls._flags.initialized = True
 
