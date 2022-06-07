@@ -14,6 +14,7 @@ from glob import glob
 from tqdm import tqdm
 
 from sudsaq.config import Config
+from sudsaq.config import Section
 
 #%%
 
@@ -50,16 +51,27 @@ if __name__ == '__main__':
 #%%
 #%%
 
-glob('/Volumes/MLIA_active_data/data_SUDSAQ/processed/coregistered/*')
+path = '/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/'
 
+ds = xr.open_mfdataset(f'{path}/*.nc', engine='scipy')
+
+ds
 #%%
 
-glob('/Volumes/MLIA_active_data/data_SUDSAQ/MOMO/outputs/*')
 
-glob('/Volumes/MLIA_active_data/data_SUDSAQ/processed/summary_dp/MOMO/*')
 
-!ls -lah /Volumes/MLIA_active_data/data_SUDSAQ/processed/summary_dp/MOMO/
+files = glob('/Volumes/MLIA_active_data/data_SUDSAQ/MOMO/inputs/**/*.nc') + glob(f'/Volumes/MLIA_active_data/data_SUDSAQ/data/momo//*.nc')
 
+ns = xr.open_mfdataset(files, engine='scipy')
+
+ns = xr.open_mfdataset(glob('/Volumes/MLIA_active_data/data_SUDSAQ/MOMO/inputs/**/*.nc'), engine='scipy')
+
+files = glob('/Volumes/MLIA_active_data/data_SUDSAQ/MOMO/inputs/**/*.nc')
+#%%
+
+
+#%%
+#%%
 #%%
 
 import h5py
@@ -82,7 +94,11 @@ def list_h5(h5, details=False, _t=1):
         return ret
 
 # list_h5('/Volumes/MLIA_active_data/data_SUDSAQ/processed/summary_dp/MOMO/momo_2012_01.h5')
-list_h5('/Volumes/MLIA_active_data/data_SUDSAQ/toar2.v1.variables.h5')
+list_h5('/Volumes/MLIA_active_data/data_SUDSAQ/data/toar2.v1.variables.h5')
+#%%
+
+toar2 = '/Volumes/MLIA_active_data/data_SUDSAQ/data/toar2.v1.variables.h5'
+
 #%%
 #%%
 #%%
@@ -97,6 +113,10 @@ list_h5('/Volumes/MLIA_active_data/data_SUDSAQ/toar2.v1.variables.h5')
 #%%
 #%%
 #%%
+
+momo_lon = np.hstack([ds['lon'], 360.]) - 180
+momo_lat = np.hstack([ds['lat'], 90.])
+
 #%%
 
 momo_file = f'{momo_output}/momo_{year}_{month}.h5'

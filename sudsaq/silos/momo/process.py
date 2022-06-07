@@ -12,6 +12,20 @@ from sudsaq.config import Config
 from sudsaq.utils  import init
 
 
+def individual_folders():
+    """
+    """
+    config = Config()
+
+    for variable in tqdm(config.variables, desc='Processing Variables'):
+        ds = xr.open_mfdataset(f'{config.path}/{variable}/{config.regex}', engine='scipy')
+
+        if variable in config.rename:
+            ds = ds.rename({config.rename[variable].var: config.rename[variable].name})
+
+        ds.to_netcdf(f'{config.output}{variable}.nc', engine='scipy')
+        del ds
+
 def extract_tar(file):
     """
     """
@@ -39,31 +53,35 @@ def process():
     """
     config = Config()
 
-    # Retrieve only the tar.gz files and extract
-    # merge = []
-    tars = glob(f'{config.input}/*.tar.gz')
-    Logger.debug(f'Reading {config.input}/*.tar.gz: found {len(tars)} files')
+    if config.individual_folders:
+        Logger.info('Processing individual folders')
+        individual_folders()
+    else:
+        # Retrieve only the tar.gz files and extract
+        # merge = []
+        tars = glob(f'{config.input}/*.tar.gz')
+        Logger.debug(f'Reading {config.input}/*.tar.gz: found {len(tars)} files')
 
-    for tar in tqdm(tars, desc='Extracting Tars', position=1):
-        file = tar.split('/')[-1][:-7]
-        out  = f'{config.output}/{file}.nc'
+        for tar in tqdm(tars, desc='Extracting Tars', position=1):
+            file = tar.split('/')[-1][:-7]
+            out  = f'{config.output}/{file}.nc'
 
-        if not glob(out) or config.regenerate:
-            try:
-                ds = extract_tar(tar)
-                ds.to_netcdf(out, engine='scipy')
-                del ds
-            except:
-                Logger.exception(f'Failed on file {tar}')
-        # merge.append(ds)
+            if not glob(out) or config.regenerate:
+                try:
+                    ds = extract_tar(tar)
+                    ds.to_netcdf(out, engine='scipy')
+                    del ds
+                except:
+                    Logger.exception(f'Failed on file {tar}')
+            # merge.append(ds)
 
-    # Now merge these together
-    # ds = xr.merge(merge)
-    #
-    # del merge
-    #
-    # Logger.info('Saving output')
-    # ds.to_netcdf(config.output, engine='scipy')
+        # Now merge these together
+        # ds = xr.merge(merge)
+        #
+        # del merge
+        #
+        # Logger.info('Saving output')
+        # ds.to_netcdf(config.output, engine='scipy')
 
     return True
 
