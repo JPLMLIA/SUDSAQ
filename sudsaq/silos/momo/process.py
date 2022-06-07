@@ -41,7 +41,7 @@ def process():
 
     # Retrieve only the tar.gz files and extract
     # merge = []
-    tars  = glob(f'{config.input}/*.tar.gz')
+    tars = glob(f'{config.input}/*.tar.gz')
     Logger.debug(f'Reading {config.input}/*.tar.gz: found {len(tars)} files')
 
     for tar in tqdm(tars, desc='Extracting Tars', position=1):
@@ -49,9 +49,12 @@ def process():
         out  = f'{config.output}/{file}.nc'
 
         if not glob(out) or config.regenerate:
-            ds = extract_tar(tar)
-            ds.to_netcdf(out, engine='scipy')
-            del ds
+            try:
+                ds = extract_tar(tar)
+                ds.to_netcdf(out, engine='scipy')
+                del ds
+            except:
+                Logger.exception(f'Failed on file {tar}')
         # merge.append(ds)
 
     # Now merge these together
