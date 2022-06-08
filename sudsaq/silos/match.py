@@ -50,7 +50,7 @@ def match(ds, df, tag):
     for time in tqdm(dates, desc='Processing Dates'):
         tf = df.query('date == @time')
 
-        for metric in metrics:
+        for metric in config.metrics:
             calc = stats.binned_statistic_2d(
                 tf.station_lat,
                 tf.station_lon,
