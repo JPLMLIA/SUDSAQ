@@ -18,10 +18,14 @@ def toar_match():
     config = Config()
 
     # Load in toar and momo data
+    Logger.info(f'Loading MOMO')
     ds = xr.open_mfdataset(config.input.momo.regex, engine='scipy', parallel=True)
+
+    Logger.info(f'Loading TOAR {config.input.toar.parameter}')
     df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
 
     # Run the generalized matching function
+    Logger.info('Matching TOAR with MOMO')
     return match(ds, df, f'toar/{config.input.toar.parameter}')
 
 
@@ -43,7 +47,7 @@ if __name__ == '__main__':
 
     state = False
     try:
-        state = retrieve()
+        state = toar_match()
     except Exception:
         Logger.exception('Caught an exception during runtime')
     finally:
