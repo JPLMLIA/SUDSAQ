@@ -65,3 +65,16 @@ retrieve:
     start: 2005-01-01 00:00
     end: 2020-12-31 23:59
   output: /data/MLIA_active_data/data_SUDSAQ/toar2/
+
+match:
+  metrics: [mean, std, count]
+  metric: dma8epa
+  input:
+    toar:
+      file: /data/MLIA_active_data/data_SUDSAQ/data/toar/toar2.v1.variables.h5
+      parameter: 'o3'
+    momo:
+      regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
+  output:
+    by_month: True
+    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/
