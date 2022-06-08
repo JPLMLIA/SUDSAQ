@@ -169,6 +169,7 @@ def retrieve():
         ts = datetime.now().strftime('%m_%d_%Y.%H_%M')
         output = f'{config.output}/errors/{ts}.txt'
         Logger.debug(f'Writing to: {output}')
+
         with open(output, 'w') as file:
             file.write(f'Errors collected during run:\n')
             for parameter, errors in all_errors.items():
