@@ -44,7 +44,7 @@ def match(ds, df, tag):
 
     # Add end values for the last bin of each lat/lon
     lat = np.hstack([ds['lat'], 90.])
-    lon = np.hstack([ds['lon'], 360.]) - 180
+    lon = np.hstack([ds['lon'], 360.])
 
     # For each date, compute the metrics and save into the Dataset
     for time in tqdm(dates, desc='Processing Dates'):
@@ -53,7 +53,7 @@ def match(ds, df, tag):
         for metric in config.metrics:
             calc = stats.binned_statistic_2d(
                 tf.station_lat,
-                tf.station_lon,
+                tf.station_lon + 180,
                 tf[config.metric],
                 metric,
                 bins = [lat, lon],
