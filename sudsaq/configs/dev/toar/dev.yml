@@ -73,10 +73,10 @@ match:
   metric: dma8epa
   input:
     toar:
-      file: /data/MLIA_active_data/data_SUDSAQ/data/toar/toar2.v1.variables.h5
+      file: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/toar2.v1.variables.h5
       parameter: 'o3'
     momo:
-      regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
   output:
     by_month: True
-    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/
+    path: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/v2/

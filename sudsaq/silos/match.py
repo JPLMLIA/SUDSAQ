@@ -44,7 +44,7 @@ def match(ds, df, tag):
 
     # Add end values for the last bin of each lat/lon
     lat = np.hstack([ds['lat'], 90.])
-    lon = np.hstack([ds['lon'], 360.])
+    lon = np.hstack([ds['lon'], 360.]) - 180
 
     # For each date, compute the metrics and save into the Dataset
     for time in tqdm(dates, desc='Processing Dates'):
@@ -76,18 +76,3 @@ def match(ds, df, tag):
         ts.to_netcdf(config.output, engine='scipy')
 
     return True
-
-#%%
-def geospatial(data, title=None):
-    fig = plt.figure(figsize=(10, 6))
-    ax = plt.subplot(projection=ccrs.PlateCarree())
-    # ax.set_extent([-20, 20, 30, 60], ccrs.PlateCarree())
-    data.plot.pcolormesh(x='lon', y='lat', ax=ax, levels=10, cmap='viridis', vmin=vmin, vmax=vmax)
-    ax.coastlines()
-    ax.gridlines(draw_labels=True, color='dimgray', linewidth=0.5)
-    if title:
-        ax.set_title(title)
-    plt.show()
-
-#%%
-# geospatial(ds['toar/mean'].mean('date'))

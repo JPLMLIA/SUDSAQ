@@ -77,4 +77,4 @@ match:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
   output:
     by_month: True
-    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/
+    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/v2/
