@@ -23,6 +23,13 @@ def toar_match():
 
     Logger.info(f'Loading TOAR ({config.input.toar.parameter})')
     df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
+    # Rename to generic names
+    df = df.rename({
+        'station_lon': 'lon',
+        'station_lat': 'lat'
+    })
+    # Convert from (-180, 180) to (0, 360) longitude format
+    df.lon.loc[df.lon < 0] += 360
 
     # Run the generalized matching function
     Logger.info('Matching TOAR with MOMO')

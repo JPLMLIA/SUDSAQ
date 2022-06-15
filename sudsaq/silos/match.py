@@ -20,6 +20,7 @@ def match(ds, df, tag):
     config = Config()
 
     # Validate the metrics requested
+    Logger.info('Validating config metrics')
     valid = ['mean', 'std', 'median', 'count', 'sum', 'min', 'max']
     for metric in config.metrics:
         if metric not in valid:
@@ -27,10 +28,12 @@ def match(ds, df, tag):
             return 1
 
     # Collect the dates to process
+    Logger.info('Retrieving unique dates')
     dates = pd.unique(df.index.get_level_values('date'))
+    Logger.debug(f'Number of dates: {len(dates)}')
 
     # Prepare the Dataset that the matched data will reside in
-    ts = xr.Dataset(
+    ms = xr.Dataset(
         coords = {
             'time': dates,
             'lat' : ds['lat'],
@@ -38,9 +41,10 @@ def match(ds, df, tag):
         }
     )
     # Prefill the variables
+    Logger.debug('Creating the matched dataset')
     shape = *dates.shape, *ds.lat.shape, *ds.lon.shape
     for metric in config.metrics:
-        ts[f'{tag}/{config.metric}/{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
+        ms[f'{tag}/{config.metric}/{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
 
     # Add end values for the last bin of each lat/lon
     lat = np.hstack([ds['lat'], 90.])
@@ -52,27 +56,29 @@ def match(ds, df, tag):
 
         for metric in config.metrics:
             calc = stats.binned_statistic_2d(
-                tf.station_lat,
-                tf.station_lon + 180,
+                tf.lat,
+                tf.lon,
                 tf[config.metric],
                 metric,
                 bins = [lat, lon],
                 expand_binnumbers = True
             )
             # Now save the calculation for this time
-            ts.loc[{'time': time}][f'{tag}/{config.metric}/{metric}'][:] = calc.statistic
+            ms.loc[{'time': time}][f'{tag}/{config.metric}/{metric}'][:] = calc.statistic
 
     # Save output
     if config.output.by_month:
-        for year, yts in ts.groupby('time.year'):
+        Logger.info('Saving output by month')
+        for year, yms in ms.groupby('time.year'):
             # Check if directory exists, otherwise create it
             output = f'{config.output.path}/{year}'
             if not os.path.exists(output):
                 os.mkdir(output, mode=0o771)
 
-            for month, mts in yts.groupby('time.month'):
-                mts.to_netcdf(f'{output}/{month:02}.nc', engine='scipy')
+            for month, mms in yms.groupby('time.month'):
+                mms.to_netcdf(f'{output}/{month:02}.nc', engine='scipy')
     else:
-        ts.to_netcdf(config.output, engine='scipy')
+        Logger.info(f'Saving to output: {config.output}')
+        ms.to_netcdf(config.output, engine='scipy')
 
     return True
