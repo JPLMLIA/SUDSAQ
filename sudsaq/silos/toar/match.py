@@ -24,7 +24,7 @@ def toar_match():
     Logger.info(f'Loading TOAR ({config.input.toar.parameter})')
     df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
     # Rename to generic names
-    df = df.rename({
+    df = df.rename(columns={
         'station_lon': 'lon',
         'station_lat': 'lat'
     })
