@@ -22,7 +22,7 @@ class Null:
         return False
 
     def __eq__(self, other):
-        if other in [None, type(self)()]:
+        if type(other) in [type(None), type(self)]:
             return True
         return False
 
@@ -78,9 +78,6 @@ class Section:
     def __iter__(self):
         return iter(self._data)
 
-    def items(self):
-        return self._data.items()
-
     def __getattr__(self, key):
         if key in self.__dict__:
             return self.__dict__[key]
@@ -99,9 +96,6 @@ class Section:
     def __getitem__(self, key):
         return self.__getattr__(key)
 
-    def get(self, key, other=None):
-        return self._data.get(key, other)
-
     def __setitem__(self, key, value):
         self.__setattr__(key, value)
 
@@ -116,6 +110,15 @@ class Section:
             else:
                 attributes.append(key)
         return f'<Section {self._name} (attributes={attributes}, sections={sections})>'
+
+    def get(self, key, other=None):
+        return self._data.get(key, other)
+
+    def items(self):
+        return self._data.items()
+
+    def keys(self):
+        return self._data.keys()
 
 class Config():
     """
@@ -276,17 +279,3 @@ class Config():
         """
         cls._flags.initialized = False
         cls.__init__(cls._flags.file, name or cls._flags.active_name, cls._flags.default)
-
-# Example argparse
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-
-    parser.add_argument('-c', '--config',   type     = str,
-                                            required = True,
-                                            metavar  = '/path/to/config.yaml',
-                                            help     = 'Path to a config.yaml file'
-    )
-
-    args = parser.parse_args()
-
-    config = utils.Config(args.config)

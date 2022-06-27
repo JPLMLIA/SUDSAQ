@@ -15,6 +15,28 @@ Logger = logging.getLogger('sudsaq/silos/match.py')
 
 def match(ds, df, tag):
     """
+    Matches silo data to the MOMO lat/lon grid using silo lat/lon data.
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        The MOMO Dataset object containing the dimensions latitude and longitude
+        to be used for matching
+    df: pandas.DataFrame
+        Silo dataframe in expected format. Must contain columns: [time, lat, lon]
+    tag: str
+        The unique tag for this silo. For example, TOAR is `toar/{config.input.toar.parameter}`
+
+    Returns
+    -------
+    bool or int
+        Returns True if the function finished properly, or an int indicating the status code.
+        See notes for more information on status codes.
+
+    Notes
+    -----
+    Status Codes:
+    1 - An invalid metric to be used in scipy.stats.binned_statistic_2d was provided
     """
     # Retrieve the config
     config = Config()
@@ -29,7 +51,7 @@ def match(ds, df, tag):
 
     # Collect the dates to process
     Logger.info('Retrieving unique dates')
-    dates = pd.unique(df.index.get_level_values('date'))
+    dates = pd.unique(df.index.get_level_values('date')) # TODO: toar/match.py should handle the index to make this script more generalized
     Logger.debug(f'Number of dates: {len(dates)}')
 
     # Prepare the Dataset that the matched data will reside in
@@ -70,12 +92,14 @@ def match(ds, df, tag):
     if config.output.by_month:
         Logger.info('Saving output by month')
         for year, yms in ms.groupby('time.year'):
+            Logger.info(f'{year}: ')
             # Check if directory exists, otherwise create it
             output = f'{config.output.path}/{year}'
             if not os.path.exists(output):
                 os.mkdir(output, mode=0o771)
 
             for month, mms in yms.groupby('time.month'):
+                Logger.info(f'- {month:02}')
                 mms.to_netcdf(f'{output}/{month:02}.nc', engine='scipy')
     else:
         Logger.info(f'Saving to output: {config.output}')
