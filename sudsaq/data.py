@@ -48,30 +48,19 @@ def daily(ds, config):
     """
     Aligns a dataset to a daily average
     """
-    # Determine which silo each variable is from
-    var = {
-        'momo': [],
-        'toar': []
-    }
-    for variable in list(ds.variables)[:-3]:
-        if 'toar' in variable:
-            var['toar'].append(variable)
-        else:
-            var['momo'].append(variable)
-
-    # Now select the time ranges per silo
+    # Select time ranges per config
     time = ds.time.dt.time
-    data = {}
-    for silo, sel in config.input.daily.items():
-        if isinstance(sel, list):
-            mask = (dt.time(sel[0]) < time) & (time < dt.time(sel[1]))
+    data = []
+    for sect, sel in config.input.daily.items():
+        if isinstance(sel.time, list):
+            mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
         else:
-            mask = (time == dt.time(sel))
+            mask = (time == dt.time(sel.time))
 
-        data[silo] = ds[var[silo]].where(mask, drop=True).resample(time='1D').mean()
+        data.append(ds[sel.vars].where(mask, drop=True).resample(time='1D').mean())
 
     # Merge the selections together
-    ds = xr.merge(data.values())
+    ds = xr.merge(data)
 
     return ds
 
@@ -111,8 +100,8 @@ def load(config, split=False):
         Logger.info('Aligning to a daily average')
         ds = daily(ds, config)
 
-    Logger.info('Loading data into memory')
-    ds.load()
+    # Logger.info('Loading data into memory')
+    # ds.load()
 
     # Hardcoded by script
     if split:

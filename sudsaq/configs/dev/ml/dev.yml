@@ -28,7 +28,7 @@ create-gb:
 
 create-optimize-gb:
   target: o3 - toar/o3/dma8epa/mean
-  train: [aerosol/sul, co]
+  train: [aerosol/sul, co, mda8]
   train_performance: True
   model:
     kind: GradientBoostingRegressor
@@ -52,10 +52,17 @@ create-optimize-gb:
       time: 2012-07
       lat: [10, 80]
       lon: [220, 310]
-      vars: [aerosol/sul, o3, co, toar/o3/dma8epa/mean]
+      vars: [aerosol/sul, co, o3, mda8, toar/o3/dma8epa/mean]
     daily:
-      momo: [8, 16]
-      toar: 0
+      mda8:
+        vars: [mda8]
+        time: 1
+      toar:
+        vars: [toar/o3/dma8epa/mean]
+        time: 0
+      momo:
+        vars: [aerosol/sul, o3, co]
+        time: [8, 16]
     momo:
       # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/*[0-7]/*.nc
       regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc
@@ -63,7 +70,7 @@ create-optimize-gb:
       # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/*[0-7]/*.nc
       regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2012/07.nc
   log:
-    file: /Users/jamesmo/projects/suds-air-quality/local/logs/create-optimize-gb.1.log
+    file: /Users/jamesmo/projects/suds-air-quality/local/logs/create-optimize-gb.2.log
 
 create-optimize-rf:
   target: o3 - toar/o3/dma8epa/mean
