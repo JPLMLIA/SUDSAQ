@@ -140,9 +140,6 @@ def main(years, months, parameter, inputs, plotting):
                     plots.spatial_map(x, y, Z, name_params = pdict, 
                                       subdir = 'inputs/momo/')
             
-                plt.figure()
-                plt.hist(np.hstack(Z), bins = 50, histtype = 'step');
-                plt.grid(ls=':', alpha = 0.5)
             
             # if plotting:
             #     cmin = np.nanmin(bias)

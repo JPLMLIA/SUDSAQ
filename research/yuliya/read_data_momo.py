@@ -10,6 +10,7 @@ import glob, os
 import numpy as np
 import h5py
 import netCDF4 as nc4
+import pandas
 from scipy.io import netcdf
 import matplotlib as mp
 from contextlib import closing
@@ -20,7 +21,8 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
+import xarray as xr
+import tarfile
 
 
 def daterange(start_date, end_date, hours = 2):
@@ -87,10 +89,18 @@ def main(outputs, inputs, years, months, mda8 = True):
         if inputs is not None:
             inputs_dict = {}
             for v in inputs:
-                input_file = glob.glob(f'{momo_root_dir}/inputs/{v}/2hr_{v}_{year}*')[0]
-                nc_in = netcdf.netcdf_file(input_file,'r')
-                k = list(nc_in.variables.keys())[-1]
-                inputs_dict[v] = nc_in.variables[k][:]
+                input_file = glob.glob(f'{momo_root_dir}/inputs/{v}/*{year}*.nc')
+                #if data is separated into months instead of yeears
+                if len(input_file) > 1:
+                    inputs_dict[v] = []
+                    for h in input_file:
+                        nc_in = netcdf.netcdf_file(input_file[h],'r')
+                        k = list(nc_in.variables.keys())[-1]
+                        inputs_dict[v].extend(nc_in.variables[k][:])
+                else:
+                    nc_in = netcdf.netcdf_file(input_file[0],'r')
+                    k = list(nc_in.variables.keys())[-1]
+                    inputs_dict[v] = nc_in.variables[k][:]
         
         start_date = datetime(int(year), 1, 1)
         end_date = datetime(int(year) + 1, 1, 1)
@@ -100,7 +110,6 @@ def main(outputs, inputs, years, months, mda8 = True):
             dates_dt.append(single_date.strftime("%Y-%m-%d %H:%M"))
         dates = np.row_stack([a.split(' ')[0].split('-') for a in dates_dt])
         hours = np.row_stack([a.split(' ')[1].split(':')[0] for a in dates_dt])
-        
         
         #for subsetting the month if there's no hourly average
         dates_dt = []
@@ -136,9 +145,11 @@ def main(outputs, inputs, years, months, mda8 = True):
             [data_dict[k].shape for k in data_dict.keys()]
             #save
             ofile = f'momo_{year}_{month}.h5'
-            with closing(h5py.File(data_output_dir + ofile, 'w')) as f:
+            with closing(h5py.File(data_output_dir + ofile, 'a')) as f:
+                keys = list(f)
                 for k in data_dict.keys():
-                    f[k] = data_dict[k]
+                    if k not in keys:
+                        f[k] = data_dict[k]
 
     
     # outputs = get_momo(input_var = None, month = '07')
@@ -162,6 +173,51 @@ def main(outputs, inputs, years, months, mda8 = True):
     # #ax.set_extent([-140, -50, 10, 80], crs=ccrs.PlateCarree())
     # #ax.set_extent([-125, -112, 30, 40], crs=ccrs.PlateCarree())
     # plt.title('Mean ozone estimate for 07-2012')
+
+
+def helper_momo(momo_root_dir):
+    input_files = glob.glob(f'{momo_root_dir}/inputs/*.tar.gz')
+    for file in input_files:
+        
+        with tarfile.open(input_files[0]) as tar:
+            #memnames = tar.getnames()
+            members = tar.getmembers()
+            for i, member in tqdm(enumerate(members)):
+                name = member.name
+                varyear = ''.join(list(name.split('.')[0].split('_')[0])[:4])
+                varmonth = ''.join(list(name.split('.')[0].split('_')[0])[4:])
+                varname = name.split('.')[0].split('_')[-1]
+                var_dir = f'{momo_root_dir}/inputs/{varname}/'
+                var_file = f'{var_dir}/2hr_{varname}_{varyear}_sfc.nc'
+                if not os.path.exists(var_dir):
+                    os.makedirs(var_dir)
+
+                ds = xr.open_dataset(tar.extractfile(member))
+                ds.to_netcdf(f'{var_dir}/2hr_{varname}_{varyear}_{varmonth}_sfc.nc')
+                
+    
+    subdirs = glob.glob(momo_root_dir+ '/inputs/*')
+    inputs = [x.split('/')[-1] for x in subdirs]
+    
+    for varname in inputs:
+        year_files = glob.glob(f'{momo_root_dir}/inputs/{varname}/*.nc')
+        dates = [x.split('_')[5:7] for x in year_files]
+        varmonths = np.array([x[1] for x in dates])
+        varyears = [x[0] for x in dates]
+        uni_years, counts = np.unique(varyears, return_counts = True)
+        for u in range(len(uni_years)):
+            if counts[u] > 1:
+                ds = xr.open_mfdataset(f'{var_dir}/*_{uni_years[u]}_*.nc', autoclose=True,
+                                       concat_dim="time",
+                                       combine='nested')
+                ds.to_netcdf(f'{var_dir}/2hr_{varname}_{uni_years[u]}_sfc.nc')    
+
+        # var = file.split('/')[-1].split('_')[-1].split('.')[0]
+        # if not os.path.exists(f'{momo_root_dir}/inputs/{var}/'):
+        #     os.makedirs(f'{momo_root_dir}/inputs/{var}/')
+        # fname = file.split('/')[-1]
+        # os.replace(file, f'{momo_root_dir}/inputs/{var}/{fname}')
+
 
 
 
