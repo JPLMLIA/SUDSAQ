@@ -1,0 +1,28 @@
+default:
+  log:
+    level: info
+  processes: 8
+
+process:
+  input: /data/MLIA_active_data/data_SUDSAQ/MOMO/inputs/
+  output: /data/MLIA_active_data/data_SUDSAQ/data/momo/
+
+individual:
+  individual_folders: True
+  path: /data/MLIA_active_data/data_SUDSAQ/MOMO/inputs/
+  output: /data/MLIA_active_data/data_SUDSAQ/data/momo/2hr_
+  regex: 2hr_*.nc
+  variables: [aero_nh4, aero_no3, aero_sul, ch2o, co, hno3, oh, pan, ps, q, so2, t, u, v]
+  rename:
+    aero_nh4:
+      var: aerosol
+      name: aerosol/nh4
+    aero_no3:
+      var: aerosol
+      name: aerosol/no3
+    aero_sul:
+      var: aerosol
+      name: aerosol/sul
+    t:
+      var: co
+      name: t

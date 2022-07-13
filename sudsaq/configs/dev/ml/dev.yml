@@ -1,0 +1,112 @@
+create-gb:
+  target: o3 - toar/o3/dma8epa/mean
+  train: [aerosol/sul, co]
+  train_performance: True
+  model:
+    kind: GradientBoostingRegressor
+    params:
+      loss: squared_error
+      learning_rate: 0.1
+      n_estimators: 200
+      max_depth: 3
+      random_state: 1
+  input:
+    sel:
+      time: 2012-07
+      lat: [10, 80]
+      lon: [220, 310]
+      vars: [aerosol/sul, o3, co, toar/o3/dma8epa/mean]
+    daily:
+      momo: [8, 16]
+      toar: 0
+    momo:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc
+    toar:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2012/07.nc
+
+create-optimize-gb:
+  target: o3 - toar/o3/dma8epa/mean
+  train: [aerosol/sul, co, mda8]
+  train_performance: True
+  model:
+    kind: GradientBoostingRegressor
+    params:
+      random_state: 1
+  hyperoptimize:
+    params:
+      loss: [squared_error, absolute_error]
+      learning_rate: [0.001, 0.01, 0.1]
+      n_estimators: [50, 100, 150, 200]
+      max_depth: [2, 3, 4]
+    kfold:
+      n_splits: 5
+      shuffle: True
+      random_state: 1
+    GridSearchCV:
+      scoring: neg_root_mean_squared_error
+      n_jobs: -1
+  input:
+    sel:
+      time: 2012-07
+      lat: [10, 80]
+      lon: [220, 310]
+      vars: [aerosol/sul, co, o3, mda8, toar/o3/dma8epa/mean]
+    daily:
+      mda8:
+        vars: [mda8]
+        time: 1
+      toar:
+        vars: [toar/o3/dma8epa/mean]
+        time: 0
+      momo:
+        vars: [aerosol/sul, o3, co]
+        time: [8, 16]
+    momo:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc
+    toar:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2012/07.nc
+  log:
+    file: /Users/jamesmo/projects/suds-air-quality/local/logs/create-optimize-gb.2.log
+
+create-optimize-rf:
+  target: o3 - toar/o3/dma8epa/mean
+  train: [aerosol/sul, co]
+  train_performance: True
+  model:
+    kind: RandomForestRegressor
+    params:
+      random_state: 1
+  hyperoptimize:
+    params:
+      criterion: [squared_error, absolute_error]
+      max_features: [sqrt, log2, null]
+      n_estimators: [50, 100, 150, 200]
+      max_depth: [2, 3, 4, null]
+    kfold:
+      n_splits: 5
+      shuffle: True
+      random_state: 1
+    GridSearchCV:
+      scoring: neg_root_mean_squared_error
+      n_jobs: -1
+  input:
+    sel:
+      time: 2012-07
+      lat: [10, 80]
+      lon: [220, 310]
+      vars: [aerosol/sul, o3, co, toar/o3/dma8epa/mean]
+    daily:
+      momo: [8, 16]
+      toar: 0
+    momo:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc
+    toar:
+      # regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/*[0-7]/*.nc
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2012/07.nc
+  log:
+    file: /Users/jamesmo/projects/suds-air-quality/local/logs/create-optimize-rf.1.log
