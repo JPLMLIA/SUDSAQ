@@ -144,19 +144,28 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
     [prediction, bias and feature_contributions], such that prediction ≈ bias +
     feature_contributions.
     """
+    # Use sklearn n_jobs: (processes=None == all cores)
+    # - all cores if -1,
+    # - 1 core if None ;
+    # - N cores if N > 1
+    n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
 
     if joint_contribution:
         biases        = []
         contributions = []
         predictions   = []
 
-        for tree in model.estimators_:
-            pred, bias, contribution = _predict_tree(tree, X, joint_contribution=joint_contribution)
+        with mp.Pool(processes=n_jobs) as pool:
+            bar     = tqdm(total=len(model.estimators_))
+            func    = partial(_predict_tree, X=X, joint_contribution=joint_contribution)
+            results = pool.imap_unordered(func, model.estimators_)
 
-            biases.append(bias)
-            contributions.append(contribution)
-            predictions.append(pred)
+            for i, (pred, bias, contribution) in enumerate(results):
+                predictions.append(pred)
+                biases.append(bias)
+                contributions.append(contribution)
 
+                bar.update()
 
         total_contributions = []
 
@@ -172,17 +181,12 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
             total_contributions[i]
             sm = sum([v for v in contribution[i].values()])
 
-
-
-        return (np.mean(predictions, axis=0), np.mean(biases, axis=0),
-            total_contributions)
+        return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
     else:
         mean_pred         = None
         mean_bias         = None
         mean_contribution = None
 
-        # Use sklearn n_jobs: all cores if -1, 1 core if None, N cores if N > 1; processes=None == all cores
-        n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
         with mp.Pool(processes=n_jobs) as pool:
             bar     = tqdm(total=len(model.estimators_))
             func    = partial(_predict_tree, X=X)
@@ -199,18 +203,6 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                     mean_pred         = _iterative_mean(i, mean_pred, pred)
 
                 bar.update()
-
-        # for i, tree in enumerate(model.estimators_):
-        #     pred, bias, contribution = _predict_tree(tree, X)
-        #
-        #     if i < 1: # first iteration
-        #         mean_bias = bias
-        #         mean_contribution = contribution
-        #         mean_pred = pred
-        #     else:
-        #         mean_bias = _iterative_mean(i, mean_bias, bias)
-        #         mean_contribution = _iterative_mean(i, mean_contribution, contribution)
-        #         mean_pred = _iterative_mean(i, mean_pred, pred)
 
         return mean_pred, mean_bias, mean_contribution
 
