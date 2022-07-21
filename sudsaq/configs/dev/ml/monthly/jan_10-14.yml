@@ -2,7 +2,7 @@
 create-rf:
   target: momo.o3 - toar.o3.dma8epa.mean
   train: momo.*
-  train_performance: False
+  train_performance: True
   model:
     kind: RandomForestRegressor
     params:
