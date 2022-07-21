@@ -22,4 +22,12 @@ import xarray as xr
 
 ds = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc')
 
-ds
+#%%
+
+from sudsaq.data import Dataset
+
+ds = Dataset(ds)
+
+#%%
+
+ds[r'(?:mda8).*']

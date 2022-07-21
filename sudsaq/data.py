@@ -148,6 +148,6 @@ class Dataset(xr.Dataset):
             if isinstance(key, str):
                 keys = [var for var in self.variables.keys() if re.fullmatch(key, var)]
                 if keys:
-                    print(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
+                    Logger.debug(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
                     return super().__getitem__(keys)
             raise e
