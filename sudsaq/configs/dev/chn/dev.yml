@@ -1,0 +1,22 @@
+default:
+  log:
+    level: info
+  processes: 8
+
+process:
+  input: /Volumes/MLIA_active_data/data_SUDSAQ/CHN/*_clear.nc
+  output:
+    by_month: True
+    path: /Volumes/MLIA_active_data/data_SUDSAQ/data/chn/raw/
+
+match:
+  metrics: [mean, std, count]
+  metric: o3
+  input:
+    chn:
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/chn/raw/**/*.nc
+    momo:
+      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/01.nc
+  output:
+    by_month: True
+    path: /Volumes/MLIA_active_data/data_SUDSAQ/data/chn/matched/

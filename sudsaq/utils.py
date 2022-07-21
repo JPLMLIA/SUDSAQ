@@ -1,11 +1,14 @@
 """
 """
 import logging
+import os
 import pickle
 import sys
+import xarray as xr
 
 from sudsaq.config import Config
 
+Logger = logging.getLogger('sudsaq/utils.py')
 
 def init(args):
     """
@@ -42,6 +45,9 @@ def init(args):
     handlers.append(sh)
 
     if config.log.file:
+        # Make sure the directory exists first
+        mkdir(config.log.file)
+
         # Add the file logging
         fh = logging.FileHandler(config.log.file)
         fh.setLevel(logging.DEBUG)
@@ -56,6 +62,28 @@ def init(args):
     )
 
     logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
+
+def save_netcdf(data, name, output):
+    """
+    Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
+
+    Parameters
+    ----------
+    data: xr.core.dataarray.DataArray or xr.core.dataarray.Dataset
+        An xarray object to be saved. If the object is not one of these types, the
+        function quietly returns
+    name: str
+        Name of the object for logging purposes
+    output: str
+        Path to output to
+    """
+    if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+        if 'loc' in data.dims:
+            Logger.warning(f'Saving {name} must be done unstacked')
+            data = data.unstack()
+
+        Logger.info(f'Saving {name} to {output}')
+        data.to_netcdf(output, engine='netcdf4')
 
 def save_pkl(file, data):
     """
@@ -89,10 +117,24 @@ def load_pkl(file):
 
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
-    Pretty prints an iterable in the form {key} = {value}
-    offset: int
+    Pretty prints an iterable in the form {key} = {value} such that the delimiter (=)
+    aligns on each line
+
+    Parameters
+    ----------
+    iterable: iterable
+        Any iterable with a .items() function
+    enum: bool, default = False
+        Whether to include enumeration of the items
+    delimiter, default = '='
+        The symbol to use between the key and the value
+    offset: int, default = 1
         Space between the key and the delimiter: {key}{offset}{delimiter}
         Defaults to 1, eg: "key ="
+    prepend: str, default = ''
+        Any string to prepend to each line
+    print: func, default = print
+        The print function to use. Allows using logging instead of Python's normal print
     """
     # Determine how much padding between the
     pad = max([1, len(max(iterable.keys(), key=len)) + offset])
@@ -105,3 +147,23 @@ def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print
 
     for i, (key, value) in enumerate(iterable.items()):
         print(fmt.format(i=i, key=key, value=value))
+
+def mkdir(path):
+    """
+    Attempts to create directories for a given path
+    """
+    # Make sure this is a directory path
+    path, _ = os.path.split(path)
+
+    # Split into parts to reconstruct
+    split = path.split('/')
+
+    # Now reconstruct the path one step at a time and ensure the directory exists
+    for i in range(2, len(split)+1):
+        dir = '/'.join(split[:i])
+        if not os.path.exists(dir):
+            try:
+                os.mkdir(dir, mode=0o771)
+            except Exception as e:
+                Logger.exception(f'Failed to create directory {dir}')
+                raise e

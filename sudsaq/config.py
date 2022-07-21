@@ -22,6 +22,8 @@ class Null:
         return False
 
     def __eq__(self, other):
+        if other is Null:
+            return True
         if type(other) in [type(None), type(self)]:
             return True
         return False
@@ -37,6 +39,9 @@ class Null:
 
     def __iter__(self):
         return iter(())
+
+    def __len__(self):
+        return 0
 
     def __repr__(self):
         return 'Null'
@@ -77,6 +82,9 @@ class Section:
 
     def __iter__(self):
         return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
 
     def __getattr__(self, key):
         if key in self.__dict__:
@@ -199,6 +207,9 @@ class Config():
 
     def __iter__(self):
         return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
 
     @classmethod
     def __setattr__(cls, key, value):

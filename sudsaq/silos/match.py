@@ -2,7 +2,6 @@
 """
 import logging
 import numpy  as np
-import os
 import pandas as pd
 import xarray as xr
 
@@ -10,6 +9,7 @@ from scipy import stats
 from tqdm  import tqdm
 
 from sudsaq.config import Config
+from sudsaq.data   import save_by_month
 
 Logger = logging.getLogger('sudsaq/silos/match.py')
 
@@ -90,17 +90,7 @@ def match(ds, df, tag):
 
     # Save output
     if config.output.by_month:
-        Logger.info('Saving output by month')
-        for year, yms in ms.groupby('time.year'):
-            Logger.info(f'{year}: ')
-            # Check if directory exists, otherwise create it
-            output = f'{config.output.path}/{year}'
-            if not os.path.exists(output):
-                os.mkdir(output, mode=0o771)
-
-            for month, mms in yms.groupby('time.month'):
-                Logger.info(f'- {month:02}')
-                mms.to_netcdf(f'{output}/{month:02}.nc', engine='scipy')
+        save_by_month(ms, config.output.path)
     else:
         Logger.info(f'Saving to output: {config.output}')
         ms.to_netcdf(config.output, engine='scipy')
