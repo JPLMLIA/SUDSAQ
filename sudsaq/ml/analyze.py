@@ -12,7 +12,6 @@ from sklearn.metrics    import (
     mean_squared_error,
     r2_score
 )
-from treeinterpreter import treeinterpreter as ti
 
 from sudsaq.config import (
     Config,
@@ -21,6 +20,7 @@ from sudsaq.config import (
 )
 from sudsaq.data  import load
 from sudsaq.ml    import plots
+from sudsaq.ml    import treeinterpreter as ti
 from sudsaq.utils import (
     align_print,
     load_pkl,
@@ -125,7 +125,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         bias          = xr.zeros_like(target)
         contributions = xr.zeros_like(data)
 
-        predicts, bias[:], contributions[:] = ti.predict(model, data)
+        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
         predict[:] = predicts.flatten()
     else:
         Logger.info('Predicting')

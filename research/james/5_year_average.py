@@ -28,3 +28,12 @@ ds.close()
 
 sum([45, 35, 25, 10]) * 2 + 5*4
 sum([45, 35, 25, 10, 5, 2.5]) * 2
+
+#%%
+import xarray as xr
+ds = xr.open_mfdataset('/data/MLIA_active_data/data_SUDSAQ/data/momo/201[0-4]/*.nc', parallel=True)
+ms = ds.mean('time')
+ms = ms.compute()
+ms.to_netcdf('/data/MLIA_active_data/data_SUDSAQ/data/momo/5_year_average.2010-2014.nc')
+
+#%%

@@ -1,5 +1,35 @@
+#%%
+%load_ext autoreload
+%autoreload 2
+%matplotlib inline
+#%%
+import numpy  as np
+import pandas as pd
+import xarray as xr
 
+from sklearn.inspection import permutation_importance
+from sklearn.metrics    import (
+    mean_absolute_percentage_error,
+    mean_squared_error,
+    r2_score
+)
+from treeinterpreter import treeinterpreter as ti
+from sudsaq.ml       import treeinterpreter as aqti
 
+from sudsaq.config import (
+    Config,
+    Section,
+    Null
+)
+from sudsaq.data  import load
+from sudsaq.ml    import plots
+from sudsaq.utils import (
+    align_print,
+    load_pkl,
+    mkdir,
+    save_pkl,
+    save_netcdf
+)
 
 #%%
 
@@ -29,5 +59,56 @@ from sudsaq.data import Dataset
 ds = Dataset(ds)
 
 #%%
+#%%
+#%%
 
-ds[r'(?:mda8).*']
+def _ti():
+    predict       = xr.zeros_like(target)
+    bias          = xr.zeros_like(target)
+    contributions = xr.zeros_like(data)
+
+    predicts, bias[:], contributions[:] = ti.predict(model, data)
+    predict[:] = predicts.flatten()
+
+    return predict, bias, contributions
+
+def _aq():
+    predict       = xr.zeros_like(target)
+    bias          = xr.zeros_like(target)
+    contributions = xr.zeros_like(data)
+
+    predicts, bias[:], contributions[:] = aqti.predict(model, data, n_jobs=-1)
+    predict[:] = predicts.flatten()
+
+    return predict, bias, contributions
+
+
+#%%
+from timeit import timeit
+
+timeit(_ti, number=1, globals={'target': target, 'data': data}) # 216.22187531400004
+timeit(_aq, number=1, globals={'target': target, 'data': data}) # 41.05707403399998
+
+
+#%%
+
+_p, _b, _c = _aq()
+p, b, c = _ti()
+
+#%%
+
+
+np.isclose(p, _p).all()
+np.isclose(b, _b).all()
+np.isclose(c, _c).all()
+
+#%%
+ p[-1].values
+_p[-1].values
+p[-1].values == _p[-1].values
+
+#%%
+_p[-1]
+p[-1]
+
+{**config.treeinterpreter}
