@@ -34,7 +34,7 @@ VARS = ['o3_average_values', 'o3_daytime_avg', 'o3_nighttime_avg', 'o3_median',
         'o3_avgdma8epax', 'o3_drmdmax1h', 'o3_w90', 'o3_aot40', 'o3_nvgt070',
         'o3_nvgt100']
         
-NUM_FEATURES = ['climatic_zone', 'lon', 'lat', 'alt',
+NUM_FEATURES = ['alt',
            'relative_alt', 'water_25km',
            'evergreen_needleleaf_forest_25km', 'evergreen_broadleaf_forest_25km',
            'deciduous_needleleaf_forest_25km', 'deciduous_broadleaf_forest_25km',
@@ -48,7 +48,7 @@ NUM_FEATURES = ['climatic_zone', 'lon', 'lat', 'alt',
            'nightlight_1km', 'nightlight_5km', 'max_nightlight_25km']
 
 CAT_FEATURES = ['climatic_zone', 'type', 'type_of_area']
-OTHER = ['id', 'country', 'htap_region', 'dataset']
+OTHER = ['id', 'country', 'htap_region', 'dataset', 'lon', 'lat']
 
 
 data = pd.read_csv(output_file)
@@ -68,6 +68,7 @@ x = np.column_stack([x_cat, np.array(data[NUM_FEATURES])])
 x = np.array(x)
 
 #kfold = GroupKFold(n_splits=len(data_files))
+pred_y = np.zeros((len(y), ))
 kfold = KFold(n_splits=5, shuffle=True, random_state=1234)
 for train_index, test_index in kfold.split(x):
     train_x, test_x = x[train_index], x[test_index]
@@ -78,21 +79,19 @@ for train_index, test_index in kfold.split(x):
     rf_predictor.fit(train_x[train_mask],
                      train_y[train_mask])
 
-    out_model = os.path.join(models_month_dir,
-                             'rf_%s_cv%d.joblib' % (model_mode, cv_index))
-    dump(rf_predictor, out_model)
-    print(f'[INFO] Saved trained model: {out_model}')
-
-    pred_y, bias, contribution = ti.predict(rf_predictor, test_x)
-    pred_y = pred_y.flatten()
+    pred_y[test_idx] = rf_predictor.predict(test_x)
 
 
- kfold = KFold(n_splits=5, shuffle=True, random_state=1234)
+#figure out root mean squared error between y and pred_y
+#plot y vs pred_y, regression y on pred_y and find the coefficient
+#look up any other diagnostic plots on sklearn
 
-rf_predictor = RandomForestRegressor()
 
-rf_predictor.fit(train_x, train_y)
-    preds_y = rf_predictor.predict(train_x)
+
+
+
+
+
 
 
 
