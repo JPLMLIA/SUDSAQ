@@ -80,6 +80,9 @@ def daily(ds, config):
     # Merge the selections together
     ds = xr.merge(data)
 
+    # Cast back to custom Dataset (xr.merge creates new)
+    ds = Dataset(ds)
+
     return ds
 
 def load(config, split=False):
