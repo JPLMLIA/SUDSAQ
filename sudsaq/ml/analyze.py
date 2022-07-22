@@ -51,7 +51,7 @@ def perm_importance(model, data, target, output=None):
 
     Logger.info('Permutation importance +/- stddev:')
     strings = align_print(fmt, enum=True, print=Logger.info)
-    if config.output.scores:
+    if output:
         with open(output, 'a') as file:
             file.write('Permutation importance +/- stddev:\n')
             file.write('\n'.join(strings))
@@ -76,7 +76,7 @@ def importance(model, variables, output=None):
 
     Logger.info('Feature importance +/- stddev:')
     strings = align_print(fmt, enum=True, print=Logger.info)
-    if config.output.scores:
+    if output:
         with open(output, 'w') as file:
             file.write('Feature importance +/- stddev:\n')
             file.write('\n'.join(strings))
@@ -146,7 +146,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         'mape'  : mean_absolute_percentage_error(target, predict),
         'rmse'  : mean_squared_error(target, predict, squared=False),
         'r2'    : r2_score(target, predict),
-        'r corr': pearsonr(target, preds)[0]
+        'r corr': pearsonr(target, predict)[0]
     })
 
     # Log the scores
