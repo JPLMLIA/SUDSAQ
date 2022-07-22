@@ -23,7 +23,7 @@ sections=(
 
 for section in ${sections[@]}; do
   echo "Running $section"
-  python ml/create.py -c $config -s $section
+  nice -n 19 python ml/create.py -c $config -s $section
 done
 
 echo "Done"
