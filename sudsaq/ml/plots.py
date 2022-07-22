@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas            as pd
 import seaborn           as sns
 
+from scipy import stats
+
 from sudsaq.config import Config
 
 # Set seaborn styles
@@ -86,7 +88,7 @@ def compare_target_predict(target, predict, title=None, save=None):
         Logger.info(f'Saving compare_target_predict plot to {save}')
         plt.savefig(save)
 
-def truth_vs_predicted(target, predict, save=None):
+def old_truth_vs_predicted(target, predict, save=None):
     """
     """
     def scatter(ax):
@@ -129,6 +131,46 @@ def truth_vs_predicted(target, predict, save=None):
     scatter(plt.subplot(121))
     density(plt.subplot(122))
 
+    if save:
+        Logger.info(f'Saving truth_vs_predicted plot to {save}')
+        plt.savefig(save)
+
+def truth_vs_predicted(target, predict, label=None, save=None):
+    """
+    """
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    # Retrieve the limits and expand them by 5% so everything fits into a square grid
+    limits = min([target.min(), predict.min()]), max([target.max(), predict.max()])
+    limits = limits[0] - np.abs(limits[0] * .05), limits[1] + np.abs(limits[1] * .05)
+    ax.set_ylim(limits)
+    ax.set_xlim(limits)
+
+    # Create the horizontal line for reference
+    ax.plot((limits[0], limits[1]), (limits[0], limits[1]), '--', color='r')
+
+    # Create the density values
+    kernel  = stats.gaussian_kde([target, predict])
+    density = kernel([target, predict])
+
+    plot = ax.scatter(target, predict, c=density, cmap='viridis', label=label, s=5)
+
+    # Create the colorbar without ticks
+    cbar = fig.colorbar(plot, ax=ax)
+    cbar.set_ticks([])
+
+    # Set labels
+    cbar.set_label('Density')
+    ax.set_xlabel('Truth')
+    ax.set_ylabel('Predicted')
+    ax.set_title('Truth vs Predicted')
+
+    if label:
+        legend = ax.legend(handlelength=0, handletextpad=0, loc='upper left', prop={'family': 'monospace'})
+        legend.legendHandles[0].set_visible(False)
+
+    plt.axis('equal')
+    plt.tight_layout()
     if save:
         Logger.info(f'Saving truth_vs_predicted plot to {save}')
         plt.savefig(save)

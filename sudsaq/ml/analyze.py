@@ -6,6 +6,7 @@ import numpy  as np
 import pandas as pd
 import xarray as xr
 
+from scipy.stats        import pearsonr
 from sklearn.inspection import permutation_importance
 from sklearn.metrics    import (
     mean_absolute_percentage_error,
@@ -49,12 +50,11 @@ def perm_importance(model, data, target, output=None):
         fmt[var] = f'{vals.importance} +/- {vals.stddev}'
 
     Logger.info('Permutation importance +/- stddev:')
-    if output:
+    strings = align_print(fmt, enum=True, print=Logger.info)
+    if config.output.scores:
         with open(output, 'a') as file:
-            file.write('\nPermutation importance +/- stddev:\n')
-            align_print(fmt, enum=True, print=[Logger.info, file.write])
-    else:
-        align_print(fmt, enum=True, print=Logger.info)
+            file.write('Permutation importance +/- stddev:\n')
+            file.write('\n'.join(strings))
 
     return df
 
@@ -75,13 +75,11 @@ def importance(model, variables, output=None):
         fmt[var] = f'{vals.importance} +/- {vals.stddev}'
 
     Logger.info('Feature importance +/- stddev:')
-    if output:
+    strings = align_print(fmt, enum=True, print=Logger.info)
+    if config.output.scores:
         with open(output, 'w') as file:
             file.write('Feature importance +/- stddev:\n')
-            align_print(fmt, enum=True, print=[Logger.info, file.write])
-    else:
-        align_print(fmt, enum=True, print=Logger.info)
-
+            file.write('\n'.join(strings))
 
     return df
 
@@ -145,18 +143,19 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
 
     Logger.info('Calculating scores')
     stats = Section('scores', {
-        'mape': mean_absolute_percentage_error(target, predict),
-        'rmse': mean_squared_error(target, predict, squared=False),
-        'r2'  : r2_score(target, predict),
+        'mape'  : mean_absolute_percentage_error(target, predict),
+        'rmse'  : mean_squared_error(target, predict, squared=False),
+        'r2'    : r2_score(target, predict),
+        'r corr': pearsonr(target, preds)[0]
     })
 
     # Log the scores
+    scores = align_print(stats, enum=False, prepend='  ', print=Logger.info)
     if config.output.scores:
+        Logger.info(f'Saving scores to {output}/{kind}.scores.txt')
         with open(f'{output}/{kind}.scores.txt', 'w') as file:
             file.write('Scores:\n')
-            align_print(stats, enum=False, prepend='  ', print=[Logger.info, file.write])
-    else:
-        align_print(stats, enum=False, prepend='  ', print=Logger.info)
+            file.write('\n'.join(scores))
 
     # Attach additional objects
     stats.predict = predict
@@ -165,6 +164,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
     impout = None
     if config.output.importance:
         impout = f'{output}/{kind}.importance.txt'
+        Logger.info(f'Saving importances to {impout}')
     if 'Forest' in str(model):
         stats.imports = importance(model, data['variable'], output=impout)
     if config.permutation_importance:
@@ -188,7 +188,8 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         plots.truth_vs_predicted(
             target.dropna('loc'),
             predict.dropna('loc'),
-            save = f'{output}/{kind}.truth_vs_predicted.png'
+            label = '\n'.join([score[:15] for score in scores]),
+            save  =  f'{output}/{kind}.truth_vs_predicted.png'
         )
 
     # Save objects as requested

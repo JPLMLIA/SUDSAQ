@@ -7,6 +7,10 @@ import numpy  as np
 import pandas as pd
 import xarray as xr
 
+from scipy.stats import (
+    gaussian_kde,
+    pearsonr
+)
 from sklearn.inspection import permutation_importance
 from sklearn.metrics    import (
     mean_absolute_percentage_error,
@@ -21,7 +25,7 @@ from sudsaq.config import (
     Section,
     Null
 )
-from sudsaq.data  import load
+from sudsaq.data  import load, Dataset
 from sudsaq.ml    import plots
 from sudsaq.utils import (
     align_print,
@@ -31,32 +35,33 @@ from sudsaq.utils import (
     save_netcdf
 )
 
+import cartopy.crs       as ccrs
+import matplotlib.pyplot as plt
+import pandas            as pd
+import seaborn           as sns
+
+from sudsaq.config import Config
+
+# Set seaborn styles
+sns.set_style('darkgrid')
+sns.set_context('talk')
+
 #%%
-
-model  = load_pkl('local/runs/1.create-rf/fold_0/model.pkl')
-data   = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.data.nc')
-target = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.target.nc')
-
 config = Config('sudsaq/configs/dev/ml/dev.yml', 'create-rf')
+model  = load_pkl('local/runs/1.create-rf/fold_0/model.pkl')
 
-data = data.stack(loc=['lat', 'lon', 'time'])
-data = data.transpose('loc', 'variable')
-data = data.dropna('loc')
+data   = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.data.nc')
+data   = data.stack(loc=['lat', 'lon', 'time'])
+data   = data.transpose('loc', 'variable')
+data   = data.dropna('loc')
 
+target = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.target.nc')
 target = target.stack(loc=['lat', 'lon', 'time'])
 target = target.dropna('loc')
 
-#%%
-
-import xarray as xr
-
-ds = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2012/07.nc')
-
-#%%
-
-from sudsaq.data import Dataset
-
-ds = Dataset(ds)
+predict = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.predict.nc')
+predict = predict.stack(loc=['lat', 'lon', 'time'])
+predict = predict.dropna('loc')
 
 #%%
 #%%
@@ -89,28 +94,12 @@ from timeit import timeit
 timeit(_ti, number=1, globals={'target': target, 'data': data}) # 216.22187531400004
 timeit(_aq, number=1, globals={'target': target, 'data': data}) # 41.05707403399998
 
-
 #%%
 
-_p, _b, _c = _aq()
-p, b, c = _ti()
-
-#%%
-
-
-np.isclose(p, _p).all()
-np.isclose(b, _b).all()
-np.isclose(c, _c).all()
-
-#%%
- p[-1].values
-_p[-1].values
-p[-1].values == _p[-1].values
-
-#%%
-_p[-1]
-p[-1]
-
-{**config.treeinterpreter}
-
-2**16
+stats = Section('scores', {
+    'mape'  : mean_absolute_percentage_error(target, predict),
+    'rmse'  : mean_squared_error(target, predict, squared=False),
+    'r2'    : r2_score(target, predict),
+    'r corr': pearsonr(target, predict)[0]
+})
+scores = align_print(stats)

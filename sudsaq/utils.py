@@ -133,9 +133,8 @@ def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print
         Defaults to 1, eg: "key ="
     prepend: str, default = ''
         Any string to prepend to each line
-    print: func or list of func, default = print
-        The print function to use. Allows using logging instead of Python's normal print
-        May be a list of functions to use, such as [logger.info, file.write]
+    print: func, default = print
+        The print function to use. Allows using custom function instead of Python's normal print
     """
     # Determine how much padding between the key and delimiter
     pad = max([1, len(max(iterable.keys(), key=len))]) + offset
@@ -146,22 +145,16 @@ def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print
         fmt += '- {i:' + f'{len(str(len(iterable)))}' + '}: '
     fmt += '{key:'+ str(pad) + '}' + delimiter + ' {value}'
 
+    # Create the formatted list
+    fmt_list = []
     for i, (key, value) in enumerate(iterable.items()):
         string = fmt.format(i=i, key=key, value=value)
+        fmt_list.append(string)
 
-        if isinstance(print, (list, tuple)):
-            for func in print:
-                # If this is writing to file, append \n
-                if func.__name__ == 'write':
-                    func(string + '\n')
-                else:
-                    func(string)
-        else:
-            # If this is writing to file, append \n
-            if print.__name__ == 'write':
-                print(string + '\n')
-            else:
-                print(string)
+    for string in fmt_list:
+        print(string)
+
+    return fmt_list
 
 def mkdir(path):
     """
