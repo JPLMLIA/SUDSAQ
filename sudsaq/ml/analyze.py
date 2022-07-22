@@ -163,8 +163,8 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
 
     # Feature importances
     impout = None
-    if config.output.importances:
-        impout = f'{output}/{kind}.importances.txt'
+    if config.output.importance:
+        impout = f'{output}/{kind}.importance.txt'
     if 'Forest' in str(model):
         stats.imports = importance(model, data['variable'], output=impout)
     if config.permutation_importance:
