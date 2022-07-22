@@ -158,10 +158,10 @@ def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print
                     func(string)
         else:
             # If this is writing to file, append \n
-            if func.__name__ == 'write':
-                func(string + '\n')
+            if print.__name__ == 'write':
+                print(string + '\n')
             else:
-                func(string)
+                print(string)
 
 def mkdir(path):
     """
