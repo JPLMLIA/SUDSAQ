@@ -31,7 +31,7 @@ from sudsaq.utils import (
 
 Logger = logging.getLogger('sudsaq/ml/analyze.py')
 
-def perm_importance(model, data, target):
+def perm_importance(model, data, target, output=None):
     """
     """
     config = Config()
@@ -49,11 +49,16 @@ def perm_importance(model, data, target):
         fmt[var] = f'{vals.importance} +/- {vals.stddev}'
 
     Logger.info('Permutation importance +/- stddev:')
-    align_print(fmt, enum=True, print=Logger.info)
+    if output:
+        with open(output, 'a') as file:
+            file.write('\nPermutation importance +/- stddev:\n')
+            align_print(fmt, enum=True, print=[Logger.info, file.write])
+    else:
+        align_print(fmt, enum=True, print=Logger.info)
 
     return df
 
-def importance(model, variables):
+def importance(model, variables, output=None):
     """
     Retrieves and formats the importances from a RandomForest model
     """
@@ -70,7 +75,13 @@ def importance(model, variables):
         fmt[var] = f'{vals.importance} +/- {vals.stddev}'
 
     Logger.info('Feature importance +/- stddev:')
-    align_print(fmt, enum=True, print=Logger.info)
+    if output:
+        with open(output, 'w') as file:
+            file.write('Feature importance +/- stddev:\n')
+            align_print(fmt, enum=True, print=[Logger.info, file.write])
+    else:
+        align_print(fmt, enum=True, print=Logger.info)
+
 
     return df
 
@@ -116,7 +127,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
 
     # Load data if not provided
     if data is None:
-        data, target = load(config, split=True)
+        data, target = load(config, split=True, lazy=False)
 
     bias, contributions = None, None
     if 'Forest' in str(model):
@@ -140,14 +151,24 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
     })
 
     # Log the scores
-    align_print(stats, enum=False, prepend='  ', print=Logger.info)
+    if config.output.scores:
+        with open(f'{output}/{kind}.scores.txt', 'w') as file:
+            file.write('Scores:\n')
+            align_print(stats, enum=False, prepend='  ', print=[Logger.info, file.write])
+    else:
+        align_print(stats, enum=False, prepend='  ', print=Logger.info)
 
     # Attach additional objects
     stats.predict = predict
+
+    # Feature importances
+    impout = None
+    if config.output.importances:
+        impout = f'{output}/{kind}.importances.txt'
     if 'Forest' in str(model):
-        stats.imports = importance(model, data['variable'])
+        stats.imports = importance(model, data['variable'], output=impout)
     if config.permutation_importance:
-        stats.permports = perm_importance(model, data, target)
+        stats.permports = perm_importance(model, data, target, output=impout)
 
     # Create plots if enabled
     if config.output.plots:

@@ -65,7 +65,7 @@ def create():
     """
     # Load config and data
     config       = Config()
-    data, target = load(config, split=True)
+    data, target = load(config, split=True, lazy=False)
 
     if config.model.kind in dir(models):
         Logger.info(f'Selecting {config.model.kind} as model')

@@ -28,7 +28,7 @@ def save_by_month(ds, path):
             Logger.info(f'- {month:02}')
             mds.to_netcdf(f'{output}/{month:02}.nc', engine='netcdf4')
 
-def split_and_stack(ds, config):
+def split_and_stack(ds, config, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
     """
@@ -59,6 +59,11 @@ def split_and_stack(ds, config):
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
 
+    if not lazy:
+        Logger.info('Loading data into memory')
+        data.load()
+        target.load()
+
     return data, target
 
 def daily(ds, config):
@@ -85,7 +90,7 @@ def daily(ds, config):
 
     return ds
 
-def load(config, split=False):
+def load(config, split=False, lazy=True):
     """
     """
     Logger.info('Collecting files')
@@ -125,13 +130,14 @@ def load(config, split=False):
         Logger.info('Aligning to a daily average')
         ds = daily(ds, config)
 
-    Logger.info('Loading data into memory')
-    ds.load()
-
     # Hardcoded by script
     if split:
         Logger.debug('Performing split and stack')
-        return split_and_stack(ds, config)
+        return split_and_stack(ds, config, lazy)
+
+    if not lazy:
+        Logger.info('Loading data into memory')
+        ds.load()
 
     Logger.debug('Returning dataset')
     return ds
