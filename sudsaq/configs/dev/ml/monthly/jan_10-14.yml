@@ -23,6 +23,9 @@ create-rf:
     contributions: True
     inputs       : True
     plots        : True
+  plots:
+    importances:
+      count: 20
   input:
     sel:
       # lat: [10, 80]   # America

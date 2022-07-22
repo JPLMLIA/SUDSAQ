@@ -125,7 +125,7 @@ def load(config, split=False):
         Logger.info('Aligning to a daily average')
         ds = daily(ds, config)
 
-    # Logger.info('Loading data into memory')
+    Logger.info('Loading data into memory')
     ds.load()
 
     # Hardcoded by script
