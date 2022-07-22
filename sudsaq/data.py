@@ -126,7 +126,7 @@ def load(config, split=False):
         ds = daily(ds, config)
 
     # Logger.info('Loading data into memory')
-    # ds.load()
+    ds.load()
 
     # Hardcoded by script
     if split:

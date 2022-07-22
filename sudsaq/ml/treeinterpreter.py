@@ -145,8 +145,8 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
     feature_contributions.
     """
     # Use sklearn n_jobs: (processes=None == all cores)
-    # - all cores if -1,
-    # - 1 core if None ;
+    # - all cores if -1
+    # - 1 core if None
     # - N cores if N > 1
     n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
 
