@@ -122,7 +122,7 @@ def create():
             Logger.debug(f'fold_{fold}: Train years = {set(input.target.train.time.dt.year.values)}')
             Logger.debug(f'fold_{fold}:  Test years = {set(input.target.test.time.dt.year.values)}')
 
-            Logger.debug(f'fold_{fold} Is Finite'
+            Logger.debug(f'fold_{fold} Is Finite')
             Logger.debug('Data   :')
             Logger.debug(f' train: {np.isfinite(input.data.train).all().values}')
             Logger.debug(f'  test: {np.isfinite(input.data.test).all().values}')
@@ -130,7 +130,7 @@ def create():
             Logger.debug(f' train: {np.isfinite(input.target.train).all().values}')
             Logger.debug(f'  test: {np.isfinite(input.target.test).all().values}')
 
-            Logger.debug(f'fold_{fold} Has NaN'
+            Logger.debug(f'fold_{fold} Has NaN')
             Logger.debug('Data   :')
             Logger.debug(f' train: {np.isnan(input.data.train).any().values}')
             Logger.debug(f'  test: {np.isnan(input.data.test).any().values}')
