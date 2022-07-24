@@ -2,7 +2,7 @@
 %load_ext autoreload
 %autoreload 2
 %matplotlib inline
-#%%
+#%
 import numpy  as np
 import pandas as pd
 import xarray as xr
@@ -47,7 +47,7 @@ sns.set_style('darkgrid')
 sns.set_context('talk')
 
 #%%
-config = Config('sudsaq/configs/dev/ml/dev.yml', 'create-rf')
+config = Config('sudsaq/configs/dev/ml/dev.yml', 'jan')
 model  = load_pkl('local/runs/1.create-rf/fold_0/model.pkl')
 
 data   = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.data.nc')
@@ -62,6 +62,15 @@ target = target.dropna('loc')
 predict = xr.open_dataarray('local/runs/1.create-rf/fold_0/test.predict.nc')
 predict = predict.stack(loc=['lat', 'lon', 'time'])
 predict = predict.dropna('loc')
+#%%
+
+tdata = xr.open_dataarray('local/runs/1.create-rf/fold_0/train.data.nc')
+ttarg = xr.open_dataarray('local/runs/1.create-rf/fold_0/train.target.nc')
+
+set(tdata.time.dt.year.values)
+set(ttarg.time.dt.year.values)
+
+
 
 #%%
 #%%
@@ -102,4 +111,68 @@ stats = Section('scores', {
     'r2'    : r2_score(target, predict),
     'r corr': pearsonr(target, predict)[0]
 })
-scores = align_print(stats)
+scores = align_print(stats, enum=False, prepend='  ')
+
+#%%
+
+config.reset('feb')
+
+data, target = load(config, split=True)
+
+#%%
+data.load().dropna('loc')
+target.load().dropna('loc')
+
+#%%
+from sklearn.model_selection import (
+    GridSearchCV,
+    GroupKFold,
+    KFold
+)
+
+kfold  = GroupKFold(n_splits=len(set(data.time.dt.year.values)))
+groups = target.time.dt.year.values
+
+for fold, (train, test) in enumerate(kfold.split(data, target, groups=groups)):
+    input = Section('', {
+        'data': {
+            'train': data.isel(loc=train),
+            'test' : data.isel(loc=test)
+        },
+        'target': {
+            'train': target.isel(loc=train),
+            'test' : target.isel(loc=test)
+        }
+    })
+    d = input.data
+    t = input.target
+
+    print(f'fold_{fold} Is Finite ------------------------')
+    print('Data   :')
+    print(f' train: {np.isfinite(d.train).all().values}')
+    print(f'  test: {np.isfinite(d.test).all().values}')
+    print('Target :')
+    print(f' train: {np.isfinite(t.train).all().values}')
+    print(f'  test: {np.isfinite(t.test).all().values}')
+
+    print(f'fold_{fold} Has NaN ------------------------')
+    print('Data   :')
+    print(f' train: {np.isnan(d.train).any().values}')
+    print(f'  test: {np.isnan(d.test).any().values}')
+    print('Target :')
+    print(f' train: {np.isnan(t.train).any().values}')
+    print(f'  test: {np.isnan(t.test).any().values}')
+
+
+
+#%%
+
+d.test.apply(np.isfinite)
+
+print('Data   :')
+print(f' train: {np.isnan(d.train).any().values}')
+print(f'  test: {np.isnan(d.test).any().values}')
+
+print('Target :')
+print(f' train: {np.isnan(t.train).any().values}')
+print(f'  test: {np.isnan(t.test).any().values}')

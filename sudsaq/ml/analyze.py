@@ -188,7 +188,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         plots.truth_vs_predicted(
             target.dropna('loc'),
             predict.dropna('loc'),
-            label = '\n'.join([score[:15] for score in scores]),
+            label = '\n'.join([score.lstrip()[:15] for score in scores]),
             save  =  f'{output}/{kind}.truth_vs_predicted.png'
         )
 

@@ -2,6 +2,7 @@
 """
 import argparse
 import logging
+import numpy  as np
 import xarray as xr
 
 from sklearn                 import ensemble as models
@@ -84,7 +85,7 @@ def create():
     elif config.GroupKFold:
         Logger.debug('Using GroupKFold')
         kfold  = GroupKFold(n_splits=len(set(data.time.dt.year.values)))
-        groups = data.time.dt.year.values
+        groups = target.time.dt.year.values
 
     if config.hyperoptimize:
         Logger.info('Performing hyperparameter optimization')
@@ -118,6 +119,25 @@ def create():
                     'test' : target.isel(loc=test)
                 }
             })
+            Logger.debug(f'fold_{fold}: Train years = {set(input.target.train.time.dt.year.values)}')
+            Logger.debug(f'fold_{fold}:  Test years = {set(input.target.test.time.dt.year.values)}')
+
+            Logger.debug(f'fold_{fold} Is Finite'
+            Logger.debug('Data   :')
+            Logger.debug(f' train: {np.isfinite(input.data.train).all().values}')
+            Logger.debug(f'  test: {np.isfinite(input.data.test).all().values}')
+            Logger.debug('Target :')
+            Logger.debug(f' train: {np.isfinite(input.target.train).all().values}')
+            Logger.debug(f'  test: {np.isfinite(input.target.test).all().values}')
+
+            Logger.debug(f'fold_{fold} Has NaN'
+            Logger.debug('Data   :')
+            Logger.debug(f' train: {np.isnan(input.data.train).any().values}')
+            Logger.debug(f'  test: {np.isnan(input.data.test).any().values}')
+            Logger.debug('Target :')
+            Logger.debug(f' train: {np.isnan(input.target.train).any().values}')
+            Logger.debug(f'  test: {np.isnan(input.target.test).any().values}')
+
             # Recreate the model each fold
             fit(model(), input.data, input.target, i=fold)
     else:
