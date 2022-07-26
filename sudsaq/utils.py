@@ -80,7 +80,10 @@ def save_netcdf(data, name, output):
     if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
         if 'loc' in data.dims:
             Logger.warning(f'Saving {name} must be done unstacked')
-            data = data.unstack()
+            data = data.unstack().sortby('lon')
+
+        if not data.name:
+            data.name = name
 
         Logger.info(f'Saving {name} to {output}')
         data.to_netcdf(output, engine='netcdf4')

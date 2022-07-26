@@ -42,132 +42,132 @@ default:
 
 jan:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jan/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jan/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/01.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/01.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jan/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jan/rf/run.log
 
 feb:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/feb/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/feb/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/02.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/02.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/feb/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/feb/rf/run.log
 
 mar:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/mar/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/mar/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/03.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/03.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/mar/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/mar/rf/run.log
 
 apr:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/apr/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/apr/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/04.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/04.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/apr/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/apr/rf/run.log
 
 may:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/may/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/may/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/05.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/05.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/may/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/may/rf/run.log
 
 jun:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jun/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jun/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/06.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/06.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jun/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jun/rf/run.log
 
 jul:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jul/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jul/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/07.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/07.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/jul/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/jul/rf/run.log
 
 aug:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/aug/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/aug/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/08.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/08.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/aug/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/aug/rf/run.log
 
 sep:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/sep/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/sep/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/09.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/09.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/sep/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/sep/rf/run.log
 
 oct:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/oct/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/oct/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/10.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/10.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/oct/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/oct/rf/run.log
 
 nov:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/nov/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/nov/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/11.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/11.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/nov/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/nov/rf/run.log
 
 dec:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/dec/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/dec/rf/
   input:
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/12.nc
     toar:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/12.nc
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/runs/11-14/toar/dec/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2014/toar/dec/rf/run.log
