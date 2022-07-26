@@ -45,7 +45,7 @@ def fit(model, data, target, i=None, test=True):
     # Create a subdirectory if kfold
     output = config.output.path
     if test:
-        year = set(target.test.time.dt.year.values)[0]
+        year = set(target.test.time.dt.year.values).pop()
         Logger.info(f'Training year: {year}')
         if output:
             output = f'{output}/{year}/'
