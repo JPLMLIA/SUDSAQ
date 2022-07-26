@@ -44,10 +44,11 @@ def fit(model, data, target, i=None, test=True):
 
     # Create a subdirectory if kfold
     output = config.output.path
-    if i is not None:
-        Logger.info(f'Iteration: {i}')
+    if test:
+        year = set(target.test.time.dt.year.values)[0]
+        Logger.info(f'Training year: {year}')
         if output:
-            output = f'{output}/fold_{i}/'
+            output = f'{output}/{year}/'
 
     Logger.info('Training model')
     model.fit(data.train, target.train)
