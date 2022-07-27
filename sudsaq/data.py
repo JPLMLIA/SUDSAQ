@@ -45,6 +45,9 @@ def split_and_stack(ds, config, lazy=True):
 
     Logger.info(f'Creating the stacked training and target objects')
 
+    # Save the lat/lon dimensions before dropping na for easy reconstruction later
+    config._reindex = ds[['lat', 'lon']]
+
     # Create the stacked data
     data = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
     data = data.transpose('loc', 'variable')

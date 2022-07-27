@@ -53,8 +53,9 @@ def perm_importance(model, data, target, output=None):
     strings = align_print(fmt, enum=True, print=Logger.info)
     if output:
         with open(output, 'a') as file:
-            file.write('Permutation importance +/- stddev:\n')
+            file.write('\n\nPermutation importance +/- stddev:\n')
             file.write('\n'.join(strings))
+        df.to_hdf(output.replace('.txt', '.h5'), 'permutation')
 
     return df
 
@@ -80,6 +81,7 @@ def importance(model, variables, output=None):
         with open(output, 'w') as file:
             file.write('Feature importance +/- stddev:\n')
             file.write('\n'.join(strings))
+        df.to_hdf(output.replace('.txt', '.h5'), 'model')
 
     return df
 
@@ -182,8 +184,9 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         plots.compare_target_predict(
             target.unstack().mean('time').sortby('lon'),
             predict.unstack().mean('time').sortby('lon'),
-            title = f'{kind.capitalize()} Set Performance',
-            save  = f'{output}/{kind}.compare_target_predict.png'
+            reindex = config._reindex,
+            title   = f'{kind.capitalize()} Set Performance',
+            save    = f'{output}/{kind}.compare_target_predict.png'
         )
         plots.truth_vs_predicted(
             target.dropna('loc'),
@@ -198,16 +201,16 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         save_pkl(f'{output}/model.pkl', model)
 
     if config.output.predict:
-        save_netcdf(predict, 'predict', f'{output}/{kind}.predict.nc')
+        save_netcdf(predict, 'predict', f'{output}/{kind}.predict.nc', reindex=config._reindex)
 
     if config.output.bias:
-        save_netcdf(bias, 'bias', f'{output}/{kind}.bias.nc')
+        save_netcdf(bias, 'bias', f'{output}/{kind}.bias.nc', reindex=config._reindex)
 
     if config.output.contributions:
-        save_netcdf(contributions, 'contributions', f'{output}/{kind}.contributions.nc')
+        save_netcdf(contributions, 'contributions', f'{output}/{kind}.contributions.nc', reindex=config._reindex)
 
     if config.output.inputs:
-        save_netcdf(data  , 'data'  , f'{output}/{kind}.data.nc')
-        save_netcdf(target, 'target', f'{output}/{kind}.target.nc')
+        save_netcdf(data  , 'data'  , f'{output}/{kind}.data.nc'  , reindex=config._reindex, dataset=True)
+        save_netcdf(target, 'target', f'{output}/{kind}.target.nc', reindex=config._reindex)
 
     return stats

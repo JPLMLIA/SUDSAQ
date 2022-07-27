@@ -21,7 +21,7 @@ logging.getLogger('fiona').setLevel(logging.WARNING)
 
 Logger = logging.getLogger('sudsaq/ml/plots.py')
 
-def compare_target_predict(target, predict, title=None, save=None):
+def compare_target_predict(target, predict, reindex=None, title=None, save=None):
     """
     """
     def draw(data, ax, title, vmax=None, vmin=None):
@@ -40,6 +40,10 @@ def compare_target_predict(target, predict, title=None, save=None):
     fig = plt.figure(figsize=(10*3, 6*2))
     if title:
         fig.suptitle(title, fontsize=44)
+
+    if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+        target  = target.reindex_like(reindex).sortby('lon')
+        predict = predict.reindex_like(reindex).sortby('lon')
 
     # Target
     draw(

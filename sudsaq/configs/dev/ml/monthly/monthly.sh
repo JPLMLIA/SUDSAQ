@@ -5,8 +5,10 @@ conda activate sudsaq
 
 cd ~/suds-air-quality/sudsaq/
 
-# config="configs/dev/ml/monthly/bias.11-14.yml"
-config="configs/dev/ml/monthly/toar.11-14.yml"
+configs=(
+  "configs/dev/ml/monthly/bias.11-15.yml"
+  "configs/dev/ml/monthly/toar.11-15.yml"
+)
 sections=(
   "jan"
   "feb"
@@ -22,9 +24,12 @@ sections=(
   "dec"
 )
 
-for section in ${sections[@]}; do
-  echo "Running $section"
-  nice -n 19 python ml/create.py -c $config -s $section
+for config in ${configs[@]}; do
+  echo "Running config: $config"
+  for section in ${sections[@]}; do
+    echo "Running section: $section"
+    nice -n 19 python ml/create.py -c $config -s $section
+  done
 done
 
 echo "Done"

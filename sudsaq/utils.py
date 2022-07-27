@@ -63,7 +63,7 @@ def init(args):
 
     logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
 
-def save_netcdf(data, name, output):
+def save_netcdf(data, name, output, dataset=False, reindex=None):
     """
     Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
 
@@ -76,14 +76,30 @@ def save_netcdf(data, name, output):
         Name of the object for logging purposes
     output: str
         Path to output to
+    dataset: bool, default = False
+        If this should be unstacked to a Dataset object instead of a DataArray
+    reindex: Dataset or DataArray, default = None
+        If provided, reindexes the data object with the given object
+        This is primarily used to expand dimensions back to the MOMO grid after having
+        shrunk from dropna
     """
     if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
         if 'loc' in data.dims:
             Logger.warning(f'Saving {name} must be done unstacked')
-            data = data.unstack().sortby('lon')
+            data = data.unstack()
 
-        if not data.name:
-            data.name = name
+            # Set the name if not present
+            if not data.name:
+                data.name = name
+
+            if dataset:
+                data = data.to_dataset('variable')
+
+        if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+            data = data.reindex_like(reindex)
+
+        # Correct if lon got mixed up as it normally does during the pipeline
+        data = data.sortby('lon')
 
         Logger.info(f'Saving {name} to {output}')
         data.to_netcdf(output, engine='netcdf4')
