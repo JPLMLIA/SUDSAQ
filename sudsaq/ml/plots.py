@@ -94,53 +94,6 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         Logger.info(f'Saving compare_target_predict plot to {save}')
         plt.savefig(save)
 
-def old_truth_vs_predicted(target, predict, save=None):
-    """
-    """
-    def scatter(ax):
-        """
-        """
-        # Scatter truth vs predicted
-        ax.scatter(x=target, y=predict)
-
-        # Normalize the axis limits
-        ax.set_ylim(limits)
-        ax.set_xlim(limits)
-
-        # Create the horizontal line for reference
-        ax.plot((limits[0], limits[1]), (limits[0], limits[1]), 'r')
-
-        ax.set_xlabel('Truth')
-        ax.set_ylabel('Predicted')
-        ax.set_title('Scatter')
-
-    def density(ax):
-        """
-        """
-        ax.hist2d(target, predict, bins=(100, 100), range=[limits, limits])
-
-        # Set labels
-        ax.set_xlabel('Truth')
-        ax.set_title('Density')
-
-        # Create the horizontal line for reference
-        ax.plot((limits[0], limits[1]), (limits[0], limits[1]), 'r')
-
-    # Create the axis
-    fig = plt.figure(figsize=(7*2, 7))
-    fig.suptitle('Truth vs Predicted', fontsize=44)
-
-    # Retrieve the limits for plotting
-    limits = min([target.min(), predict.min()]) - 5, max([target.max(), predict.max()]) + 5
-
-    # Generate plots
-    scatter(plt.subplot(121))
-    density(plt.subplot(122))
-
-    if save:
-        Logger.info(f'Saving truth_vs_predicted plot to {save}')
-        plt.savefig(save)
-
 def truth_vs_predicted(target, predict, label=None, save=None):
     """
     """
@@ -181,62 +134,79 @@ def truth_vs_predicted(target, predict, label=None, save=None):
         Logger.info(f'Saving truth_vs_predicted plot to {save}')
         plt.savefig(save)
 
-def importances(df, pdf=None, save=None):
-    def draw(df, ax, title):
-        """
-        Takes in a DataFrame of the form DataFrame(columns=variables, index=['importance', 'stddev'])
-
-        Parameters
-        ----------
-        df: pandas.DataFrame
-            The feature importances to plot
-        """
-        if config.count:
-            Logger.debug(f'Plotting only the top {config.count} features')
-            df[df.columns[:config.count]]
-
-        ax.bar(x=range(df.shape[1]), height=df.loc['importance'], yerr=df.loc['stddev'], align='center', tick_label=df.columns)
-
-        ax.set_title(title)
-
-        if config.labelrotation:
-            ax.tick_params(axis='x', labelrotation=config.labelrotation)
-
+def importance(df, pdf=None, save=None):
+    """
+    """
     # Retrieve the config for this plot type
     config = Config().plots.importances
 
-    # Check if pdf was provided
-    perms = isinstance(pdf, pd.core.frame.DataFrame)
+    if pdf is not None:
+        perm = True
+
+        # Sort by df
+        pdf = pdf[df.columns]
+
+    # Normalize the scores, defaults to True
+    if config.get('normalize', True): # Defaults to True
+        df = df / df.max(axis=1).importance
+
+        if perm:
+            pdf = pdf / pdf.max(axis=1).importance
+
+    # Control how many features are plotted
+    if config.count:
+        Logger.info(f'Plotting only the top {config.count} features')
+        df = df[df.columns[:config.count]]
+
+        if perm:
+            pdf = pdf[df.columns[:config.count]]
 
     # Retrieve the figsize from the config if provided, otherwise attempt to calculate a good shape
     if config.figsize:
         figsize = config.figsize
     else:
-        height  = 2 if perms else 1
         width   = config.get('count', df.shape[1])
-        figsize = (5 * width, 5 * height)
+        figsize = (2 * width, 5)
 
-    # If the permutation importance is provided, draw both, otherwise just the normal
-    fig = plt.figure(figsize=figsize)
-    if perms:
-        fig.suptitle('Feature Importance', fontsize=44)
+    fig, ax = plt.subplots(figsize=(10, 5))
 
-        # Generate plots (2 rows, 1 column)
-        draw(df ,
-            ax    = plt.subplot(211),
-            title = 'Model Importance'
+    ax.bar(
+        x          = range(df.shape[1]),
+        height     = df.loc['importance'],
+        yerr       = df.loc['stddev'],
+        label      = 'Model',
+        align      = 'center',
+        linewidth  = 0,
+        width      = .5,
+        tick_label = df.columns
+    )
+
+    if perm:
+        ax.bar(
+            x         = ax.get_xticks() + .1,
+            height    = pdf.loc['importance'],
+            yerr      = pdf.loc['stddev'],
+            label     = 'Permutation',
+            align     = 'edge',
+            linewidth = 0,
+            width     = .5,
+            alpha     = .9
         )
-        draw(pdf,
-            ax    = plt.subplot(212),
-            title = 'Permutation Importance'
-        )
-    else:
-        draw(df, plt.subplot(111), 'Feature Importance')
 
-    # Fix suptitle clipping when perms is drawn
-    if perms:
-        fig.tight_layout(rect=[0, 0.03, 1, 0.93])
+        # Shift the labels slightly to align better
+        ax.set_xticks(ax.get_xticks() + .15)
 
+        # Only enable the legend if permutations are drawn
+        ax.legend()
+
+    ax.tick_params(axis='x', labelrotation=config.get('labelrotation', 0))
+
+    # Disable vertical axis lines and set labels
+    ax.grid(False, axis='x')
+    ax.set_title('Feature Importance')
+    ax.set_ylabel('Score')
+
+    plt.tight_layout()
     if save:
         Logger.info(f'Saving importances plot to {save}')
         plt.savefig(save)

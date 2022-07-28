@@ -48,16 +48,10 @@ def split_and_stack(ds, config, lazy=True):
     # Save the lat/lon dimensions before dropping na for easy reconstruction later
     config._reindex = ds[['lat', 'lon']]
 
-    # Create the stacked data
-    data = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
-    data = data.transpose('loc', 'variable')
-
-    # Stack the target data
+    # Create the stacked objects
+    data   = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
+    data   = data.transpose('loc', 'variable')
     target = target.stack({'loc': ['lat', 'lon', 'time']})
-    target = target.dropna('loc')
-
-    # Subselect data where there is target data
-    data = data.sel(loc=target['loc'])
 
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')

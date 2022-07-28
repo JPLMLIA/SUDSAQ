@@ -37,8 +37,11 @@ def perm_importance(model, data, target, output=None):
     """
     config = Config()
 
+    # Make sure the inputs are aligned first
+    data, target = xr.align(data, target)
+
     permimp = permutation_importance(model, data, target, **config.permutation_importance)
-    # Remove the importances array
+    # Only want the summaries, remove the importances array
     del permimp['importances']
 
     # Convert to a DataFrame and sort by importance value
@@ -59,7 +62,7 @@ def perm_importance(model, data, target, output=None):
 
     return df
 
-def importance(model, variables, output=None):
+def model_importance(model, variables, output=None):
     """
     Retrieves and formats the importances from a RandomForest model
     """
@@ -129,26 +132,30 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
     if data is None:
         data, target = load(config, split=True, lazy=False)
 
+    # Prepare the storage variables
     bias, contributions = None, None
+    predict = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+
     if 'Forest' in str(model):
         Logger.info('Predicting using TreeInterpreter')
-        predict       = xr.zeros_like(target)
-        bias          = xr.zeros_like(target)
+        bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
         predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
         predict[:] = predicts.flatten()
     else:
         Logger.info('Predicting')
-        predict    = xr.zeros_like(target)
         predict[:] = model.predict(data.values)
+
+    # Some functions require the target and predict be the same shape
+    target, aligned = xr.align(target, predict)
 
     Logger.info('Calculating scores')
     stats = Section('scores', {
-        'mape'  : mean_absolute_percentage_error(target, predict),
-        'rmse'  : mean_squared_error(target, predict, squared=False),
-        'r2'    : r2_score(target, predict),
-        'r corr': pearsonr(target, predict)[0]
+        'mape'  : mean_absolute_percentage_error(target, aligned),
+        'rmse'  : mean_squared_error(target, aligned, squared=False),
+        'r2'    : r2_score(target, aligned),
+        'r corr': pearsonr(target, aligned)[0]
     })
 
     # Log the scores
@@ -161,6 +168,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
 
     # Attach additional objects
     stats.predict = predict
+    stats.aligned = aligned
 
     # Feature importances
     impout = None
@@ -168,16 +176,16 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         impout = f'{output}/{kind}.importance.txt'
         Logger.info(f'Saving importances to {impout}')
     if 'Forest' in str(model):
-        stats.imports = importance(model, data['variable'], output=impout)
+        stats.mimportance = model_importance(model, data['variable'], output=impout)
     if config.permutation_importance:
-        stats.permports = perm_importance(model, data, target, output=impout)
+        stats.pimportance = perm_importance(model, data, target, output=impout)
 
     # Create plots if enabled
     if config.output.plots:
         if stats.imports is not Null:
-            plots.importances(
-                df   = stats.imports,
-                pdf  = stats.permports,
+            plots.importance(
+                df   = stats.mimportance,
+                pdf  = stats.pimportance,
                 save = f'{output}/{kind}.importances.png'
             )
 
@@ -190,7 +198,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         )
         plots.truth_vs_predicted(
             target.dropna('loc'),
-            predict.dropna('loc'),
+            aligned.dropna('loc'),
             label = '\n'.join([score.lstrip()[:15] for score in scores]),
             save  =  f'{output}/{kind}.truth_vs_predicted.png'
         )
@@ -207,7 +215,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         save_netcdf(bias, 'bias', f'{output}/{kind}.bias.nc', reindex=config._reindex)
 
     if config.output.contributions:
-        save_netcdf(contributions, 'contributions', f'{output}/{kind}.contributions.nc', reindex=config._reindex)
+        save_netcdf(contributions, 'contributions', f'{output}/{kind}.contributions.nc', reindex=config._reindex, dataset=True)
 
     if config.output.inputs:
         save_netcdf(data  , 'data'  , f'{output}/{kind}.data.nc'  , reindex=config._reindex, dataset=True)

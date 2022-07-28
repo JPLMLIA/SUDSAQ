@@ -38,9 +38,34 @@ def fit(model, data, target, i=None, test=True):
         The fold iteration, creates a folder under output
     test: bool, default = None
 
+    Notes
+    -----
+    The test set may not want to have NaNs
+    The training set must have its NaNs dropped
+    Loading is done in this function to ensure
+    memory usage is kept down. Lazy load before
+    this function.
+
+    Cannot drop NaNs on target prior to kfold as
+    X and y wouldn't align raising an exception
     """
     # Retrieve the config object
     config = Config()
+
+    # Always emove NaNs on the training set
+    data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'))
+
+    if config.align_test:
+        data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'))
+    else:
+        # Target and data drop NaNs separately for prediction, will be aligned afterwards
+        data.test   = data.test.dropna('loc')
+        target.test = target.test.dropna('loc')
+
+    # Make sure the data is loaded into memory
+    Logger.debug('Loading training data')
+    data.train   = data.train.load()
+    target.train = target.train.load()
 
     # Create a subdirectory if kfold
     output = config.output.path
@@ -58,6 +83,10 @@ def fit(model, data, target, i=None, test=True):
         analyze(model, data.train, target.train, 'train', output)
 
     if test:
+        Logger.debug('Loading test data')
+        data.test   = data.test.load()
+        target.test = target.test.load()
+
         Logger.info(f'Creating test set performance analysis')
         analyze(model, data.test, target.test, 'test', output)
 
@@ -67,7 +96,7 @@ def create():
     """
     # Load config and data
     config       = Config()
-    data, target = load(config, split=True, lazy=False)
+    data, target = load(config, split=True, lazy=True)
 
     if config.model.kind in dir(models):
         Logger.info(f'Selecting {config.model.kind} as model')
