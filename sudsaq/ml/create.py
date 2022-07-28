@@ -52,6 +52,8 @@ def fit(model, data, target, i=None, test=True):
     # Retrieve the config object
     config = Config()
 
+    Logger.info('Preparing data for model training')
+    
     # Always emove NaNs on the training set
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'), copy=False)

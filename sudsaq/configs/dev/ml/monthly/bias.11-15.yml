@@ -25,6 +25,7 @@ default:
   plots:
     importances:
       count: 20
+      labelrotation: 90
   input:
     # sel:
       # lat: [10, 80]   # America
@@ -39,6 +40,8 @@ default:
       momo:
         vars: momo.(?!mda8).* # Match all momo variables except mda8
         time: [8, 16]
+  log:
+    level: debug
 
 jan:
   output:

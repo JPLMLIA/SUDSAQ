@@ -166,7 +166,7 @@ def importance(df, pdf=None, save=None):
         figsize = config.figsize
     else:
         width   = config.get('count', df.shape[1])
-        figsize = (2 * width, 5)
+        figsize = (3 * width, 5)
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
