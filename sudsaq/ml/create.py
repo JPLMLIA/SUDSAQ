@@ -53,11 +53,14 @@ def fit(model, data, target, i=None, test=True):
     config = Config()
 
     # Always emove NaNs on the training set
-    data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'))
+    Logger.debug('Aligning training data')
+    data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'), copy=False)
 
     if config.align_test:
-        data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'))
+        Logger.debug('Aligning test data')
+        data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'), copy=False)
     else:
+        Logger.debug('Dropping NaNs in test data')
         # Target and data drop NaNs separately for prediction, will be aligned afterwards
         data.test   = data.test.dropna('loc')
         target.test = target.test.dropna('loc')
@@ -151,22 +154,6 @@ def create():
             })
             Logger.debug(f'fold_{fold}: Train years = {set(input.target.train.time.dt.year.values)}')
             Logger.debug(f'fold_{fold}:  Test years = {set(input.target.test.time.dt.year.values)}')
-
-            Logger.debug(f'fold_{fold} Is Finite')
-            Logger.debug('Data   :')
-            Logger.debug(f' train: {np.isfinite(input.data.train).all().values}')
-            Logger.debug(f'  test: {np.isfinite(input.data.test).all().values}')
-            Logger.debug('Target :')
-            Logger.debug(f' train: {np.isfinite(input.target.train).all().values}')
-            Logger.debug(f'  test: {np.isfinite(input.target.test).all().values}')
-
-            Logger.debug(f'fold_{fold} Has NaN')
-            Logger.debug('Data   :')
-            Logger.debug(f' train: {np.isnan(input.data.train).any().values}')
-            Logger.debug(f'  test: {np.isnan(input.data.test).any().values}')
-            Logger.debug('Target :')
-            Logger.debug(f' train: {np.isnan(input.target.train).any().values}')
-            Logger.debug(f'  test: {np.isnan(input.target.test).any().values}')
 
             # Recreate the model each fold
             fit(model(), input.data, input.target, i=fold)
