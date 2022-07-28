@@ -63,77 +63,6 @@ def init(args):
 
     logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
 
-def save_netcdf(data, name, output, dataset=False, reindex=None):
-    """
-    Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
-
-    Parameters
-    ----------
-    data: xr.core.dataarray.DataArray or xr.core.dataarray.Dataset
-        An xarray object to be saved. If the object is not one of these types, the
-        function quietly returns
-    name: str
-        Name of the object for logging purposes
-    output: str
-        Path to output to
-    dataset: bool, default = False
-        If this should be unstacked to a Dataset object instead of a DataArray
-    reindex: Dataset or DataArray, default = None
-        If provided, reindexes the data object with the given object
-        This is primarily used to expand dimensions back to the MOMO grid after having
-        shrunk from dropna
-    """
-    if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-        if 'loc' in data.dims:
-            Logger.warning(f'Saving {name} must be done unstacked')
-            data = data.unstack()
-
-            # Set the name if not present
-            if not data.name:
-                data.name = name
-
-            if dataset:
-                data = data.to_dataset('variable')
-
-        if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-            data = data.reindex_like(reindex)
-
-        # Correct if lon got mixed up as it normally does during the pipeline
-        data = data.sortby('lon')
-
-        Logger.info(f'Saving {name} to {output}')
-        data.to_netcdf(output, engine='netcdf4')
-
-def save_pkl(file, data):
-    """
-    Saves data to a file via pickle
-
-    Parameters
-    ----------
-    file : str
-        Path to a file to dump the data to via pickle
-    data: any
-        Any pickleable object
-    """
-    with open(file, 'wb') as file:
-        pickle.dump(data, file)
-
-def load_pkl(file):
-    """
-    Loads data from a pickle
-
-    Parameters
-    ----------
-    file : str
-        Path to a Python pickle file to load
-
-    Returns
-    -------
-    any
-        The data object loaded from the pickle file
-    """
-    return pickle.load(open(file, 'rb'))
-
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
     Pretty prints an iterable in the form {key} = {value} such that the delimiter (=)
@@ -194,3 +123,94 @@ def mkdir(path):
             except Exception as e:
                 Logger.exception(f'Failed to create directory {dir}')
                 raise e
+
+def load_pkl(file):
+    """
+    Loads data from a pickle
+
+    Parameters
+    ----------
+    file : str
+        Path to a Python pickle file to load
+
+    Returns
+    -------
+    any
+        The data object loaded from the pickle file
+    """
+    return pickle.load(open(file, 'rb'))
+
+def save_pkl(data, output, **kwargs):
+    """
+    Saves data to a file via pickle
+
+    Parameters
+    ----------
+    data: any
+        Any pickleable object
+    output : str
+        Path to a file to dump the data to via pickle
+    """
+    mkdir(output)
+    with open(output, 'wb') as file:
+        pickle.dump(data, file)
+
+def save_netcdf(data, name, output, dataset=False, reindex=None):
+    """
+    Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
+
+    Parameters
+    ----------
+    data: xr.core.dataarray.DataArray or xr.core.dataarray.Dataset
+        An xarray object to be saved. If the object is not one of these types, the
+        function quietly returns
+    name: str
+        Name of the object for logging purposes
+    output: str
+        Path to output to
+    dataset: bool, default = False
+        If this should be unstacked to a Dataset object instead of a DataArray
+    reindex: Dataset or DataArray, default = None
+        If provided, reindexes the data object with the given object
+        This is primarily used to expand dimensions back to the MOMO grid after having
+        shrunk from dropna
+    """
+    if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+        if 'loc' in data.dims:
+            Logger.warning(f'Saving {name} must be done unstacked')
+            data = data.unstack()
+
+            # Set the name if not present
+            if not data.name:
+                data.name = name
+
+            if dataset:
+                data = data.to_dataset('variable')
+
+        if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+            data = data.reindex_like(reindex)
+
+        # Correct if lon got mixed up as it normally does during the pipeline
+        data = data.sortby('lon')
+
+        Logger.info(f'Saving {name} to {output}')
+        data.to_netcdf(output, engine='netcdf4')
+
+def save_objects(output, kind, **others):
+    """
+    Simplifies saving objects by taking a dictionary of {name: obj}
+    where obj is an xarray object to be passed to save_netcdf
+    """
+    config = Config()
+
+    # These objects will be converted to a dataset
+    datasets = ['data', 'contributions']
+
+    for name, obj in others.items():
+        save_netcdf(
+            data    = obj,
+            name    = name,
+            output  = f'{output}/{kind}.{name}.nc',
+            reindex = config._reindex,
+            dataset = name in datasets
+        )

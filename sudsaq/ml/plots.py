@@ -29,7 +29,7 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         """
         """
         data.plot.pcolormesh(x='lon', y='lat', ax=ax,
-            levels = 10,
+            levels = 20,
             cmap   = 'viridis',
             vmax   = vmax,
             vmin   = vmin
@@ -38,7 +38,11 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         ax.gridlines(draw_labels=True, color='dimgray', linewidth=0.5)
         ax.set_title(title)
 
-    fig = plt.figure(figsize=(10*3, 6*2))
+        # Remove the top and right axis tick labels
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+
+    fig = plt.figure(figsize=(20*3, 12*2))
     if title:
         fig.suptitle(title, fontsize=44)
 
@@ -90,6 +94,7 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         vmax, vmin
     )
 
+    plt.tight_layout()
     if save:
         Logger.info(f'Saving compare_target_predict plot to {save}')
         plt.savefig(save)
@@ -165,8 +170,8 @@ def importance(df, pdf=None, save=None):
     if config.figsize:
         figsize = config.figsize
     else:
-        width   = config.get('count', df.shape[1])
-        figsize = (3 * width, 5)
+        size = config.get('count', df.shape[1])
+        figsize = (size*3, size)
 
     fig, ax = plt.subplots(figsize=(10, 5))
 

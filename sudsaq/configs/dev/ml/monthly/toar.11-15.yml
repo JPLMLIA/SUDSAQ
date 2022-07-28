@@ -1,7 +1,7 @@
 default:
   target: toar.o3.dma8epa.mean
   train: momo.(?!o3).*
-  train_performance: True
+  train_performance: False
   model:
     kind: RandomForestRegressor
     params:
@@ -25,6 +25,7 @@ default:
   plots:
     importances:
       count: 20
+      labelrotation: 90
   input:
     # sel:
       # lat: [10, 80]   # America

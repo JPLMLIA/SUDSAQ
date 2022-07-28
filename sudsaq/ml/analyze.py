@@ -26,8 +26,7 @@ from sudsaq.utils import (
     align_print,
     load_pkl,
     mkdir,
-    save_pkl,
-    save_netcdf
+    save_objects
 )
 
 Logger = logging.getLogger('sudsaq/ml/analyze.py')
@@ -115,7 +114,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         else:
             Logger.warning(f'No output provided, disabling saving objects')
             for key in config.output:
-                config.output[key] = False
+                config.output[key] = []
 
     if output:
         mkdir(output)
@@ -204,21 +203,14 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         )
 
     # Save objects as requested
-    if config.output.model:
-        Logger.info(f'Saving model to {output}/model.pkl')
-        save_pkl(f'{output}/model.pkl', model)
-
-    if config.output.predict:
-        save_netcdf(predict, 'predict', f'{output}/{kind}.predict.nc', reindex=config._reindex)
-
-    if config.output.bias:
-        save_netcdf(bias, 'bias', f'{output}/{kind}.bias.nc', reindex=config._reindex)
-
-    if config.output.contributions:
-        save_netcdf(contributions, 'contributions', f'{output}/{kind}.contributions.nc', reindex=config._reindex, dataset=True)
-
-    if config.output.inputs:
-        save_netcdf(data  , 'data'  , f'{output}/{kind}.data.nc'  , reindex=config._reindex, dataset=True)
-        save_netcdf(target, 'target', f'{output}/{kind}.target.nc', reindex=config._reindex)
+    save_objects(
+        output  = output,
+        kind    = kind,
+        data    = data,
+        target  = target,
+        predict = predict,
+        bias    = bias,
+        contributions = contributions,
+    )
 
     return stats

@@ -20,7 +20,9 @@ from sudsaq.data       import load
 from sudsaq.ml.analyze import analyze
 from sudsaq.utils      import (
     align_print,
-    init
+    init,
+    save_objects,
+    save_pkl
 )
 
 Logger = logging.getLogger('sudsaq/ml/create.py')
@@ -53,7 +55,7 @@ def fit(model, data, target, i=None, test=True):
     config = Config()
 
     Logger.info('Preparing data for model training')
-    
+
     # Always emove NaNs on the training set
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'), copy=False)
@@ -83,9 +85,20 @@ def fit(model, data, target, i=None, test=True):
     Logger.info('Training model')
     model.fit(data.train, target.train)
 
+    if config.output.model:
+        Logger.info(f'Saving model to {output}/model.pkl')
+        save_pkl(model, f'{output}/model.pkl')
+
     if config.train_performance:
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
+    elif config.output.inputs:
+        save_objects(
+            output = output,
+            kind   = 'train',
+            data   = data.train,
+            target = target.train
+        )
 
     if test:
         Logger.debug('Loading test data')

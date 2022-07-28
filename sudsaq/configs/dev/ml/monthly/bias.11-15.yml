@@ -1,7 +1,7 @@
 default:
   target: momo.mda8 - toar.o3.dma8epa.mean
   train: momo.(?!o3|mda8).*
-  train_performance: True
+  train_performance: False
   model:
     kind: RandomForestRegressor
     params:
