@@ -24,6 +24,7 @@ default:
     scores       : True
     importance   : True
     plots        : True
+    explanation  : True
   plots:
     importances:
       count: 20

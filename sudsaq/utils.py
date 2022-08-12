@@ -204,7 +204,7 @@ def save_objects(output, kind, **others):
     config = Config()
 
     # These objects will be converted to a dataset
-    datasets = ['data', 'contributions', 'shap_values']
+    datasets = ['data', 'contributions', 'explanation']
 
     for name, obj in others.items():
         if config.output[name]:

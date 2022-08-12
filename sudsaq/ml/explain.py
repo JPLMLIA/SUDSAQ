@@ -141,7 +141,7 @@ def explain(model=None, data=None, output=None, kind='input'):
     save_objects(
         output      = output,
         kind        = kind,
-        shap_values = to_dataset(explanation)
+        explanation = to_dataset(explanation)
     )
 
     # Plots
