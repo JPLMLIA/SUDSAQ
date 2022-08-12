@@ -87,7 +87,7 @@ def model_importance(model, variables, output=None):
 
     return df
 
-def analyze(model=None, data=None, target=None, kind='default', output=None):
+def analyze(model=None, data=None, target=None, kind='input', output=None):
     """
     Analyzes a model using different metrics and plots
 
@@ -114,7 +114,7 @@ def analyze(model=None, data=None, target=None, kind='default', output=None):
         else:
             Logger.warning(f'No output provided, disabling saving objects')
             for key in config.output:
-                config.output[key] = []
+                config.output[key] = False
 
     if output:
         mkdir(output)

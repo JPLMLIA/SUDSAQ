@@ -86,7 +86,7 @@ def match(ds, df, tag):
                 expand_binnumbers = True
             )
             # Now save the calculation for this time
-            ms.loc[{'time': time}][f'{tag}/{config.metric}/{metric}'][:] = calc.statistic
+            ms.loc[{'time': time}][f'{tag}.{config.metric}.{metric}'][:] = calc.statistic
 
     # Save output
     if config.output.by_month:

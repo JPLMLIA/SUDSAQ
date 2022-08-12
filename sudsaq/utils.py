@@ -175,26 +175,26 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
         This is primarily used to expand dimensions back to the MOMO grid after having
         shrunk from dropna
     """
-    if isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-        if 'loc' in data.dims:
-            Logger.warning(f'Saving {name} must be done unstacked')
-            data = data.unstack()
+    if 'loc' in data.dims:
+        Logger.warning(f'Saving {name} must be done unstacked')
+        data = data.unstack()
 
-            # Set the name if not present
-            if not data.name:
-                data.name = name
+    if dataset:
+        data = data.to_dataset('variable')
 
-            if dataset:
-                data = data.to_dataset('variable')
+    # Names always get set on DataArray objects
+    if isinstance(data, xr.core.dataarray.DataArray):
+        data.name = name
 
-        if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-            data = data.reindex_like(reindex)
+    # Apply reindexing if its available
+    if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+        data = data.reindex_like(reindex)
 
-        # Correct if lon got mixed up as it normally does during the pipeline
-        data = data.sortby('lon')
+    # Correct if lon got mixed up as it normally does during the pipeline
+    data = data.sortby('lon')
 
-        Logger.info(f'Saving {name} to {output}')
-        data.to_netcdf(output, engine='netcdf4')
+    Logger.info(f'Saving {name} to {output}')
+    data.to_netcdf(output, engine='netcdf4')
 
 def save_objects(output, kind, **others):
     """
@@ -204,13 +204,16 @@ def save_objects(output, kind, **others):
     config = Config()
 
     # These objects will be converted to a dataset
-    datasets = ['data', 'contributions']
+    datasets = ['data', 'contributions', 'shap_values']
 
     for name, obj in others.items():
-        save_netcdf(
-            data    = obj,
-            name    = name,
-            output  = f'{output}/{kind}.{name}.nc',
-            reindex = config._reindex,
-            dataset = name in datasets
-        )
+        if config.output[name]:
+            save_netcdf(
+                data    = obj,
+                name    = name,
+                output  = f'{output}/{kind}.{name}.nc',
+                reindex = config._reindex,
+                dataset = name in datasets
+            )
+        else:
+            Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')

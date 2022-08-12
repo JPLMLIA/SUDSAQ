@@ -18,6 +18,7 @@ from sudsaq.config     import (
 )
 from sudsaq.data       import load
 from sudsaq.ml.analyze import analyze
+from sudsaq.ml.explain import explain
 from sudsaq.utils      import (
     align_print,
     init,
@@ -92,7 +93,7 @@ def fit(model, data, target, i=None, test=True):
     if config.train_performance:
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
-    elif config.output.inputs:
+    else:
         save_objects(
             output = output,
             kind   = 'train',
@@ -102,11 +103,34 @@ def fit(model, data, target, i=None, test=True):
 
     if test:
         Logger.debug('Loading test data')
-        data.test   = data.test.load()
+
         target.test = target.test.load()
+        if target.isnull().all():
+            Logger.warning('Test data detected to be entirely NaN, skipping')
+            return
+
+        data.test = data.test.load()
 
         Logger.info(f'Creating test set performance analysis')
-        analyze(model, data.test, target.test, 'test', output)
+        analyze(
+            model  = model,
+            data   = data.test,
+            target = target.test,
+            kind   = 'test',
+            output = output
+        )
+
+        # Run the explanation module if it's enabled
+        try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
+            if config.explain:
+                explain(
+                    model  = model,
+                    data   = data.test,
+                    kind   = 'test',
+                    output = output
+                )
+        except:
+            Logger.exception('SHAP explanations failed:')
 
 def create():
     """
