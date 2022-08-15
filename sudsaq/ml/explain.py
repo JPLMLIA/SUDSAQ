@@ -148,7 +148,7 @@ def explain(model=None, data=None, output=None, kind=None):
         data = data.load()
 
     Logger.info('Generating SHAP explanation, this may take awhile')
-    explanation = shap_values(model, data.to_dataframe(), n_job=config.n_jobs)
+    explanation = shap_values(model, data.to_dataframe(), n_jobs=config.n_jobs)
 
     save_objects(
         output      = output,
