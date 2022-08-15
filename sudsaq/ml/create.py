@@ -105,7 +105,7 @@ def fit(model, data, target, i=None, test=True):
         Logger.debug('Loading test data')
 
         target.test = target.test.load()
-        if target.isnull().all():
+        if target.test.isnull().all():
             Logger.warning('Test data detected to be entirely NaN, skipping')
             return
 
