@@ -132,7 +132,7 @@ def explain(model=None, data=None, output=None, kind=None):
     # Load the model from a pickle if provided
     if model is None:
         try:
-            model = load_pkl(config.input.explain.model)
+            model = load_pkl(config.input.model)
         except:
             Logger.exception(f'Failed to load model')
             return 1
@@ -142,8 +142,8 @@ def explain(model=None, data=None, output=None, kind=None):
     #     data, target = load(config, split=True, lazy=False)
 
     if data is None:
-        Logger.info(f'Loading data from {config.input.explain.data}')
-        data = xr.open_dataset(config.input.explain.data)
+        Logger.info(f'Loading data from {config.input.data}')
+        data = xr.open_dataset(config.input.data)
         data = data.stack({'loc': ['lat', 'lon', 'time']})
         data = data.load()
 
