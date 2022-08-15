@@ -11,6 +11,12 @@ import xarray            as xr
 
 from tqdm import tqdm
 
+from sudsaq.config import Config
+from sudsaq.utils  import (
+    init,
+    load_pkl
+)
+
 # Increase matplotlib's logger to warning to disable the debug spam it makes
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 logging.getLogger('fiona').setLevel(logging.WARNING)
@@ -105,7 +111,7 @@ def shap_values(model, data, n_jobs=-1):
 
     return explanation
 
-def explain(model=None, data=None, output=None, kind='input'):
+def explain(model=None, data=None, output=None, kind=None):
     """
     """
     config = Config()
@@ -119,10 +125,13 @@ def explain(model=None, data=None, output=None, kind='input'):
             for key in config.output:
                 config.output[key] = False
 
+    # Use config provided `kind` if available
+    kind = config.get('kind', 'input')
+
     # Load the model from a pickle if provided
     if model is None:
         try:
-            model = load_pkl(config.input.model)
+            model = load_pkl(config.input.explain.model)
         except:
             Logger.exception(f'Failed to load model')
             return 1
@@ -132,8 +141,10 @@ def explain(model=None, data=None, output=None, kind='input'):
     #     data, target = load(config, split=True, lazy=False)
 
     if data is None:
-        data = xr.open_dataset(config.input.data)
+        Logger.info(f'Loading data from {config.input.explain.data}')
+        data = xr.open_dataset(config.input.explain.data)
         data = data.stack({'loc': ['lat', 'lon', 'time']})
+        data = data.load()
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     explanation = shap_values(model, data.to_dataframe(), n_job=config.n_jobs)
@@ -148,3 +159,31 @@ def explain(model=None, data=None, output=None, kind='input'):
     Logger.info('Generating SHAP plots')
     summary(explanation, data, save=f'{output}/shap.summary.png')
     heatmap(explanation)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+
+    parser.add_argument('-c', '--config',   type     = str,
+                                            required = True,
+                                            metavar  = '/path/to/config.yaml',
+                                            help     = 'Path to a config.yaml file'
+    )
+    parser.add_argument('-s', '--section',  type     = str,
+                                            default  = 'explain',
+                                            metavar  = '[section]',
+                                            help     = 'Section of the config to use'
+    )
+
+    init(parser.parse_args())
+
+    state = False
+    try:
+        state = explain()
+    except Exception:
+        Logger.exception('Caught an exception during runtime')
+    finally:
+        if state is True:
+            Logger.info('Finished successfully')
+        else:
+            Logger.info(f'Failed to complete with status code: {state}')
