@@ -88,15 +88,17 @@ def to_dataset(explanation, data):
 def shap_values(model, data, n_jobs=-1):
     """
     """
+    Logger.debug('Creating explainer')
+    explainer = shap.TreeExplainer(model, data)
+
     n_jobs  = {-1: os.cpu_count(), None: 1}.get(n_jobs, n_jobs)
     subsets = np.array_split(data, n_jobs)
 
     Logger.debug(f'Using {n_jobs} jobs')
+    Logger.debug('Performing SHAP calculations')
 
     bar  = tqdm(total=len(subsets), desc='Processes Finished')
     rets = []
-
-    explainer = shap.TreeExplainer(model, data)
     with mp.Pool(processes=n_jobs) as pool:
         for ret in pool.imap(explainer, subsets):
             rets.append(ret)
