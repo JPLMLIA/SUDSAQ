@@ -28,7 +28,7 @@ bbox_dict = {'globe':[0+180, 360+180, -90, 90],
 
 
 #choose parameters
-bbox = bbox_dict['globe']
+bbox = bbox_dict['north_america']
 month = 'jan'
 years = [2011, 2012, 2013, 2014]
 
@@ -83,8 +83,9 @@ plt.close()
 # --------------- PLOT an input variable
 name = 'momo.osrc'
 #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
-f = f'{root_dir}/model/new/{month}/combined/test.data.nc'
-data = xr.open_dataset(f)
+# f = f'{root_dir}/model/new/{month}/combined/test.data.nc'
+# data = xr.open_dataset(f)
+data = xr.open_dataset(f'{models_dir}/test.data.nc')
 
 #lists all variables    
 var_names = data.variable.values
@@ -120,10 +121,17 @@ plt.close()
 
 # --------------- correlation analysis
 
-data_mean = data.mean(dim='time', skipna= True)
-data_mean['stack-50e2f0b556989bc5a94867be166bc66f'].values
+#read in data and subset a region from bbox
+data = xr.open_dataset(f'{models_dir}/test.data.nc')
+var_names = data.variable.values
 
-data_stacked = data_mean.stack(z=('lon', 'lat'))
+#take mean over time
+data_mean = data.mean(dim='time', skipna= True)
+
+#crop the data for the region
+data_cropped = data_mean.sel(lat=slice(bbox[2], bbox[3]), 
+                        lon=slice(bbox[0], bbox[1]))
+data_stacked = data_cropped.stack(z=('lon', 'lat'))
 
 #remove locations with nan values
 data_array = data_stacked['stack-50e2f0b556989bc5a94867be166bc66f'].values
@@ -133,7 +141,6 @@ mask_locs = counts_nan < len(var_names)
 # some variables have all zeros, mask them
 counts_zero = (data_array == 0).sum(axis = 1)
 mask_zero =  counts_zero < mask_locs.sum()
-
 
 # make the full correlation matrix
 corr_mat = np.corrcoef(data_array[:, mask_locs][mask_zero, :])
