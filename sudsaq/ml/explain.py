@@ -10,12 +10,14 @@ import seaborn           as sns
 import shap
 import xarray            as xr
 
-from tqdm import tqdm
+from functools import partial
+from tqdm      import tqdm
 
 from sudsaq.config import Config
 from sudsaq.utils  import (
     init,
-    load_pkl
+    load_pkl,
+    save_objects
 )
 
 # Increase matplotlib's logger to warning to disable the debug spam it makes
@@ -41,7 +43,7 @@ def summary(explanation, data, save=None):
         Logger.info(f'Saving summary plot to {save}')
         plt.savefig(save)
 
-def heatmap(explanation):
+def heatmap(explanation, save=None):
     """
     """
     shap.plots.heatmap(explanation, show=False if save else True)
@@ -89,7 +91,7 @@ def shap_values(model, data, n_jobs=-1):
     """
     """
     Logger.debug('Creating explainer')
-    explainer = shap.TreeExplainer(model, data)
+    explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent')
 
     n_jobs  = {-1: os.cpu_count(), None: 1}.get(n_jobs, n_jobs)
     subsets = np.array_split(data, n_jobs)
@@ -97,17 +99,21 @@ def shap_values(model, data, n_jobs=-1):
     Logger.debug(f'Using {n_jobs} jobs')
     Logger.debug('Performing SHAP calculations')
 
+    # Disable additivity check for now, needs more looking into
+    # Issues due to multiprocessing/splitting the input X
+    func = partial(explainer, check_additivity=False)
+
     bar  = tqdm(total=len(subsets), desc='Processes Finished')
     rets = []
     with mp.Pool(processes=n_jobs) as pool:
-        for ret in pool.imap(explainer, subsets):
+        for ret in pool.imap(func, subsets):
             rets.append(ret)
             bar.update()
 
     # Combine the results together to one Explanation object
     explanation = shap.Explanation(
         np.vstack([ret.values      for ret in rets]),
-        np.hstack([ret.base_values for ret in rets]),
+        np.vstack([ret.base_values for ret in rets]),
         np.vstack([ret.data        for ret in rets]),
         feature_names = ret.feature_names
     )
@@ -150,18 +156,21 @@ def explain(model=None, data=None, output=None, kind=None):
         data = data.load()
 
     Logger.info('Generating SHAP explanation, this may take awhile')
-    explanation = shap_values(model, data.to_dataframe(), n_jobs=config.n_jobs)
+    X = data.to_dataframe()
+    explanation = shap_values(model, X, n_jobs=config.n_jobs)
 
     save_objects(
         output      = output,
         kind        = kind,
-        explanation = to_dataset(explanation)
+        explanation = to_dataset(explanation, data)
     )
 
     # Plots
     Logger.info('Generating SHAP plots')
-    summary(explanation, data, save=f'{output}/shap.summary.png')
-    heatmap(explanation)
+    summary(explanation, X, save=f'{output}/shap.summary.png')
+    # heatmap(explanation,    save=f'{output}/shap.heatmap.png')
+
+    return explanation
 
 
 if __name__ == '__main__':
@@ -186,7 +195,7 @@ if __name__ == '__main__':
     except Exception:
         Logger.exception('Caught an exception during runtime')
     finally:
-        if state is True:
+        if isinstance(state, shap._explanation.Explanation):
             Logger.info('Finished successfully')
         else:
             Logger.info(f'Failed to complete with status code: {state}')

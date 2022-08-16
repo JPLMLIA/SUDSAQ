@@ -179,12 +179,13 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
         Logger.warning(f'Saving {name} must be done unstacked')
         data = data.unstack()
 
-    if dataset:
-        data = data.to_dataset('variable')
-
     # Names always get set on DataArray objects
     if isinstance(data, xr.core.dataarray.DataArray):
         data.name = name
+
+        # Only DataArrays can be cast back to Datasets
+        if dataset:
+            data = data.to_dataset('variable')
 
     # Apply reindexing if its available
     if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):

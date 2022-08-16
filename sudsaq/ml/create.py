@@ -37,8 +37,6 @@ def fit(model, data, target, i=None, test=True):
     model:
     data:
     target:
-    i: int, default = None
-        The fold iteration, creates a folder under output
     test: bool, default = None
 
     Notes
@@ -61,15 +59,6 @@ def fit(model, data, target, i=None, test=True):
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'), copy=False)
 
-    if config.align_test:
-        Logger.debug('Aligning test data')
-        data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'), copy=False)
-    else:
-        Logger.debug('Dropping NaNs in test data')
-        # Target and data drop NaNs separately for prediction, will be aligned afterwards
-        data.test   = data.test.dropna('loc')
-        target.test = target.test.dropna('loc')
-
     # Make sure the data is loaded into memory
     Logger.debug('Loading training data')
     data.train   = data.train.load()
@@ -79,7 +68,7 @@ def fit(model, data, target, i=None, test=True):
     output = config.output.path
     if test:
         year = set(target.test.time.dt.year.values).pop()
-        Logger.info(f'Training year: {year}')
+        Logger.info(f'Testing year: {year}')
         if output:
             output = f'{output}/{year}/'
 
@@ -102,11 +91,20 @@ def fit(model, data, target, i=None, test=True):
         )
 
     if test:
-        Logger.debug('Loading test data')
+        if config.align_test:
+            Logger.debug('Aligning test data')
+            data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'), copy=False)
+        else:
+            Logger.debug('Dropping NaNs in test data')
+            # Target and data drop NaNs separately for prediction, will be aligned afterwards
+            data.test   = data.test.dropna('loc')
+            target.test = target.test.dropna('loc')
 
+        Logger.debug('Loading test data')
         target.test = target.test.load()
+
         if target.test.isnull().all():
-            Logger.warning('Test data detected to be entirely NaN, skipping')
+            Logger.warning('Test data detected to be entirely NaN, cancelling test analysis for this fold')
             return
 
         data.test = data.test.load()

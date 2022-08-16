@@ -92,17 +92,10 @@ def load(config, split=False, lazy=True):
     """
     Logger.info('Collecting files')
     files = []
-
-    # TODO: Generalize to allow new datasets not hardcoded
-    if config.input.momo:
-        momo = glob(config.input.momo.regex)
-        Logger.debug(f'Collected {len(momo)} files using regex `{config.input.momo.regex}`')
-        files += momo
-
-    if config.input.toar:
-        toar = glob(config.input.toar.regex)
-        Logger.debug(f'Collected {len(toar)} files using regex `{config.input.toar.regex}`')
-        files += toar
+    for string in config.input.glob:
+        match = glob(string)
+        Logger.debug(f'Collected {len(match)} files using "{string}"')
+        files += match
 
     Logger.info('Lazy loading the dataset')
     ds = xr.open_mfdataset(files, parallel=True, engine='netcdf4')
