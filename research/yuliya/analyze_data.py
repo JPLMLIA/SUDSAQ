@@ -13,7 +13,8 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import xarray as xr
-
+import scipy.cluster.hierarchy as sch
+from sklearn.metrics import pairwise_distances
 
 #-----------------read in data
 root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
@@ -28,7 +29,8 @@ bbox_dict = {'globe':[0+180, 360+180, -90, 90],
 
 
 #choose parameters
-bbox = bbox_dict['north_america']
+region = 'north_america'
+bbox = bbox_dict[region]
 month = 'jan'
 years = [2011, 2012, 2013, 2014]
 
@@ -192,8 +194,22 @@ plt.close()
 
 
 
+#cluster the correlation matrix to see groups better
+D = pairwise_distances(corr_mat)
+H = sch.linkage(D, method='average')
+d1 = sch.dendrogram(H, no_plot=True)
+idx = d1['leaves']
+X = corr_mat[idx,:][:, idx]
 
-
+plt.figure(figsize = (14, 12))
+plt.pcolor(X, cmap = 'coolwarm')
+plt.clim((-1,1))
+plt.xticks(np.arange(len(names))+0.5, names, rotation = 90, fontsize = 8);
+plt.yticks(np.arange(len(names))+0.5, names, rotation = 0, fontsize = 8);
+plt.colorbar()
+plt.title(f'momo variable correlations {region}, clustered')
+plt.savefig(f'{plots_dir}/variable_corr_cluster_matrix.png')
+plt.close()
 
 
 
