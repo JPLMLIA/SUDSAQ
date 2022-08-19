@@ -21,11 +21,15 @@ root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
 if not os.path.exists(root_dir):
     root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
 
-bbox_dict = {'globe':[0+180, 360+180, -90, 90],
-              'europe': [-20+360, 40+360, 25, 80],
-              'asia': [110+360, 160+360, 10, 70],
-              'australia': [130+360, 170+360, -50, -10],
-              'north_america': [-140+360, -50+360, 10, 80]}
+bbox_dict = {'globe':[0, 360, -90, 90],
+            'europe': [-20, 40, 25, 80],
+            'asia': [110, 160, 10, 70],
+            'australia': [130, 170, -50, -10],
+            'north_america': [-140, -50, 10, 80],
+            'west_europe': [-20, 10, 25, 80],
+            'east_europe': [10, 40, 25, 80],
+            'west_na': [-140, -95, 10, 80],
+            'east_na': [-95, -50, 10, 80], }
 
 
 #choose parameters
@@ -43,6 +47,7 @@ if not os.path.exists(plots_dir):
     os.makedirs(plots_dir)
 
 
+# -----------------------------------
 # --------------- PLOT true vs predicted ozone bias 
 #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
 bias_true = xr.open_dataset(f'{models_dir}/test.target.nc').load()
@@ -59,6 +64,7 @@ true_monthly_mean = np.nanmean(bias_true, axis = 2)
 #get predicted bias
 bias_pred = bias_pred.sel(time = np.in1d(bias_pred['time.year'], years))
 bias_pred = bias_pred['predict'].values
+#bias_pred = bias_pred['stack-1fd40670e8e2b515c6221d4afa3a768a'].values
 pred_monthly_mean = np.nanmean(bias_pred, axis = 2)
 
 #plot difference between true and predicted
@@ -72,7 +78,7 @@ gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='gray', alpha=0.5, linestyle='--')
 gl.xformatter = LONGITUDE_FORMATTER
 gl.yformatter = LATITUDE_FORMATTER
-ax.set_extent([bbox[0], bbox[1], bbox[2], bbox[3]], crs=ccrs.PlateCarree())
+ax.set_extent([bbox[0]+360, bbox[1]+360, bbox[2], bbox[3]], crs=ccrs.PlateCarree())
 ax.stock_img()
 plt.colorbar()
 plt.title(f'true - predicted bias residuals')
@@ -81,24 +87,21 @@ plt.close()
 
 
 
-
+# -----------------------------------
 # --------------- PLOT an input variable
 name = 'momo.osrc'
-#ds_momo = xr.open_mfdataset(files_momo, parallel=True)
-# f = f'{root_dir}/model/new/{month}/combined/test.data.nc'
-# data = xr.open_dataset(f)
+
 data = xr.open_dataset(f'{models_dir}/test.data.nc')
+data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
+                        lon=slice(bbox[0], bbox[1]))
 
 #lists all variables    
-var_names = data.variable.values
-lat = data.lat.values
-lon = data.lon.values
+var_names = list(data.keys())
+lat = data_cropped.lat.values
+lon = data_cropped.lon.values
 # get all the variables
-vals = data['stack-50e2f0b556989bc5a94867be166bc66f'].values
+var_monthly_mean = data_cropped[name].mean(dim='time', skipna= True).values
 
-#get variable of interest and take monthly mean
-name_mask = var_names == name
-var_monthly_mean = np.nanmean(vals[name_mask, :, :, :], axis = 3)[0,:,:]
 
 #plot the monthly mean
 x, y = np.meshgrid(lon, lat)
@@ -121,13 +124,19 @@ plt.close()
 
 
 
+
+
+# -----------------------------------
 # --------------- correlation analysis
 
 #read in data and subset a region from bbox
 data = xr.open_dataset(f'{models_dir}/test.data.nc')
-var_names = data.variable.values
+
+#optionally can run on contributions
+data = xr.open_dataset(f'{models_dir}/test.contributions.nc')
 
 #take mean over time
+var_names = list(data.keys())
 data_mean = data.mean(dim='time', skipna= True)
 
 #crop the data for the region
@@ -136,7 +145,7 @@ data_cropped = data_mean.sel(lat=slice(bbox[2], bbox[3]),
 data_stacked = data_cropped.stack(z=('lon', 'lat'))
 
 #remove locations with nan values
-data_array = data_stacked['stack-50e2f0b556989bc5a94867be166bc66f'].values
+data_array = data_stacked.to_array().values
 counts_nan = np.isnan(data_array).sum(axis = 0)
 mask_locs = counts_nan < len(var_names)
 
@@ -161,7 +170,7 @@ plt.close()
 
 
 # only use variables with the largest sum of correlations, e.g. > 20
-mask_large = np.nansum(corr_mat, axis = 1) > 20
+mask_large = np.nansum(np.abs(corr_mat), axis = 1) > 20
 plt.figure(figsize = (12, 10))
 plt.pcolor(corr_mat[mask_large, :][:, mask_large])
 plt.xticks(np.arange(len(names[mask_large]))+0.5, names[mask_large], rotation = 90);
@@ -195,11 +204,12 @@ plt.close()
 
 
 #cluster the correlation matrix to see groups better
-D = pairwise_distances(corr_mat)
+X0 = corr_mat.copy()
+D = pairwise_distances(X0)
 H = sch.linkage(D, method='average')
 d1 = sch.dendrogram(H, no_plot=True)
 idx = d1['leaves']
-X = corr_mat[idx,:][:, idx]
+X = X0[idx,:][:, idx]
 
 plt.figure(figsize = (14, 12))
 plt.pcolor(X, cmap = 'coolwarm')
@@ -207,8 +217,8 @@ plt.clim((-1,1))
 plt.xticks(np.arange(len(names))+0.5, names, rotation = 90, fontsize = 8);
 plt.yticks(np.arange(len(names))+0.5, names, rotation = 0, fontsize = 8);
 plt.colorbar()
-plt.title(f'momo variable correlations {region}, clustered')
-plt.savefig(f'{plots_dir}/variable_corr_cluster_matrix.png')
+plt.title(f'momo variable correlations {region}, {month}, clustered')
+plt.savefig(f'{plots_dir}/variable_corr_cluster_matrix_{region}.png')
 plt.close()
 
 
