@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import scipy as sp
 from joblib import load
-from config_all import REQUIRED_VARS
+#from config_all import REQUIRED_VARS
 import pickle
 import xarray as xr
 
@@ -40,12 +40,17 @@ def main(months, models_dir, out_dir):
     else:
         if len(months) < 1:
             months = np.atleast_1d(months)
-            months = [f'{models_dir}/{x}/' for x in months]
+        months = [f'{models_dir}/{x}/' for x in months]
     
     #save inputs
     for m, dirs in enumerate(months):
         m = dirs.split('/')[-2]
         print(f'merging -----> {dirs}')
+
+        out_dir = f'{root_dir}/{out_dir}/model_data/{m}/combined/'
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        
         
         print(f'merging -----> X/test.data')
         files_momo = glob.glob(f'{dirs}/rf/*/test.data.nc')
@@ -54,12 +59,8 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
-        
-        out_dir = f'{root_dir}/{out_dir}/model_data/{m}/combined/'
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
-        xr.save_mfdataset([data], [f'{out_dir}/test.data.nc'])
-    
+        xr.save_mfdataset([data], [f'{out_dir}/test.data.nc'], engine = 'netcdf4')
+
         #save predicts
         print(f'merging -----> yhat/test.predict')
         files_momo = glob.glob(f'{dirs}/rf/*/test.predict.nc')
@@ -68,7 +69,7 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))    
         data = xr.merge(dat_momo)
-        xr.save_mfdataset([data], [f'{out_dir}/test.predict.nc'])
+        xr.save_mfdataset([data], [f'{out_dir}/test.predict.nc'], engine = 'netcdf4')
     
         #save truth
         print(f'merging -----> y/test.target')
@@ -78,8 +79,9 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))    
         data = xr.merge(dat_momo)
-        xr.save_mfdataset([data], [f'{out_dir}/test.target.nc'])
+        xr.save_mfdataset([data], [f'{out_dir}/test.target.nc'], engine = 'netcdf4')
         
+
         print(f'merging -----> contributions/test.constributions')
         files_momo = glob.glob(f'{dirs}/rf/*/test.contributions.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
@@ -87,12 +89,8 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
-        
-        out_dir = f'{root_dir}/{out_dir}/model_data/{m}/combined/'
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
-        xr.save_mfdataset([data], [f'{out_dir}/test.contributions.nc'])
-    
+        xr.save_mfdataset([data], [f'{out_dir}/test.contributions.nc'], engine = 'netcdf4')
+
     
 if __name__ == '__main__':
     import argparse
