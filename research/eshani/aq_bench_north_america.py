@@ -38,21 +38,21 @@ NUM_FEATURES = ['alt', 'relative_alt', 'water_25km',
 CAT_FEATURES = ['climatic_zone', 'type', 'type_of_area']
 OTHER = ['id', 'country', 'htap_region', 'dataset', 'lon', 'lat']
 
-
+# reads in csv file
 data = pd.read_csv('AQbench_dataset.csv')
 
+# filters data to only include North American data stations
 lon = np.array(data['lon'])
 lat = np.array(data['lat'])
-
 mask_lon = (lon>=-180) & (lon<=-53) #masks
 mask_lat = (lat>=-7) & (lat<=83)
 mask = mask_lon & mask_lat
-
 data = data.iloc[mask]
 
 
 feature_names = np.array(NUM_FEATURES)
 
+# one-hot encodes the categorical vairables
 x_cat = np.zeros((data.shape[0], len(CAT_FEATURES)))
 x_range = range(len(CAT_FEATURES))
 for i in x_range:
@@ -62,25 +62,16 @@ for i in x_range:
     for j, u in enumerate(unique_cat):
          mask = x== u
          x_cat[mask, i] = j+1
-
-
-y = np.array(data['o3_average_values']) 
 encoder = OneHotEncoder(sparse=False)
 onehot = encoder.fit_transform(data[CAT_FEATURES])
+
+# sets y to be 5 year average ozone
+y = np.array(data['o3_average_values']) 
+# sets x to be numerical features and one-hot-encoded categorical features
 x = np.array(np.column_stack([np.array(data[NUM_FEATURES]), onehot]))
 
-
-
-# #filter x data based on lon and lat for north america
-# for i in range(len(lon)):
-#     if(lon[i]>=-180 and lon[i]<=-53 and lat[i]>=7 and lat[i]<=83):
-#         new_x.append(np.array(data[i]))
-
-# x = new_x
-
-
-
-#kfold = GroupKFold(n_splits=len(data_files))
+# Random Forest Model ran on 5 splits of data to generate pred_y
+# kfold = GroupKFold(n_splits=len(data_files))
 pred_y = np.zeros((len(y), ))
 kfold = KFold(n_splits=5, shuffle=True, random_state=1234)
 for train_index, test_index in kfold.split(x):
@@ -94,67 +85,64 @@ for train_index, test_index in kfold.split(x):
 
     pred_y[test_index] = rf_predictor.predict(test_x)
 
-#stats
+# calculates root mean squared error
 mse = sklearn.metrics.mean_squared_error(y, pred_y)
 rmse = math.sqrt(mse)
 print("Root Mean Sqaured Error = " + str(rmse))
 
+# calculates r correlation value
 r = np.corrcoef(y, pred_y)
 print("r correlation = " + str(r[0,1]))
 
+# creates scatter plot of pred_y vs y and plots line of best fit
 a, b = np.polyfit(y, pred_y, 1)
-
 plt.scatter(y, pred_y, s=3)
 plt.plot(y, a*y+b, color="red", linewidth=2)
-
-plt.title('Predicted Y vs Actual Y', fontsize=14)
-plt.xlabel('Actual Y', fontsize=14)
-plt.ylabel('Predicted Y', fontsize=14)
-
+plt.title('Predicted Ozone vs Actual Ozone in North America', fontsize=12)
+plt.xlabel('Actual Ozone (ppb)', fontsize=12)
+plt.ylabel('Predicted Ozone (ppb)', fontsize=12)
+plt.xlim([0, 60])
+plt.ylim([0, 60])
+plt.savefig('scatter_north_america.png')
 plt.show()
 
+# plots histogram of y and pred_y
 range1 = np.max(y)-np.min(y)
 range2 = np.max(pred_y)-np.min(pred_y)
-
 plt.hist(y, bins=(int)(range1/2), color="blue", alpha=0.5)
 plt.hist(pred_y, bins=(int)(range2/2), color="red", alpha=0.5)
-plt.title('Histogram of Actual and Predicted Average Ozone over 5 years', fontsize=10)
-plt.xlabel('Average Ozone over 5 years', fontsize=10)
+plt.title('Histogram of Actual and Predicted Average Ozone in North America', fontsize=12)
+plt.xlabel('Average Ozone over 5 years ', fontsize=12)
 legend_drawn_flag = True
 plt.legend(["actual", "predicted"], loc=0, frameon=legend_drawn_flag)
+plt.savefig('hist_north_america.png')
 plt.show()
 
 
-
-#Feature and Permutation Importance
-
-# define dataset
-X, y = make_classification(n_samples=1625, n_features=32, n_informative=5, n_redundant=5, random_state=1)
+# Calculates feature importance
+X, y = make_classification(n_samples=len(y), n_features=x.shape[1], n_informative=5, n_redundant=5, random_state=1)
 model = RandomForestClassifier()
-# # fit the model
 model.fit(x, y)
 importance = model.feature_importances_
-# for i,v in enumerate(importance):
-# 	print('Feature %d: %0s, Score: %.5f' % (i, feature_names[i],v))
+# normalizes feature importance
 normal_array = importance/np.max(importance)
 plt.bar(feature_names, normal_array, color='blue', alpha=0.5)
 
 
-
+# Calculates permutation importance
 r = permutation_importance(model, x, y,
                             n_repeats=30,
                             random_state=0)
-
-# for i in range(len(r.importances_mean)):
-#     print('Feature %d: %s: %.5f +/- %.5f' % (i, feature_names[i], r.importances_mean[i], r.importances_std[i]))
-
+# normalizes permutation importance
 normal_array = r.importances_mean/np.max(r.importances_mean)
 plt.bar(feature_names, normal_array, color='red', alpha=0.5)
 
-plt.title('Feature Importance vs Permutation Importance', fontsize=14)
-plt.xlabel('Feature Name', fontsize=14)
-plt.ylabel('Normalized Importance', fontsize=14)
+# plots normalized feature importance against normalized permuation importance
+plt.title('Feature Importance vs Permutation Importance of North America', fontsize=12)
+plt.xlabel('Feature Name', fontsize=12)
+plt.ylabel('Normalized Importance', fontsize=12)
 plt.xticks(fontsize=8, rotation = 90)
 legend_drawn_flag = True
 plt.legend(["Feature Importance", "Permutation Importance"], loc=0, frameon=legend_drawn_flag)
+plt.savefig('importance_north_america.png')
 plt.show()
