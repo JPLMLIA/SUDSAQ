@@ -79,6 +79,9 @@ def daily(ds, config):
 
         data.append(ds[sel.vars].where(mask, drop=True).resample(time='1D').mean())
 
+    # Add variables that don't have a time dimension back in
+    data.append(ds.drop_dims('time'))
+
     # Merge the selections together
     ds = xr.merge(data)
 
