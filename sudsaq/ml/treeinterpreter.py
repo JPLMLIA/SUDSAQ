@@ -21,14 +21,6 @@ from tqdm import tqdm
 
 Logger = logging.getLogger('treeinterpreter.py')
 
-RAY = False
-try:
-    import ray
-
-    RAY = ray.is_initialized()
-except:
-    pass
-
 if LooseVersion(sklearn.__version__) < LooseVersion('0.17'):
     raise Exception('treeinterpreter requires scikit-learn 0.17 or later')
 
@@ -198,7 +190,9 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
         mean_bias         = None
         mean_contribution = None
 
-        if RAY:
+        try:
+            import ray
+
             Logger.debug('Using ray as backend')
             Logger.debug(f'Placing X into shared memory')
             X_id = ray.put(X)
@@ -221,7 +215,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                     mean_bias         = _iterative_mean(i, mean_bias, bias)
                     mean_contribution = _iterative_mean(i, mean_contribution, contribution)
                     mean_pred         = _iterative_mean(i, mean_pred, pred)
-        else:
+        except:
             Logger.debug('Using multiprocessing as backend')
             with mp.Pool(processes=n_jobs) as pool:
                 func    = partial(_predict_tree, X=X)
