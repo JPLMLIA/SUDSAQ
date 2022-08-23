@@ -198,7 +198,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
             X_id = ray.put(X)
 
             Logger.debug('Starting jobs')
-            ids = ray.get([_predict_tree.remote(estimator, X_id) for estimator in model.estimators_])
+            ids = [_predict_tree.remote(estimator, X_id) for estimator in model.estimators_]
 
             # Process jobs as they complete and update tqdm
             for i, _ in tqdm(enumerate(model.estimators_), desc='TreeInterpreter Jobs'):
