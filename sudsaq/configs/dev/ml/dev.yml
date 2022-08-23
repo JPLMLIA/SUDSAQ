@@ -205,10 +205,9 @@ jan:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jan/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/01.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/01.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/01.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/01.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jan/rf/run.log
 
@@ -216,10 +215,9 @@ feb:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/feb/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/02.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/02.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/02.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/02.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/feb/rf/run.log
 
@@ -227,10 +225,9 @@ mar:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/mar/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/03.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/03.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/03.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/03.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/mar/rf/run.log
 
@@ -238,10 +235,9 @@ apr:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/apr/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/04.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/04.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/04.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/04.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/apr/rf/run.log
 
@@ -249,10 +245,9 @@ may:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/may/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/05.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/05.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/05.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/05.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/may/rf/run.log
 
@@ -260,10 +255,9 @@ jun:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jun/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/06.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/06.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/06.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/06.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jun/rf/run.log
 
@@ -271,10 +265,9 @@ jul:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jul/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/07.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/07.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/07.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/07.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jul/rf/run.log
 
@@ -282,10 +275,9 @@ aug:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/aug/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/08.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/08.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/08.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/08.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/aug/rf/run.log
 
@@ -293,10 +285,9 @@ sep:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/sep/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/09.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/09.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/09.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/09.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/sep/rf/run.log
 
@@ -304,10 +295,9 @@ oct:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/oct/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/10.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/10.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/10.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/10.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/oct/rf/run.log
 
@@ -315,10 +305,9 @@ nov:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/nov/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/11.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/11.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/11.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/11.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/nov/rf/run.log
 
@@ -326,9 +315,8 @@ dec:
   output:
     path: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/dec/rf/
   input:
-    momo:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/12.nc
-    toar:
-      regex: /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/12.nc
+    glob:
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/12.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/12.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/dec/rf/run.log

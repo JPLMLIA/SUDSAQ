@@ -48,7 +48,7 @@ def _get_tree_paths(tree, node_id, depth=0):
         paths = [[node_id]]
     return paths
 
-@ray.remote(num_returns=3)
+@ray.remote
 def _predict_tree(model, X, joint_contribution=False):
     """
     For a given DecisionTreeRegressor, DecisionTreeClassifier,
@@ -201,10 +201,10 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
             ids = [_predict_tree.remote(estimator, X_id) for estimator in model.estimators_]
 
             # Process jobs as they complete and update tqdm
-            for i, _ in tqdm(enumerate(model.estimators_), desc='TreeInterpreter Jobs'):
+            for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
                 done, _ = ray.wait(ids, num_returns=1)
 
-                pred, bias, contribution = ray.get(done)
+                pred, bias, contribution = ray.get(done)[0]
 
                 if i < 1: # first iteration
                     mean_bias         = bias
@@ -214,9 +214,6 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                     mean_bias         = _iterative_mean(i, mean_bias, bias)
                     mean_contribution = _iterative_mean(i, mean_contribution, contribution)
                     mean_pred         = _iterative_mean(i, mean_pred, pred)
-
-            # Remove X from memory
-            free([X_id])
         else:
             Logger.debug('Using multiprocessing as backend')
             with mp.Pool(processes=n_jobs) as pool:
