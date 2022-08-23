@@ -25,7 +25,6 @@ import pickle
 import xarray as xr
 
 
-
 def main(months, models_dir, out_dir):
 
     #-----------------read in data

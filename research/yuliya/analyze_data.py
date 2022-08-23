@@ -21,7 +21,8 @@ root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
 if not os.path.exists(root_dir):
     root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
 
-bbox_dict = {'globe':[0, 360, -90, 90],
+#everything is in -180 to 180 lon
+bbox_dict = {'globe':[-180, 180, -90, 90],
             'europe': [-20, 40, 25, 80],
             'asia': [110, 160, 10, 70],
             'australia': [130, 170, -50, -10],
@@ -38,7 +39,7 @@ bbox = bbox_dict[region]
 month = 'jan'
 years = [2011, 2012, 2013, 2014]
 
-#set the directory for that month
+#set the directory for th60at month
 models_dir = f'{root_dir}/model/new/model_data/{month}/combined/'
 #set plot directory
 plots_dir = f'{models_dir}/plots/'
@@ -63,22 +64,23 @@ true_monthly_mean = np.nanmean(bias_true, axis = 2)
 
 #get predicted bias
 bias_pred = bias_pred.sel(time = np.in1d(bias_pred['time.year'], years))
-bias_pred = bias_pred['predict'].values
-#bias_pred = bias_pred['stack-1fd40670e8e2b515c6221d4afa3a768a'].values
+#bias_pred = bias_pred['predict'].values
+bias_pred = bias_pred['stack-1fd40670e8e2b515c6221d4afa3a768a'].values
 pred_monthly_mean = np.nanmean(bias_pred, axis = 2)
 
 #plot difference between true and predicted
 x, y = np.meshgrid(lon, lat)
 fig = plt.figure(figsize=(18, 9))
 ax = plt.subplot(projection = ccrs.PlateCarree())
-plt.pcolor(x, y, true_monthly_mean - pred_monthly_mean, cmap = 'jet')
+plt.pcolor(x, y, pred_monthly_mean, cmap = 'jet')
+#plt.clim((-1200, 0))
 ax.set_global()
 ax.coastlines()
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='gray', alpha=0.5, linestyle='--')
 gl.xformatter = LONGITUDE_FORMATTER
 gl.yformatter = LATITUDE_FORMATTER
-ax.set_extent([bbox[0]+360, bbox[1]+360, bbox[2], bbox[3]], crs=ccrs.PlateCarree())
+ax.set_extent([bbox[0], bbox[1], bbox[2], bbox[3]], crs=ccrs.PlateCarree())
 ax.stock_img()
 plt.colorbar()
 plt.title(f'true - predicted bias residuals')
@@ -90,10 +92,11 @@ plt.close()
 # -----------------------------------
 # --------------- PLOT an input variable
 name = 'momo.osrc'
-
 data = xr.open_dataset(f'{models_dir}/test.data.nc')
+data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
+data = data.sortby(data.lon)
 data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
-                        lon=slice(bbox[0], bbox[1]))
+                         lon=slice(bbox[0], bbox[1]))
 
 #lists all variables    
 var_names = list(data.keys())
@@ -108,6 +111,7 @@ x, y = np.meshgrid(lon, lat)
 fig = plt.figure(figsize=(18, 9))
 ax = plt.subplot(projection = ccrs.PlateCarree())
 plt.pcolor(x, y, var_monthly_mean, cmap = 'jet')
+plt.clim(-1200, 0)
 ax.set_global()
 ax.coastlines()
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
@@ -129,20 +133,25 @@ plt.close()
 # -----------------------------------
 # --------------- correlation analysis
 
-#read in data and subset a region from bbox
-data = xr.open_dataset(f'{models_dir}/test.data.nc')
+#option1: read in data and subset a region from bbox
+data = xr.open_dataset(f'{models_dir}/test.data.mean.nc')
+data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
+data = data.sortby(data.lon)
 
-#optionally can run on contributions
-data = xr.open_dataset(f'{models_dir}/test.contributions.nc')
+#option2: optionally can run on contributions
+data = xr.open_dataset(f'{models_dir}/test.contributions.mean.nc')
+data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
+data = data.sortby(data.lon)
 
 #take mean over time
 var_names = list(data.keys())
-data_mean = data.mean(dim='time', skipna= True)
+#data_mean = data.mean(dim='time', skipna= True)
 
 #crop the data for the region
-data_cropped = data_mean.sel(lat=slice(bbox[2], bbox[3]), 
+data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
                         lon=slice(bbox[0], bbox[1]))
 data_stacked = data_cropped.stack(z=('lon', 'lat'))
+
 
 #remove locations with nan values
 data_array = data_stacked.to_array().values
