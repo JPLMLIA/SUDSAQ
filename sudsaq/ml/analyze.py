@@ -21,7 +21,7 @@ from sudsaq.config import (
 )
 from sudsaq.data  import load
 from sudsaq.ml    import plots
-from sudsaq.ml    import mptreeinterpreter as ti
+from sudsaq.ml    import treeinterpreter as ti
 from sudsaq.utils import (
     align_print,
     load_pkl,
