@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import logging
 import multiprocessing as mp
-import numpy           as np
+import numpy as np
+import ray
 import sklearn
 
 from distutils.version import LooseVersion
@@ -17,6 +19,8 @@ from sklearn.tree import (
     _tree
 )
 from tqdm import tqdm
+
+Logger = logging.getLogger('treeinterpreter.py')
 
 if LooseVersion(sklearn.__version__) < LooseVersion('0.17'):
     raise Exception('treeinterpreter requires scikit-learn 0.17 or later')
@@ -44,6 +48,7 @@ def _get_tree_paths(tree, node_id, depth=0):
         paths = [[node_id]]
     return paths
 
+@ray.remote(num_returns=3)
 def _predict_tree(model, X, joint_contribution=False):
     """
     For a given DecisionTreeRegressor, DecisionTreeClassifier,
@@ -187,12 +192,20 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
         mean_bias         = None
         mean_contribution = None
 
-        with mp.Pool(processes=n_jobs) as pool:
-            bar     = tqdm(total=len(model.estimators_))
-            func    = partial(_predict_tree, X=X)
-            results = pool.imap_unordered(func, model.estimators_)
+        if ray.is_initialized():
+            Logger.debug('Using ray as backend')
+            Logger.debug(f'Placing X into shared memory')
+            X_id = ray.put(X)
 
-            for i, (pred, bias, contribution) in enumerate(results):
+            Logger.debug('Starting jobs')
+            ids = ray.get([_predict_tree.remote(estimator, X_id) for estimator in model.estimators_])
+
+            # Process jobs as they complete and update tqdm
+            for i, _ in tqdm(enumerate(model.estimators_), desc='TreeInterpreter Jobs'):
+                done, _ = ray.wait(ids, num_returns=1)
+
+                pred, bias, contribution = ray.get(done)
+
                 if i < 1: # first iteration
                     mean_bias         = bias
                     mean_contribution = contribution
@@ -202,7 +215,23 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                     mean_contribution = _iterative_mean(i, mean_contribution, contribution)
                     mean_pred         = _iterative_mean(i, mean_pred, pred)
 
-                bar.update()
+            # Remove X from memory
+            free([X_id])
+        else:
+            Logger.debug('Using multiprocessing as backend')
+            with mp.Pool(processes=n_jobs) as pool:
+                func    = partial(_predict_tree, X=X)
+                results = pool.imap_unordered(func, model.estimators_)
+
+                for i, (pred, bias, contribution) in tqdm(enumerate(results), desc='TreeInterpreter Jobs'):
+                    if i < 1: # first iteration
+                        mean_bias         = bias
+                        mean_contribution = contribution
+                        mean_pred         = pred
+                    else:
+                        mean_bias         = _iterative_mean(i, mean_bias, bias)
+                        mean_contribution = _iterative_mean(i, mean_contribution, contribution)
+                        mean_pred         = _iterative_mean(i, mean_pred, pred)
 
         return mean_pred, mean_bias, mean_contribution
 
