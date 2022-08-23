@@ -141,11 +141,11 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
-        try:
-            predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
-        except:
-            Logger.exception('Failed to multiprocess TreeInterpreter, running original')
-            predicts, bias[:], contributions[:] = tio.predict(model, data, **config.treeinterpreter)
+        # try:
+        #     predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+        # except:
+        #     Logger.exception('Failed to multiprocess TreeInterpreter, running original')
+        predicts, bias[:], contributions[:] = tio.predict(model, data, **config.treeinterpreter)
 
         predict[:] = predicts.flatten()
     else:
