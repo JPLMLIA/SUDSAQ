@@ -59,7 +59,18 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
-        xr.save_mfdataset([data], [f'{out_dir}/test.data.nc'], engine = 'netcdf4')
+        
+        filename = f'{out_dir}/test.data.nc'
+        if os.path.exists(filename):
+            os.remove(filename)
+        xr.save_mfdataset([data], [filename], engine = 'netcdf4')
+        
+        data_mean = data.mean(dim='time', skipna= True)
+        filename = f'{out_dir}/test.data.mean.nc'
+        if os.path.exists(filename):
+            os.remove(filename)
+        xr.save_mfdataset([data_mean], [filename], engine = 'netcdf4')
+
 
         #save predicts
         print(f'merging -----> yhat/test.predict')
@@ -89,7 +100,16 @@ def main(months, models_dir, out_dir):
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
-        xr.save_mfdataset([data], [f'{out_dir}/test.contributions.nc'], engine = 'netcdf4')
+        filename = f'{out_dir}/test.contributions.nc'
+        if os.path.exists(filename):
+            os.remove(filename)
+        xr.save_mfdataset([data], [filename], engine = 'netcdf4')
+        
+        data_mean = data.mean(dim='time', skipna= True)
+        filename = f'{out_dir}/test.contributions.mean.nc'
+        if os.path.exists(filename):
+            os.remove(filename)
+        xr.save_mfdataset([data_mean], [filename], engine = 'netcdf4')
 
     
 if __name__ == '__main__':
