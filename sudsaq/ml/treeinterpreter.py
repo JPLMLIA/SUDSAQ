@@ -2,7 +2,6 @@
 import logging
 import multiprocessing as mp
 import numpy as np
-import ray
 import sklearn
 
 from distutils.version import LooseVersion
@@ -21,6 +20,14 @@ from sklearn.tree import (
 from tqdm import tqdm
 
 Logger = logging.getLogger('treeinterpreter.py')
+
+RAY = False
+try:
+    import ray
+
+    RAY = ray.is_initialized()
+except:
+    pass
 
 if LooseVersion(sklearn.__version__) < LooseVersion('0.17'):
     raise Exception('treeinterpreter requires scikit-learn 0.17 or later')
@@ -48,7 +55,6 @@ def _get_tree_paths(tree, node_id, depth=0):
         paths = [[node_id]]
     return paths
 
-@ray.remote
 def _predict_tree(model, X, joint_contribution=False):
     """
     For a given DecisionTreeRegressor, DecisionTreeClassifier,
@@ -192,13 +198,14 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
         mean_bias         = None
         mean_contribution = None
 
-        if ray.is_initialized():
+        if RAY:
             Logger.debug('Using ray as backend')
             Logger.debug(f'Placing X into shared memory')
             X_id = ray.put(X)
 
             Logger.debug('Starting jobs')
-            ids = [_predict_tree.remote(estimator, X_id) for estimator in model.estimators_]
+            func = ray.remote(_predict_tree)
+            ids  = [func.remote(estimator, X_id) for estimator in model.estimators_]
 
             # Process jobs as they complete and update tqdm
             for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
@@ -220,7 +227,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                 func    = partial(_predict_tree, X=X)
                 results = pool.imap_unordered(func, model.estimators_)
 
-                for i, (pred, bias, contribution) in tqdm(enumerate(results), desc='TreeInterpreter Jobs'):
+                for i, (pred, bias, contribution) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
                     if i < 1: # first iteration
                         mean_bias         = bias
                         mean_contribution = contribution

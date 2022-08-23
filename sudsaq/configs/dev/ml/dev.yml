@@ -161,6 +161,7 @@ create-optimize-rf:
     file: /Users/jamesmo/projects/suds-air-quality/local/logs/create-optimize-rf.1.log
 
 default: # create-rf
+  ray: False
   target: momo.mda8 - toar.o3.dma8epa.mean
   train: momo.(?!o3|mda8).*
   train_performance: False
@@ -200,6 +201,8 @@ default: # create-rf
       momo:
         vars: momo.(?!mda8).*
         time: [8, 16]
+  log:
+    level: debug
 
 jan:
   output:

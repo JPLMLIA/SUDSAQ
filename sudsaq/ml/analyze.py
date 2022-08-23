@@ -31,6 +31,15 @@ from sudsaq.utils import (
 
 Logger = logging.getLogger('sudsaq/ml/analyze.py')
 
+RAY = False
+# try:
+#     from ray.util.joblib import register_ray
+#     register_ray()
+#     # with parallel_backend("ray"):
+#     RAY = True
+# except:
+#     pass
+
 def perm_importance(model, data, target, output=None):
     """
     """

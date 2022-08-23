@@ -3,7 +3,6 @@
 import logging
 import os
 import pickle
-import ray
 import sys
 import xarray as xr
 
@@ -64,8 +63,15 @@ def init(args):
 
     logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
 
-    Logger.debug(f'Initializing ray')
-    ray.init(**config.ray)
+    if config.ray:
+        try:
+            import ray
+            Logger.debug('Initializing ray')
+            ray.init(**config.ray)
+        except Exception as e:
+            Logger.debug('ray could not be initialized:\n{e}')
+    else:
+        Logger.debug('ray is disabled for this run')
 
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
