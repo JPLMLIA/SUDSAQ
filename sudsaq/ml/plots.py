@@ -145,7 +145,7 @@ def importance(df, pdf=None, save=None):
     # Retrieve the config for this plot type
     config = Config().plots.importances
 
-    if pdf is not None:
+    if isinstance(pdf, pandas.core.frame.DataFrame):
         perm = True
 
         # Sort by df
