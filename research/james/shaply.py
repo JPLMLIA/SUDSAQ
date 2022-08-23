@@ -26,19 +26,19 @@ data.load(), target.load(), predict.load()
 
 #%
 
-data = data.to_array().stack({'loc': ['lat', 'lon', 'time']})
-data = data.transpose('loc', 'variable')
+data = data.stack({'loc': ['lat', 'lon', 'time']})
+# data = data.transpose('loc', 'variable')
 _data = data.head(50)
 #%%
 
-sv = shap.TreeExplainer(model).shap_values(_data.values)
-sv
-#%%
+from types import SimpleNamespace
 
-help(shap.summary_plot)
-shap.summary_plot(sv, _data.values, feature_names=_data['variable'].values, plot_size=(10, 5))
-
-#%%
+Logger = SimpleNamespace(
+    exception = lambda string: print(f'EXCEPTION: {string}'),
+    info      = lambda string: print(f'INFO: {string}'),
+    error     = lambda string: print(f'ERROR: {string}'),
+    debug     = lambda string: print(f'DEBUG: {string}')
+)
 
 import multiprocessing as mp
 import os
@@ -64,31 +64,53 @@ def _calc_shap_values(data, explainer):
 def shap_values(model, data, n_jobs=-1):
     """
     """
+    Logger.debug('Creating explainer')
+    explainer = shap.TreeExplainer(model, data)#, feature_perturbation='tree_path_dependent')
+
     n_jobs  = {-1: os.cpu_count(), None: 1}.get(n_jobs, n_jobs)
     subsets = np.array_split(data, n_jobs)
 
+    Logger.debug(f'Using {n_jobs} jobs')
+    Logger.debug('Performing SHAP calculations')
+
+    # Disable additivity check for now, needs more looking into
+    # Issues due to multiprocessing/splitting the input X
+    func = partial(explainer, check_additivity=False)
+
     bar  = tqdm(total=len(subsets), desc='Processes Finished')
     rets = []
-
-    explainer = shap.TreeExplainer(model, data)
     with mp.Pool(processes=n_jobs) as pool:
-        for ret in pool.imap(explainer, subsets):
+        for ret in pool.imap(func, subsets):
             rets.append(ret)
             bar.update()
+
+    return rets
 
     # Combine the results together to one Explanation object
     explanation = shap.Explanation(
         np.vstack([ret.values      for ret in rets]),
-        np.hstack([ret.base_values for ret in rets]),
+        np.vstack([ret.base_values for ret in rets]),
         np.vstack([ret.data        for ret in rets]),
         feature_names = ret.feature_names
     )
 
     return explanation
 
-_data.to_dataset('variable')
-X = _data.to_dataset('variable').to_dataframe()
-ex = shap_values(model, X)
+X  = _data.to_dataframe()
+_ex = shap_values(model, X)
+#%%
+_ex[1]
+ex[1]
+
+#%%
+
+exp = shap.Explanation(
+    np.vstack([ret.values      for ret in ex]),
+    np.vstack([ret.base_values for ret in ex]),
+    np.vstack([ret.data        for ret in ex]),
+    feature_names = X.columns
+)
+exp
 
 
 #%%
@@ -117,16 +139,6 @@ import seaborn as sns
 sns.set_style('darkgrid')
 sns.set_context('talk')
 
-
-fig, ax = plt.subplots(figsize=(15, 8))
-shap.dependence_plot(0, s.values, data.values, interaction_index=1, feature_names=s['variable'].values, ax=ax)
-
-#%%
-# help(shap.summary_plot)
-# fig, ax = plt.subplots(figsize=(15, 8))
-shap.summary_plot(s.values, data.values, feature_names=s['variable'].values, plot_size=(15, 8))
-
-#%%
 #%%
 
 explainer = shap.Explainer(model)
@@ -170,7 +182,8 @@ import matplotlib.pyplot as plt
 
 # Set plot_size=None to disable auto resizing
 # Set show=False to enable control over the plot
-shap.summary_plot(ex, X, show=False)
+shap.summary_plot(exp, X, show=False)
+shap.summary_plot(exp, X, show=False)
 
 # Tweak plot as needed
 plt.savefig('local/runs/11-14/bias/nov/rf/2012/shap.summary.png')
@@ -218,3 +231,50 @@ def to_dataset(explanation, data):
 ds = to_dataset(ex, _data)
 
 #%%
+
+explainer = shap.TreeExplainer(model, X)
+
+help(shap.TreeExplainer)
+
+help(explainer)
+
+#%%
+X.shape
+X.sample(45)
+
+help(X.sample)
+
+#%%
+
+years = [2012, 2013, 2014, 2015]
+{
+
+}
+#%%
+
+from glob import glob
+
+runs = glob('/Volumes/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/*/**/**')
+
+stat = {}
+for run in runs:
+    split = run.split('/')
+    month = split[-3]
+    year  = split[-1]
+
+    if month not in stat:
+        stat[month] = []
+
+    if year.startswith('20'):
+        stat[month].append(int(year))
+
+stat
+
+#%%
+
+from sudsaq.config import Config
+
+c = Config('sudsaq/configs/dev/ml/monthly/create.bias.11-15.yml', 'jan')
+c.input.glob
+
+xr.open_mfdataset(c.input.glob)

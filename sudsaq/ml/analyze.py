@@ -28,6 +28,7 @@ from sudsaq.utils import (
     mkdir,
     save_objects
 )
+from treeinterpreter import treeinterpreter as tio
 
 Logger = logging.getLogger('sudsaq/ml/analyze.py')
 
@@ -140,7 +141,12 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
-        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+        try:
+            predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+        except:
+            Logger.exception('Failed to multiprocess TreeInterpreter, running original')
+            predicts, bias[:], contributions[:] = tio.predict(model, data, **config.treeinterpreter)
+
         predict[:] = predicts.flatten()
     else:
         Logger.info('Predicting')
@@ -177,7 +183,10 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     if 'Forest' in str(model):
         stats.mimportance = model_importance(model, data['variable'], output=impout)
     if config.permutation_importance:
-        stats.pimportance = perm_importance(model, data, target, output=impout)
+        try:
+            stats.pimportance = perm_importance(model, data, target, output=impout)
+        except:
+            Logger.exception('Failed to generate permutation importance')
 
     # Create plots if enabled
     if config.output.plots:
