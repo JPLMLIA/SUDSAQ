@@ -101,13 +101,16 @@ def fit(model, data, target, i=None, test=True):
             target.test = target.test.dropna('loc')
 
         Logger.debug('Loading test data')
-        target.test = target.test.load()
 
-        if target.test.isnull().all():
-            Logger.warning('Test data detected to be entirely NaN, cancelling test analysis for this fold')
+        target.test = target.test.load()
+        if target.test.size == 0:
+            Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
             return
 
         data.test = data.test.load()
+        if data.test.size == 0:
+            Logger.warning('Test data detected to be entirely NaN, cancelling test analysis for this fold')
+            return
 
         Logger.info(f'Creating test set performance analysis')
         analyze(

@@ -215,7 +215,8 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
                     mean_bias         = _iterative_mean(i, mean_bias, bias)
                     mean_contribution = _iterative_mean(i, mean_contribution, contribution)
                     mean_pred         = _iterative_mean(i, mean_pred, pred)
-        except:
+
+        except ModuleNotFoundError:
             Logger.debug('Using multiprocessing as backend')
             with mp.Pool(processes=n_jobs) as pool:
                 func    = partial(_predict_tree, X=X)
