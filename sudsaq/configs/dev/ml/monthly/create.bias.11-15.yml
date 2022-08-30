@@ -14,7 +14,9 @@ default:
   treeinterpreter:
     n_jobs: -1
   explain: False
-  ray: False
+  ray:
+    _plasma_directory: /scratch/jamesmo/tmp
+    _temp_dir: /scratch/jamesmo/tmp
   output:
     model        : True
     data         : True

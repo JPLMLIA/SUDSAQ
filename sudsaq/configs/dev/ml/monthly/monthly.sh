@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# export JOBLIB_TEMP_FOLDER=/home/jamesmo/suds-air-quality/local/tmp
+export JOBLIB_TEMP_FOLDER=/scratch/jamesmo/tmp
 export HDF5_USE_FILE_LOCKING=FALSE
 
 source /usr/local/anaconda3/bin/activate
