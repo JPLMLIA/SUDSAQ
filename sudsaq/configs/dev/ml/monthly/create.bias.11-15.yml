@@ -46,125 +46,126 @@ default:
       momo:
         vars: momo.(?!mda8).* # Match all momo variables except mda8
         time: [8, 16]
+        local: True
   log:
     level: debug
 
 jan:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jan/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jan/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jan/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jan/rf/run.log
 
 feb:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/feb/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/feb/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/02.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/02.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/feb/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/feb/rf/run.log
 
 mar:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/mar/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/mar/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/03.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/03.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/mar/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/mar/rf/run.log
 
 apr:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/apr/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/apr/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/04.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/04.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/apr/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/apr/rf/run.log
 
 may:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/may/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/may/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/05.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/05.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/may/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/may/rf/run.log
 
 jun:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jun/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jun/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/06.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/06.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jun/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jun/rf/run.log
 
 jul:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jul/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jul/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/jul/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/jul/rf/run.log
 
 aug:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/aug/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/aug/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/08.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/08.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/aug/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/aug/rf/run.log
 
 sep:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/sep/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/sep/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/09.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/09.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/sep/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/sep/rf/run.log
 
 oct:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/oct/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/oct/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/10.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/10.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/oct/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/oct/rf/run.log
 
 nov:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/nov/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/nov/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/11.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/11.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/nov/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/nov/rf/run.log
 
 dec:
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/dec/rf/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/dec/rf/
   input:
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/12.nc         # MOMO
       - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/12.nc # TOAR
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias/dec/rf/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/bias-local/dec/rf/run.log

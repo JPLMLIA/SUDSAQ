@@ -211,6 +211,7 @@ jan:
     glob:
       - /Volumes/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/01.nc
       - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-4]/01.nc
+      - /Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/metadata.nc
   log:
     file: /Users/jamesmo/projects/suds-air-quality/local/runs/11-14/bias/jan/rf/run.log
 

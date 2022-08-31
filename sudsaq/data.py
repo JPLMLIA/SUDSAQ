@@ -2,6 +2,7 @@
 """
 import logging
 import datetime as dt
+import numpy    as np
 import os
 import re
 import xarray   as xr
@@ -9,6 +10,37 @@ import xarray   as xr
 from glob import glob
 
 from sudsaq.config import Config
+
+# List of UTC+Offset, (West Lon, East Lon) to apply in daily()
+Timezones = [
+#  offset, (west, east)
+    (  0, (  0.0, 7.5)),
+    (  1, (  7.5, 22.5)),
+    (  2, ( 22.5, 37.5)),
+    (  3, ( 37.5, 52.5)),
+    (  4, ( 52.5, 67.5)),
+    (  5, ( 67.5, 82.5)),
+    (  6, ( 82.5, 97.5)),
+    (  7, ( 97.5, 112.5)),
+    (  8, (112.5, 127.5)),
+    (  9, (127.5, 142.5)),
+    ( 10, (142.5, 157.5)),
+    ( 11, (157.5, 172.5)),
+    ( 12, (172.5, 180.0)),
+    (-12, (180.0, 187.5)),
+    (-11, (187.5, 202.5)),
+    (-10, (202.5, 217.5)),
+    ( -9, (217.5, 232.5)),
+    ( -8, (232.5, 247.5)),
+    ( -7, (247.5, 262.5)),
+    ( -6, (262.5, 277.5)),
+    ( -5, (277.5, 292.5)),
+    ( -4, (292.5, 307.5)),
+    ( -3, (307.5, 322.5)),
+    ( -2, (322.5, 337.5)),
+    ( -1, (337.5, 352.5)),
+    (  0, (352.5, 360.0))
+]
 
 Logger = logging.getLogger('sudsaq/select.py')
 
@@ -72,15 +104,30 @@ def daily(ds, config):
     data = []
     for sect, sel in config.input.daily.items():
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
-        if isinstance(sel.time, list):
-            mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
-        else:
-            mask = (time == dt.time(sel.time))
+        if sel.local:
+            Logger.debug('Using local timezones')
+            for offset, bounds in Timezones:
+                sub  = ds.sel(lon=slice(*bounds))
+                time = ( sub.time + np.timedelta64(offset, 'h') ).dt.time
 
-        data.append(ds[sel.vars].where(mask, drop=True).resample(time='1D').mean())
+                if isinstance(sel.time, list):
+                    mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
+                else:
+                    mask = (time == dt.time(sel.time))
+
+                data.append(sub[sel.vars].where(mask, drop=True).resample(time='1D').mean())
+        else:
+            if isinstance(sel.time, list):
+                mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
+            else:
+                mask = (time == dt.time(sel.time))
+
+            data.append(ds[sel.vars].where(mask, drop=True).resample(time='1D').mean())
 
     # Add variables that don't have a time dimension back in
-    data.append(ds.drop_dims('time'))
+    timeless = ds.drop_dims('time')
+    Logger.debug(f'- Appending timeless variables: {timeless}')
+    data.append(timeless)
 
     # Merge the selections together
     ds = xr.merge(data)
