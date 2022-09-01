@@ -106,8 +106,10 @@ def daily(ds, config):
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
             Logger.debug('Using local timezones')
+            ns    = ds[sel.vars]
+            local = []
             for offset, bounds in Timezones:
-                sub  = ds.sel(lon=slice(*bounds))
+                sub  = ns.sel(lon=slice(*bounds))
                 time = ( sub.time + np.timedelta64(offset, 'h') ).dt.time
 
                 if isinstance(sel.time, list):
@@ -115,7 +117,10 @@ def daily(ds, config):
                 else:
                     mask = (time == dt.time(sel.time))
 
-                data.append(sub[sel.vars].where(mask, drop=True).resample(time='1D').mean())
+                local.append(sub.where(mask, drop=True).resample(time='1D').mean())
+
+            # Merge these datasets back together to create the full grid
+            data.append(xr.merge(local))
         else:
             if isinstance(sel.time, list):
                 mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
@@ -126,8 +131,9 @@ def daily(ds, config):
 
     # Add variables that don't have a time dimension back in
     timeless = ds.drop_dims('time')
-    Logger.debug(f'- Appending timeless variables: {timeless}')
-    data.append(timeless)
+    if len(timeless) > 0:
+        Logger.debug(f'- Appending timeless variables: {timeless}')
+        data.append(timeless)
 
     # Merge the selections together
     ds = xr.merge(data)
