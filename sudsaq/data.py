@@ -105,7 +105,7 @@ def daily(ds, config):
     for sect, sel in config.input.daily.items():
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
-            Logger.debug('Using local timezones')
+            Logger.debug('-- Using local timezones')
             ns    = ds[sel.vars]
             local = []
             for offset, bounds in Timezones:
@@ -120,6 +120,7 @@ def daily(ds, config):
                 local.append(sub.where(mask, drop=True).resample(time='1D').mean())
 
             # Merge these datasets back together to create the full grid
+            Logger.debug('-- Merging local averages together')
             data.append(xr.merge(local))
         else:
             if isinstance(sel.time, list):
@@ -136,6 +137,7 @@ def daily(ds, config):
         data.append(timeless)
 
     # Merge the selections together
+    Logger.debug('- Merging all averages together')
     ds = xr.merge(data)
 
     # Cast back to custom Dataset (xr.merge creates new)
