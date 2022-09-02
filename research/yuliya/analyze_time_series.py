@@ -103,7 +103,7 @@ plt.close()
 
 
 ### -----------------
-### this will plot momo mda8 and toar mda8
+### this will plot bias mda8 and toar mda8, then will compute momo mda8
 
 coord = [33, -84]
 bias_files = glob.glob(f'{root_dir}/model/new/model_data/*/combined/test.target.nc')
