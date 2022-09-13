@@ -121,7 +121,7 @@ def daily(ds, config):
 
             # Merge these datasets back together to create the full grid
             Logger.debug('-- Merging local averages together')
-            data.append(xr.merge(local))
+            data.append(xr.merge(local, compat='override'))
         else:
             if isinstance(sel.time, list):
                 mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
@@ -133,12 +133,12 @@ def daily(ds, config):
     # Add variables that don't have a time dimension back in
     timeless = ds.drop_dims('time')
     if len(timeless) > 0:
-        Logger.debug(f'- Appending timeless variables: {timeless}')
+        Logger.debug(f'- Appending {len(timeless)} timeless variables: {list(timeless)}')
         data.append(timeless)
 
     # Merge the selections together
     Logger.debug('- Merging all averages together')
-    ds = xr.merge(data)
+    ds = xr.merge(data, compat='override')
 
     # Cast back to custom Dataset (xr.merge creates new)
     ds = Dataset(ds)

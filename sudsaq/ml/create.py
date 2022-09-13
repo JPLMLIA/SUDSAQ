@@ -56,13 +56,24 @@ def fit(model, data, target, i=None, test=True):
     Logger.info('Preparing data for model training')
 
     # Always emove NaNs on the training set
+    Logger.debug('Dropping NaNs from training data')
+    data.train   = data.train.dropna('loc')
+    target.train = target.train.dropna('loc')
+
     Logger.debug('Aligning training data')
-    data.train, target.train = xr.align(data.train.dropna('loc'), target.train.dropna('loc'), copy=False)
+    data.train, target.train = xr.align(data.train, target.train, copy=False)
 
     # Make sure the data is loaded into memory
     Logger.debug('Loading training data')
     data.train   = data.train.load()
     target.train = target.train.load()
+
+    if target.train.size == 0:
+        Logger.error('Train target detected to be empty, skipping this fold')
+        return
+    if data.train.size == 0:
+        Logger.error('Train data detected to be empty, skipping this fold')
+        return
 
     # Create a subdirectory if kfold
     output = config.output.path
@@ -91,14 +102,14 @@ def fit(model, data, target, i=None, test=True):
         )
 
     if test:
+        Logger.debug('Dropping NaNs in test data')
+        # Target and data drop NaNs separately for prediction, will be aligned afterwards
+        data.test   = data.test.dropna('loc')
+        target.test = target.test.dropna('loc')
+
         if config.align_test:
             Logger.debug('Aligning test data')
-            data.test, target.test = xr.align(data.test.dropna('loc'), target.test.dropna('loc'), copy=False)
-        else:
-            Logger.debug('Dropping NaNs in test data')
-            # Target and data drop NaNs separately for prediction, will be aligned afterwards
-            data.test   = data.test.dropna('loc')
-            target.test = target.test.dropna('loc')
+            data.test, target.test = xr.align(data.test, target.test, copy=False)
 
         Logger.debug('Loading test data')
 
