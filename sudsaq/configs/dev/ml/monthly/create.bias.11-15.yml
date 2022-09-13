@@ -49,6 +49,7 @@ default:
         local: True
   log:
     level: debug
+    reset: True
 
 jan:
   output:

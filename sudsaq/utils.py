@@ -48,6 +48,9 @@ def init(args):
         # Make sure the directory exists first
         mkdir(config.log.file)
 
+        if config.log.reset and os.path.exists(config.log.file):
+            os.remove(config.log.file)
+
         # Add the file logging
         fh = logging.FileHandler(config.log.file)
         fh.setLevel(logging.DEBUG)
