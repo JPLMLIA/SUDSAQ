@@ -8,6 +8,7 @@ import re
 import xarray   as xr
 
 from glob import glob
+from tqdm import tqdm
 
 from sudsaq.config import Config
 
@@ -108,7 +109,7 @@ def daily(ds, config):
             Logger.debug('-- Using local timezones')
             ns    = ds[sel.vars]
             local = []
-            for offset, bounds in Timezones:
+            for offset, bounds in tqdm(Timezones, desc='Timezones Calculated'):
                 sub  = ns.sel(lon=slice(*bounds))
                 time = ( sub.time + np.timedelta64(offset, 'h') ).dt.time
 
