@@ -109,16 +109,19 @@ def daily(ds, config):
         """
         if isinstance(sel, list):
             mask = (dt.time(sel[0]) <= time) & (time < dt.time(sel[1]))
+            ds   = ds.where(mask, drop=True)
+
+            # Floor the times to the day for the groupby operation
+            ds.coords['time'] = ds.time.dt.floor('1D')
+
+            # Now group as daily taking the mean
+            ds = ds.groupby('time').mean()
         else:
             mask = (time == dt.time(sel))
+            ds   = ds.where(mask, drop=True)
 
-        ds = ds.where(mask, drop=True)
-
-        # Floor the times to the day for the groupby operation
-        ds.coords['time'] = ds.time.dt.floor('1D')
-
-        # Now group as daily taking the mean
-        ds = ds.groupby('time').mean()
+            # Floor the times to the day for the groupby operation
+            ds.coords['time'] = ds.time.dt.floor('1D')
 
         return ds
 
