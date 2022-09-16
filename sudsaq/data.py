@@ -112,15 +112,15 @@ def daily(ds, config):
         else:
             mask = (time == dt.time(sel))
 
-        sub = sub.where(mask, drop=True)
+        ds = ds.where(mask, drop=True)
 
         # Floor the times to the day for the groupby operation
-        sub.coords['time'] = time.dt.floor('1D')
+        ds.coords['time'] = time.dt.floor('1D')
 
         # Now group as daily taking the mean
-        sub = sub.groupby('time').mean()
+        ds = ds.groupby('time').mean()
 
-        return sub
+        return ds
 
     # Select time ranges per config
     time = ds.time.dt.time
