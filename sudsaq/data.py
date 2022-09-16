@@ -96,10 +96,32 @@ def split_and_stack(ds, config, lazy=True):
 
     return data, target
 
+
+
+
 def daily(ds, config):
     """
     Aligns a dataset to a daily average
     """
+    def select_times(ds, sel, time):
+        """
+        Selects timestamps using integer hours (0-23) over all dates
+        """
+        if isinstance(sel, list):
+            mask = (dt.time(sel[0]) <= time) & (time < dt.time(sel[1]))
+        else:
+            mask = (time == dt.time(sel))
+
+        sub = sub.where(mask, drop=True)
+
+        # Floor the times to the day for the groupby operation
+        sub.coords['time'] = time.dt.floor('1D')
+
+        # Now group as daily taking the mean
+        sub = sub.groupby('time').mean()
+
+        return sub
+
     # Select time ranges per config
     time = ds.time.dt.time
     data = []
@@ -109,27 +131,19 @@ def daily(ds, config):
             Logger.debug('-- Using local timezones')
             ns    = ds[sel.vars]
             local = []
-            for offset, bounds in tqdm(Timezones, desc='Timezones Calculated'):
+            for offset, bounds in tqdm(Timezones, desc='Timezones Processed'):
                 sub  = ns.sel(lon=slice(*bounds))
                 time = ( sub.time + np.timedelta64(offset, 'h') ).dt.time
+                sub  = select_times(sub, sel.time, time)
 
-                if isinstance(sel.time, list):
-                    mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
-                else:
-                    mask = (time == dt.time(sel.time))
-
-                local.append(sub.where(mask, drop=True).resample(time='1D').mean())
+                local.append(sub)
 
             # Merge these datasets back together to create the full grid
-            Logger.debug('-- Merging local averages together')
-            data.append(xr.merge(local, compat='override'))
+            Logger.debug('-- Merging local averages together (this can take awhile)')
+            data.append(xr.merge(local))
         else:
-            if isinstance(sel.time, list):
-                mask = (dt.time(sel.time[0]) < time) & (time < dt.time(sel.time[1]))
-            else:
-                mask = (time == dt.time(sel.time))
-
-            data.append(ds[sel.vars].where(mask, drop=True).resample(time='1D').mean())
+            sub = select_times(ds[sel.vars], sel.time, time)
+            data.append(sub)
 
     # Add variables that don't have a time dimension back in
     timeless = ds.drop_dims('time')
@@ -139,7 +153,7 @@ def daily(ds, config):
 
     # Merge the selections together
     Logger.debug('- Merging all averages together')
-    ds = xr.merge(data, compat='override')
+    ds = xr.merge(data)
 
     # Cast back to custom Dataset (xr.merge creates new)
     ds = Dataset(ds)
