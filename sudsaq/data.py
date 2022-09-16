@@ -115,7 +115,7 @@ def daily(ds, config):
         ds = ds.where(mask, drop=True)
 
         # Floor the times to the day for the groupby operation
-        ds.coords['time'] = time.dt.floor('1D')
+        ds.coords['time'] = ds.dt.floor('1D')
 
         # Now group as daily taking the mean
         ds = ds.groupby('time').mean()
