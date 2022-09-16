@@ -55,18 +55,18 @@ def fit(model, data, target, i=None, test=True):
 
     Logger.info('Preparing data for model training')
 
-    # Always emove NaNs on the training set
+    # Make sure the data is loaded into memory
+    Logger.debug('Loading training data')
+    data.train   = data.train.load()
+    target.train = target.train.load()
+
+    # Always remove NaNs on the training set
     Logger.debug('Dropping NaNs from training data')
     data.train   = data.train.dropna('loc')
     target.train = target.train.dropna('loc')
 
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train, target.train, copy=False)
-
-    # Make sure the data is loaded into memory
-    Logger.debug('Loading training data')
-    data.train   = data.train.load()
-    target.train = target.train.load()
 
     if target.train.size == 0:
         Logger.error('Train target detected to be empty, skipping this fold')
