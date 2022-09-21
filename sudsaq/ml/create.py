@@ -102,6 +102,10 @@ def fit(model, data, target, i=None, test=True):
         )
 
     if test:
+        Logger.debug('Loading test data')
+        target.test = target.test.load()
+        data.test   = data.test.load()
+
         Logger.debug('Dropping NaNs in test data')
         # Target and data drop NaNs separately for prediction, will be aligned afterwards
         data.test   = data.test.dropna('loc')
@@ -111,14 +115,10 @@ def fit(model, data, target, i=None, test=True):
             Logger.debug('Aligning test data')
             data.test, target.test = xr.align(data.test, target.test, copy=False)
 
-        Logger.debug('Loading test data')
-
-        target.test = target.test.load()
         if target.test.size == 0:
             Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
             return
 
-        data.test = data.test.load()
         if data.test.size == 0:
             Logger.warning('Test data detected to be entirely NaN, cancelling test analysis for this fold')
             return
