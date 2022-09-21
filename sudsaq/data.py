@@ -108,7 +108,7 @@ def daily(ds, config):
         Selects timestamps using integer hours (0-23) over all dates
         """
         if isinstance(sel, list):
-            mask = (dt.time(sel[0]) <= time) & (time < dt.time(sel[1]))
+            mask = (dt.time(sel[0]) <= time) & (time <= dt.time(sel[1]))
             ds   = ds.where(mask, drop=True)
 
             # Floor the times to the day for the groupby operation

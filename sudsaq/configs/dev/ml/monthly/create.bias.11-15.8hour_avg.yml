@@ -45,7 +45,7 @@ default:
         time: 0
       momo:
         vars: momo.(?!mda8).* # Match all momo variables except mda8
-        time: [8, 16]
+        time: [8, 15]
         local: True
   log:
     level: debug
