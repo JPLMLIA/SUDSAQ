@@ -34,7 +34,7 @@ bbox_dict = {'globe':[-180, 180, -90, 90],
 
 
 #choose parameters
-region = 'north_america'
+region = 'globe'
 bbox = bbox_dict[region]
 month = 'jan'
 years = [2011, 2012, 2013, 2014]
@@ -126,7 +126,17 @@ plt.savefig(f'{plots_dir}/{name}_monthly_mean_map.png')
 plt.close()
 
 
+#choose a location
 
+
+coord = [33, -84]
+xi = np.searchsorted(lon, coord[1])
+yi = np.searchsorted(lat, coord[0])
+
+vals = data[name][yi, xi].values
+
+plt.figure()
+plt.plot(vals, '.')
 
 
 
@@ -229,6 +239,7 @@ plt.colorbar()
 plt.title(f'momo variable correlations {region}, {month}, clustered')
 plt.savefig(f'{plots_dir}/variable_corr_cluster_matrix_{region}.png')
 plt.close()
+
 
 
 

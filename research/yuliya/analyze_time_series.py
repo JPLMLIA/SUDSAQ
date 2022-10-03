@@ -109,7 +109,7 @@ coord = [33, -84]
 bias_files = glob.glob(f'{root_dir}/model/new/model_data/*/combined/test.target.nc')
 toar_files = glob.glob(f'{root_dir}/model/toar/model_data/*/combined/test.target.nc')
 bias_files = [bias_files[x] for x in idx] 
-toar_files = [toar_files[x] for x in idx] 
+#toar_files = [toar_files[x] for x in idx] 
 
 bias_vals = []
 toar_vals = []
@@ -153,11 +153,14 @@ days = np.hstack([x.split('-')[-1] for x in labels])
 tick_idx = list(np.where(np.in1d(days, '01'))[0])
 
 plt.figure(figsize = (10, 5))
-plt.plot(toar_vals, '-', color = '0.8', label = 'toar ozone') 
-plt.plot(toar_vals + bias_vals, '.', color = '0.5', ms = 3, label = 'momo_ozone') 
+plt.plot(toar_vals, '-', color = '0.8', label = 'toar ozone')
+plt.plot(toar_vals, '.', color = '0.8', ms = 3)  
+plt.plot(toar_vals + bias_vals, '-', color = 'r', alpha = 0.3, label = 'momo_ozone') 
+plt.plot(toar_vals + bias_vals, '.', color = 'r', ms = 3) 
 plt.xticks(tick_idx, labels[tick_idx])
 plt.xlabel(f'time')
-plt.ylabel(f'{name}')
+plt.ylabel(f'ppb')
+plt.legend()
 plt.title(f'toar vs momo ozone, year {year}, location = lon {coord[1]}, lat {coord[0]}')  
 plt.grid(ls = ':')
 plt.savefig(f'{plots_dir}/time_series_ozone_{year}_loc{coord}.png')

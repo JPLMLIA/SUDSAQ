@@ -46,7 +46,7 @@ def main(months, models_dir, out_dir):
         m = dirs.split('/')[-2]
         print(f'merging -----> {dirs}')
 
-        out_dir = f'{root_dir}/{out_dir}/model_data/{m}/combined/'
+        out_dir = f'{root_dir}/{out_dir}/combined_data/{m}/'
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         
@@ -115,8 +115,8 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--models_dir', type=str, default = '/models/2011-2015/bias/')
-    parser.add_argument('--out_dir', type=str, default = '/model/new/')
+    parser.add_argument('--models_dir', type=str, default = '/models/2011-2015/bias-8hour/')
+    parser.add_argument('--out_dir', type=str, default = '/summaries/2011-2015/bias-8hour/')
     parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 
