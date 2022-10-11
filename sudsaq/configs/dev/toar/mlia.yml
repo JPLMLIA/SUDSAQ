@@ -71,7 +71,7 @@ match:
   metric: dma8epa
   input:
     toar:
-      file: /data/MLIA_active_data/data_SUDSAQ/data/toar/toar2.v1.variables.h5
+      file: /data/MLIA_active_data/data_SUDSAQ/data/toar/raw/toar2.v1.variables.h5
       parameter: 'o3'
     momo:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
