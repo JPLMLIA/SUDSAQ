@@ -25,7 +25,7 @@ def match(ds, df, tag):
     df: pandas.DataFrame
         Silo dataframe in expected format. Must contain columns: [time, lat, lon]
     tag: str
-        The unique tag for this silo. For example, TOAR is `toar/{config.input.toar.parameter}`
+        The unique tag for this silo. For example, TOAR is `toar.{config.input.toar.parameter}`
 
     Returns
     -------

@@ -33,7 +33,7 @@ def toar_match():
 
     # Run the generalized matching function
     Logger.info('Matching TOAR with MOMO')
-    return match(ds, df, f'toar/{config.input.toar.parameter}')
+    return match(ds, df, f'toar.{config.input.toar.parameter}')
 
 
 if __name__ == '__main__':
