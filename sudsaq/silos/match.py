@@ -66,7 +66,7 @@ def match(ds, df, tag):
     Logger.debug('Creating the matched dataset')
     shape = *dates.shape, *ds.lat.shape, *ds.lon.shape
     for metric in config.metrics:
-        ms[f'{tag}/{config.metric}/{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
+        ms[f'{tag}.{config.metric}.{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
 
     # Add end values for the last bin of each lat/lon
     lat = np.hstack([ds['lat'], 90.])
