@@ -96,9 +96,6 @@ def split_and_stack(ds, config, lazy=True):
 
     return data, target
 
-
-
-
 def daily(ds, config):
     """
     Aligns a dataset to a daily average

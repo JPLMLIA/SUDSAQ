@@ -187,9 +187,9 @@ def create():
         align_print(gscv.best_params_, enum=False, prepend='  ', print=Logger.info)
 
         # Create the predictor
-        model = lambda: ensemble(**config.model_params, **gscv.best_params_)
+        model = lambda: ensemble(**config.model.params, **gscv.best_params_)
     else:
-        model = lambda: ensemble(**config.model_params)
+        model = lambda: ensemble(**config.model.params)
 
     if kfold:
         for fold, (train, test) in enumerate(kfold.split(data, target, groups=groups)):
