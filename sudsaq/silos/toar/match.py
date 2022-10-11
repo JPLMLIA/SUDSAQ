@@ -19,7 +19,7 @@ def toar_match():
 
     # Load in toar and momo data
     Logger.info(f'Loading MOMO')
-    ds = xr.open_mfdataset(config.input.momo.regex, engine='scipy', parallel=True)
+    ds = xr.open_mfdataset(config.input.momo.regex, parallel=True)
 
     Logger.info(f'Loading TOAR ({config.input.toar.parameter})')
     df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
