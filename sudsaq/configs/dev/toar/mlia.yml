@@ -67,7 +67,7 @@ retrieve:
   output: /data/MLIA_active_data/data_SUDSAQ/toar2/
 
 match:
-  metrics: [mean, std, count]
+  metrics: [median, mean, std, count]
   metric: dma8epa
   input:
     toar:
@@ -77,4 +77,4 @@ match:
       regex: /data/MLIA_active_data/data_SUDSAQ/data/momo/**/*.nc # Collect from all years
   output:
     by_month: True
-    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/v2/
+    path: /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/
