@@ -144,6 +144,59 @@ def fit(model, data, target, i=None, test=True):
         except:
             Logger.exception('SHAP explanations failed:')
 
+def hyperoptimize(data, target, model):
+    """
+    Searches hyperparameter space to determine the best parameters
+    to use for a given model and data input.
+
+    Parameters
+    ----------
+    data:
+    target:
+    model:
+
+    Returns
+    -------
+    lambda
+        Lambda function that creates an instance of the provided model with the optimized parameters
+    """
+    Logger.info('Performing hyperparameter optimization (this may take awhile)')
+    config = Config()
+
+    # Load all of the data, drop the nans, and align the time dimension
+    data, target = xr.align(
+        data.load().dropna('loc'),
+        target.load().dropna('loc')
+    )
+
+    # If KFold is enabled, set it up
+    kfold  = None
+    groups = None
+    if config.KFold:
+        Logger.debug('Using KFold')
+        kfold  = KFold(**config.KFold)
+    # Split using grouped years
+    elif config.GroupKFold:
+        Logger.debug('Using GroupKFold')
+        kfold  = GroupKFold(n_splits=len(set(data.time.dt.year.values)))
+        groups = target.time.dt.year.values
+
+    gscv = GridSearchCV(
+        estimator   = model(),
+        param_grid  = dict(config.hyperoptimize.param_grid),
+        cv          = kfold,
+        error_score = 'raise',
+        **config.hyperoptimize.GridSearchCV
+    )
+
+    gscv.fit(data, target, groups=groups)
+
+    Logger.info('Optimal parameter selection:')
+    align_print(gscv.best_params_, enum=False, prepend='  ', print=Logger.info)
+
+    # Create the predictor
+    return lambda: model(**config.model.params, **gscv.best_params_)
+
 def create():
     """
     Creates and trains a desired model.
@@ -172,22 +225,7 @@ def create():
         groups = target.time.dt.year.values
 
     if config.hyperoptimize:
-        Logger.info('Performing hyperparameter optimization')
-
-        gscv = GridSearchCV(
-            ensemble(),
-            config.hyperoptimize.params._data,
-            cv          = kfold,
-            error_score = 'raise',
-            **config.hyperoptimize.GridSearchCV
-        )
-        gscv.fit(data, target)
-
-        Logger.info('Optimal parameter selection:')
-        align_print(gscv.best_params_, enum=False, prepend='  ', print=Logger.info)
-
-        # Create the predictor
-        model = lambda: ensemble(**config.model.params, **gscv.best_params_)
+        model = hyperoptimize(data, target, ensemble)
     else:
         model = lambda: ensemble(**config.model.params)
 
