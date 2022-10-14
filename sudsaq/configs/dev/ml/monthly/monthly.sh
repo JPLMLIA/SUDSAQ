@@ -9,8 +9,7 @@ conda activate sudsaq
 cd ~/suds-air-quality/sudsaq/
 
 configs=(
-  "configs/dev/ml/monthly/create.bias.11-15.yml"
-  "configs/dev/ml/monthly/create.toar.11-15.yml"
+  "configs/dev/ml/monthly/create.bias.11-15.8hour_avg.optimize.yml"
 )
 sections=(
   "jan"

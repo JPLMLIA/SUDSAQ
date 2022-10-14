@@ -3,6 +3,7 @@
 import logging
 import os
 import pickle
+import shutil
 import sys
 import xarray as xr
 
@@ -65,6 +66,9 @@ def init(args):
     )
 
     logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
+
+    if config.log.config:
+        shutil.copy(config._flags['file'], config.log.config)
 
     if config.ray:
         try:
