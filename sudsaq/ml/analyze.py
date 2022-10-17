@@ -144,7 +144,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     bias, contributions = None, None
     predict = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
 
-    if 'Forest' in str(model):
+    if not config.not_ti and 'Forest' in str(model):
         Logger.info('Predicting using TreeInterpreter')
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
