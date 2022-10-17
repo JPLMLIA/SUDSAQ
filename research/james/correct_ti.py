@@ -1,7 +1,9 @@
 import argparse
 import os
+import xarray as xr
 
 from glob import glob
+from tqdm import tqdm
 
 from sudsaq.config     import Config
 from sudsaq.utils      import load_pkl
@@ -15,7 +17,7 @@ def correct(dir):
     [yaml] = glob(f'{dir}/*.yml')
 
     paths = glob(f'{dir}/**/rf/*/')
-    for path in paths:
+    for path in tqdm(paths, desc='Models Corrected'):
         month, _, year = path.split('/')[-4:-1]
         config = Config(yaml, month)
         config.not_ti               = True
