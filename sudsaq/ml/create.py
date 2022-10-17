@@ -75,16 +75,16 @@ def fit(model, data, target, i=None, test=True):
         Logger.error('Train data detected to be empty, skipping this fold')
         return
 
+    Logger.info('Training model')
+    model.fit(data.train, target.train)
+
     # Create a subdirectory if kfold
     output = config.output.path
     if test:
         year = set(target.test.time.dt.year.values).pop()
         Logger.info(f'Testing year: {year}')
         if output:
-            output = f'{output}/{year}/'
-
-    Logger.info('Training model')
-    model.fit(data.train, target.train)
+            output += f'/{year}/'
 
     if config.output.model:
         Logger.info(f'Saving model to {output}/model.pkl')
