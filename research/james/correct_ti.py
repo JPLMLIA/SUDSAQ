@@ -3,9 +3,9 @@ import os
 
 from glob import glob
 
-from sudsaq.analyze import analyze
-from sudsaq.config  import Config
-from sudsaq.utils   import load_pkl
+from sudsaq.config     import Config
+from sudsaq.utils      import load_pkl
+from sudsaq.ml.analyze import analyze
 
 def correct(dir):
     rm = glob(f'{dir}/**/rf/**/*.bias.nc') + glob(f'{dir}/**/rf/**/*.contributions.nc')
@@ -16,7 +16,7 @@ def correct(dir):
 
     paths = glob(f'{dir}/**/rf/*/')
     for path in paths:
-        month, _, year, _ = path.split('/')
+        month, _, year = path.split('/')[-4:-1]
         config = Config(yaml, month)
         config.not_ti               = True
         config.output.data          = False
@@ -38,3 +38,4 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     correct(args.run)
+paths = glob(f'{dir}/**/rf/*/')
