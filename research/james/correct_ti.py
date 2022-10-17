@@ -19,6 +19,7 @@ def correct(dir):
     paths = glob(f'{dir}/**/rf/*/')
     for path in tqdm(paths, desc='Models Corrected'):
         month, _, year = path.split('/')[-4:-1]
+        print(f'Processing: {month}/{year}')
         config = Config(yaml, month)
         config.not_ti               = True
         config.output.data          = False
@@ -26,10 +27,11 @@ def correct(dir):
         config.output.bias          = False
         config.output.contributions = False
         config.output.model         = False
-        data   = xr.open_dataset(f'{path}/test.data.nc').to_array().stack(loc=['lat', 'lon', 'time']).dropna('loc').transpose('loc', 'variable')
-        target = xr.open_dataarray(f'{path}/test.target.nc').stack(loc=['lat', 'lon', 'time']).dropna('loc')
-        model  = load_pkl(f'{path}/model.pkl')
-        analyze(model=model, data=data, target=target, kind='test', output=path)
+        if os.path.exists(f'{path}/test.data.nc'):
+            data   = xr.open_dataset(f'{path}/test.data.nc').to_array().stack(loc=['lat', 'lon', 'time']).dropna('loc').transpose('loc', 'variable')
+            target = xr.open_dataarray(f'{path}/test.target.nc').stack(loc=['lat', 'lon', 'time']).dropna('loc')
+            model  = load_pkl(f'{path}/model.pkl')
+            analyze(model=model, data=data, target=target, kind='test', output=path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
