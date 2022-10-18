@@ -1,4 +1,5 @@
 import argparse
+import matplotlib.pyplot as plt
 import os
 import xarray as xr
 
@@ -32,6 +33,7 @@ def correct(dir):
             target = xr.open_dataarray(f'{path}/test.target.nc').stack(loc=['lat', 'lon', 'time']).dropna('loc')
             model  = load_pkl(f'{path}/model.pkl')
             analyze(model=model, data=data, target=target, kind='test', output=path)
+            plt.close('all')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
