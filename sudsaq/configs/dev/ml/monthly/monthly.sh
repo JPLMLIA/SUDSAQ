@@ -8,17 +8,22 @@ conda activate sudsaq
 
 cd ~/suds-air-quality/sudsaq/
 
+
 configs=(
-  "configs/dev/ml/monthly/create.bias.11-15.8hour_avg.optimize.yml"
+  "configs/dev/ml/monthly/bias/tz/8hr.median.yml"
+  "configs/dev/ml/monthly/bias/utc/8hr.median.yml"
+  "configs/dev/ml/monthly/bias/utc/8hr.mean.yml"
+  "configs/dev/ml/monthly/bias/tz/8hr.mean.yml"
+  "configs/dev/ml/monthly/bias/utc/24hr.mean.yml"
 )
 sections=(
   "jan"
+  "jul"
   "feb"
   "mar"
   "apr"
   "may"
   "jun"
-  "jul"
   "aug"
   "sep"
   "oct"
