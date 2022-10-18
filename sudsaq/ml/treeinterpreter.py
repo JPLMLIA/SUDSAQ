@@ -156,23 +156,19 @@ def _predict_forest_ray(model, X):
     mean_pred = None
     mean_bias = None
     mean_cont = None
-    objs = []
     for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
-        [done], running = ray.wait(ids, num_returns=1)
-        pred, bias, contribution = ray.get(done)
-        ids = running
-        print(f'Job already seen: {done in objs}')
-        objs.append(done[0])
+        [done], running  = ray.wait(ids, num_returns=1)
+        pred, bias, cont = ray.get(done)
 
-        print(f'{i}: {done}')
+        ids = running
         if i < 1: # first iteration
             mean_pred = pred
             mean_bias = bias
-            mean_cont = contribution
+            mean_cont = cont
         else:
             mean_pred = _iterative_mean(i, mean_pred, pred)
             mean_bias = _iterative_mean(i, mean_bias, bias)
-            mean_cont = _iterative_mean(i, mean_cont, contribution)
+            mean_cont = _iterative_mean(i, mean_cont, cont)
 
     return mean_pred, mean_bias, mean_cont
 
@@ -186,15 +182,15 @@ def _predict_forest_mp(model, X, n_jobs):
         func    = partial(_predict_tree, X=X)
         results = pool.imap_unordered(func, model.estimators_)
 
-        for i, (pred, bias, contribution) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
+        for i, (pred, bias, cont) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
             if i < 1: # first iteration
                 mean_pred = pred
                 mean_bias = bias
-                mean_cont = contribution
+                mean_cont = cont
             else:
                 mean_pred = _iterative_mean(i, mean_pred, pred)
                 mean_bias = _iterative_mean(i, mean_bias, bias)
-                mean_cont = _iterative_mean(i, mean_cont, contribution)
+                mean_cont = _iterative_mean(i, mean_cont, cont)
 
     return mean_pred, mean_bias, mean_cont
 
