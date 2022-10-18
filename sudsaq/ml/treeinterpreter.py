@@ -157,7 +157,7 @@ def _predict_forest_ray(model, X):
     mean_bias = None
     mean_cont = None
     objs = []
-    for i, _ in enumerate(tqdm(, desc='TreeInterpreter Jobs')):
+    for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
         [done], running = ray.wait(ids, num_returns=1)
         pred, bias, contribution = ray.get(done)
         ids = running
