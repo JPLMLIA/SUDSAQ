@@ -140,6 +140,61 @@ def _iterative_mean(iter, current_mean, x):
     """
     return current_mean + ((x - current_mean) / (iter + 1))
 
+def _predict_forest_ray(model, X):
+    """
+    """
+    import ray
+    Logger.debug('Using ray as backend')
+    Logger.debug(f'Placing X into shared memory')
+    X_id = ray.put(X)
+
+    Logger.debug('Starting jobs')
+    func = ray.remote(_predict_tree)
+    ids  = [func.remote(estimator, X_id) for estimator in model.estimators_]
+
+    # Process jobs as they complete and update tqdm
+    mean_pred = None
+    mean_bias = None
+    mean_cont = None
+    for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
+        done, _ = ray.wait(ids, num_returns=1)
+
+        pred, bias, contribution = ray.get(done)[0]
+
+        print(f'{i}: {done}')
+        if i < 1: # first iteration
+            mean_pred = pred
+            mean_bias = bias
+            mean_cont = contribution
+        else:
+            mean_pred = _iterative_mean(i, mean_pred, pred)
+            mean_bias = _iterative_mean(i, mean_bias, bias)
+            mean_cont = _iterative_mean(i, mean_cont, contribution)
+
+    return mean_pred, mean_bias, mean_cont
+
+def _predict_forest_mp(model, X, n_jobs):
+    """
+    """
+    mean_pred = None
+    mean_bias = None
+    mean_cont = None
+    with mp.Pool(processes=n_jobs) as pool:
+        func    = partial(_predict_tree, X=X)
+        results = pool.imap_unordered(func, model.estimators_)
+
+        for i, (pred, bias, contribution) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
+            if i < 1: # first iteration
+                mean_pred = pred
+                mean_bias = bias
+                mean_cont = contribution
+            else:
+                mean_pred = _iterative_mean(i, mean_pred, pred)
+                mean_bias = _iterative_mean(i, mean_bias, bias)
+                mean_cont = _iterative_mean(i, mean_cont, contribution)
+
+    return mean_pred, mean_bias, mean_cont
+
 def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
     """
     For a given RandomForestRegressor, RandomForestClassifier,
@@ -191,46 +246,10 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
         mean_contribution = None
 
         try:
-            import ray
-
-            Logger.debug('Using ray as backend')
-            Logger.debug(f'Placing X into shared memory')
-            X_id = ray.put(X)
-
-            Logger.debug('Starting jobs')
-            func = ray.remote(_predict_tree)
-            ids  = [func.remote(estimator, X_id) for estimator in model.estimators_]
-
-            # Process jobs as they complete and update tqdm
-            for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
-                done, _ = ray.wait(ids, num_returns=1)
-
-                pred, bias, contribution = ray.get(done)[0]
-
-                if i < 1: # first iteration
-                    mean_bias         = bias
-                    mean_contribution = contribution
-                    mean_pred         = pred
-                else:
-                    mean_bias         = _iterative_mean(i, mean_bias, bias)
-                    mean_contribution = _iterative_mean(i, mean_contribution, contribution)
-                    mean_pred         = _iterative_mean(i, mean_pred, pred)
-
+            return _predict_forest_ray(model, X)
         except ModuleNotFoundError:
             Logger.debug('Using multiprocessing as backend')
-            with mp.Pool(processes=n_jobs) as pool:
-                func    = partial(_predict_tree, X=X)
-                results = pool.imap_unordered(func, model.estimators_)
-
-                for i, (pred, bias, contribution) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
-                    if i < 1: # first iteration
-                        mean_bias         = bias
-                        mean_contribution = contribution
-                        mean_pred         = pred
-                    else:
-                        mean_bias         = _iterative_mean(i, mean_bias, bias)
-                        mean_contribution = _iterative_mean(i, mean_contribution, contribution)
-                        mean_pred         = _iterative_mean(i, mean_pred, pred)
+            return _predict_forest_mp(model, X, n_jobs)
 
         return mean_pred, mean_bias, mean_contribution
 
