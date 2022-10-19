@@ -149,7 +149,7 @@ def _predict_forest_ray(model, X):
     X_id = ray.put(X)
 
     Logger.debug('Starting jobs')
-    func = ray.remote(_predict_tree, num_cpus=1)
+    func = ray.remote(_predict_tree)
     ids  = [func.remote(estimator, X_id) for estimator in model.estimators_]
 
     # Process jobs as they complete and update tqdm
