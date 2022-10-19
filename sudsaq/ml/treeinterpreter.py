@@ -145,12 +145,26 @@ def _predict_forest_ray(model, X):
     """
     import ray
     Logger.debug('Using ray as backend')
+
+    @ray.remote(num_returns=3)
+    def mean(*results):
+        """
+        results is a list of tuples (predict, bias, contribution)
+        from each estimator
+        """
+        pred = np.mean([result[0] for result in results], axis=0)
+        bias = np.mean([result[1] for result in results], axis=0)
+        cont = np.mean([result[2] for result in results], axis=0)
+        return pred, bias, cont
+
     Logger.debug(f'Placing X into shared memory')
     X_id = ray.put(X)
 
     Logger.debug('Starting jobs')
     func = ray.remote(_predict_tree)
-    ids  = [func.remote(estimator, X_id) for estimator in model.estimators_]
+    jobs = [func.remote(estimator, X_id) for estimator in model.estimators_]
+
+    return ray.get(mean.remote(*jobs))
 
     # Process jobs as they complete and update tqdm
     mean_pred = None
