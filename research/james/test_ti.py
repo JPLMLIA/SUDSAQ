@@ -2,6 +2,7 @@ from sudsaq.config import Section
 from sudsaq.utils  import load_pkl
 from sudsaq.ml     import treeinterpreter as ti
 import xarray as xr
+import numpy as np
 import ray; ray.init(_plasma_directory= '/scratch/jamesmo/tmp', _temp_dir= '/scratch/jamesmo/tmp')
 
 
@@ -33,6 +34,8 @@ def test_ti(ret=False):
     predict[:] = predicts.flatten()
     if ret:
         return predict
-    return run.predict.identical(predict)
+    print(f'Numpy : {np.isclose(predict.values, run.predict.values)}')
+    print(f'Xarray: {run.predict.identical(predict)}')
+    return
 
-print(test_ti())
+test_ti()

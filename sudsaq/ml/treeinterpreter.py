@@ -170,6 +170,8 @@ def _predict_forest_ray(model, X):
                 bias = _iterative_mean(i, bias, _bias)
                 cont = _iterative_mean(i, cont, _cont)
 
+            del _pred, _bias, _cont
+
         return pred, bias, cont
 
     Logger.debug(f'Placing X into shared memory')
