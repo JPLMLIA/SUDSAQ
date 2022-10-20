@@ -147,14 +147,29 @@ def _predict_forest_ray(model, X):
     Logger.debug('Using ray as backend')
 
     @ray.remote(num_returns=3)
-    def mean(*results):
+    def mean(jobs):
         """
         results is a list of tuples (predict, bias, contribution)
         from each estimator
         """
-        pred = np.mean([result[0] for result in results], axis=0)
-        bias = np.mean([result[1] for result in results], axis=0)
-        cont = np.mean([result[2] for result in results], axis=0)
+        # pred = np.mean([result[0] for result in jobs], axis=0)
+        # bias = np.mean([result[1] for result in jobs], axis=0)
+        # cont = np.mean([result[2] for result in jobs], axis=0)
+        # return pred, bias, cont
+        for i in tqdm(range(len(jobs)), desc='TreeInterpreter Jobs'):
+            [done], running     = ray.wait(jobs, num_returns=1)
+            _pred, _bias, _cont = ray.get(done)
+
+            jobs = running
+            if i < 1: # first iteration
+                pred = _pred
+                bias = _bias
+                cont = _cont
+            else:
+                pred = _iterative_mean(i, pred, _pred)
+                bias = _iterative_mean(i, bias, _bias)
+                cont = _iterative_mean(i, cont, _cont)
+
         return pred, bias, cont
 
     Logger.debug(f'Placing X into shared memory')
@@ -164,27 +179,7 @@ def _predict_forest_ray(model, X):
     func = ray.remote(_predict_tree)
     jobs = [func.remote(estimator, X_id) for estimator in model.estimators_]
 
-    return ray.get(mean.remote(*jobs))
-
-    # Process jobs as they complete and update tqdm
-    mean_pred = None
-    mean_bias = None
-    mean_cont = None
-    for i, _ in enumerate(tqdm(model.estimators_, desc='TreeInterpreter Jobs')):
-        [done], running  = ray.wait(ids, num_returns=1)
-        pred, bias, cont = ray.get(done)
-
-        ids = running
-        if i < 1: # first iteration
-            mean_pred = pred
-            mean_bias = bias
-            mean_cont = cont
-        else:
-            mean_pred = _iterative_mean(i, mean_pred, pred)
-            mean_bias = _iterative_mean(i, mean_bias, bias)
-            mean_cont = _iterative_mean(i, mean_cont, cont)
-
-    return mean_pred, mean_bias, mean_cont
+    return ray.get(mean.remote(jobs))
 
 def _predict_forest_mp(model, X, n_jobs):
     """
