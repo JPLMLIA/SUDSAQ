@@ -25,13 +25,14 @@ import pickle
 import xarray as xr
 
 
-def main(months, models_dir, out_dir):
+def main(months, models_dir):
 
     #-----------------read in data
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
         root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
     
+    out_dir = f'/summaries/{models_dir}'
     models_dir = f'{root_dir}/{models_dir}'
     
     if months == 'all':
@@ -50,8 +51,7 @@ def main(months, models_dir, out_dir):
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         
-        
-        print(f'merging -----> X/test.data')
+        print(f'merging + mean -----> X/test.data')
         files_momo = glob.glob(f'{dirs}/rf/*/test.data.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
@@ -59,10 +59,10 @@ def main(months, models_dir, out_dir):
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
         
-        filename = f'{out_dir}/test.data.nc'
-        if os.path.exists(filename):
-            os.remove(filename)
-        xr.save_mfdataset([data], [filename], engine = 'netcdf4')
+        # filename = f'{out_dir}/test.data.nc'
+        # if os.path.exists(filename):
+        #     os.remove(filename)
+        # xr.save_mfdataset([data], [filename], engine = 'netcdf4')
         
         data_mean = data.mean(dim='time', skipna= True)
         filename = f'{out_dir}/test.data.mean.nc'
@@ -92,17 +92,17 @@ def main(months, models_dir, out_dir):
         xr.save_mfdataset([data], [f'{out_dir}/test.target.nc'], engine = 'netcdf4')
         
 
-        print(f'merging -----> contributions/test.constributions')
+        print(f'merging + mean -----> contributions/test.constributions')
         files_momo = glob.glob(f'{dirs}/rf/*/test.contributions.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
         for f in files_momo:
             dat_momo.append(xr.open_dataset(f))
         data = xr.merge(dat_momo)
-        filename = f'{out_dir}/test.contributions.nc'
-        if os.path.exists(filename):
-            os.remove(filename)
-        xr.save_mfdataset([data], [filename], engine = 'netcdf4')
+        # filename = f'{out_dir}/test.contributions.nc'
+        # if os.path.exists(filename):
+        #     os.remove(filename)
+        # xr.save_mfdataset([data], [filename], engine = 'netcdf4')
         
         data_mean = data.mean(dim='time', skipna= True)
         filename = f'{out_dir}/test.contributions.mean.nc'
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--models_dir', type=str, default = '/models/2011-2015/bias-8hour/')
-    parser.add_argument('--out_dir', type=str, default = '/summaries/2011-2015/bias-8hour/')
+    #parser.add_argument('--out_dir', type=str, default = '/summaries/2011-2015/bias-8hour/')
     parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 
