@@ -144,6 +144,11 @@ def _predict_forest_ray(model, X):
     """
     """
     import ray
+
+    if not ray.is_initialized():
+        Logger.debug('Ray is not initialized')
+        return False
+
     Logger.debug('Using ray as backend')
 
     @ray.remote(num_returns=3)
@@ -178,10 +183,12 @@ def _predict_forest_ray(model, X):
     X_id = ray.put(X)
 
     Logger.debug('Starting jobs')
-    func = ray.remote(_predict_tree)
-    jobs = [func.remote(estimator, X_id) for estimator in model.estimators_]
+    func  = ray.remote(_predict_tree)
+    jobs  = [func.remote(estimator, X_id) for estimator in model.estimators_]
+    means = ray.get(mean.remote(jobs))
+    del jobs
 
-    return ray.get(mean.remote(jobs))
+    return means
 
 def _predict_forest_mp(model, X, n_jobs):
     """
@@ -251,17 +258,16 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
 
         return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
     else:
-        mean_pred         = None
-        mean_bias         = None
-        mean_contribution = None
-
+        ret = None, None, None
         try:
-            return _predict_forest_ray(model, X)
+            ret = _predict_forest_ray(model, X)
+            if ret is False:
+                raise ModuleNotFoundError # Module is found but not initialized, fallback
         except ModuleNotFoundError:
             Logger.debug('Using multiprocessing as backend')
-            return _predict_forest_mp(model, X, n_jobs)
+            ret = _predict_forest_mp(model, X, n_jobs)
 
-        return mean_pred, mean_bias, mean_contribution
+        return ret
 
 def predict(model, X, joint_contribution=False, n_jobs=None):
     """ Returns a triple (prediction, bias, feature_contributions), such

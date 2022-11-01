@@ -14,8 +14,6 @@ default:
   treeinterpreter:
     n_jobs: -1
   explain: False
-  ray:
-    _temp_dir: /scratch_lg_edge/sudsaq/tmp
   output:
     model        : True
     data         : True
@@ -46,7 +44,7 @@ default:
   log:
     level: debug
     reset: True
-    config: /scratch_lg_edge/sudsaq/models/bias/utc/8hr_median/v1
+    config: /scratch_lg_edge/sudsaq/models/bias/utc/8hr_median/v1/
 
 jan:
   output:

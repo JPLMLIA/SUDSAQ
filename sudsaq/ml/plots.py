@@ -11,6 +11,7 @@ import xarray            as xr
 from scipy import stats
 
 from sudsaq.config import Config
+from sudsaq.utils  import catch
 
 # Set seaborn styles
 sns.set_style('darkgrid')
@@ -22,6 +23,7 @@ logging.getLogger('fiona').setLevel(logging.WARNING)
 
 Logger = logging.getLogger('sudsaq/ml/plots.py')
 
+@catch
 def compare_target_predict(target, predict, reindex=None, title=None, save=None):
     """
     """
@@ -99,6 +101,7 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         Logger.info(f'Saving compare_target_predict plot to {save}')
         plt.savefig(save)
 
+@catch
 def truth_vs_predicted(target, predict, label=None, save=None):
     """
     """
@@ -139,6 +142,7 @@ def truth_vs_predicted(target, predict, label=None, save=None):
         Logger.info(f'Saving truth_vs_predicted plot to {save}')
         plt.savefig(save)
 
+@catch
 def importance(df, pdf=None, save=None):
     """
     """
