@@ -198,6 +198,8 @@ def load(config, split=False, lazy=True):
         Logger.debug('Performing split and stack')
         return split_and_stack(ds, config, lazy)
 
+    # If set in the config use that else use the parameter
+    lazy = config.input.get('lazy', lazy)
     if not lazy:
         Logger.info('Loading data into memory')
         ds.load()
