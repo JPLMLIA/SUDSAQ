@@ -32,7 +32,7 @@ default:
   input:
     sel:
       # Drop these variables
-      vars: momo.(?!o3|hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms).*
+      vars: (momo|toar).(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms).*
       # lat: [10, 80]   # America
       # lon: [220, 310] # America
     lazy: False
