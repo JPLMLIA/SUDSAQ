@@ -7,14 +7,15 @@ import os
 import re
 import xarray   as xr
 
-from glob import glob
-from tqdm import tqdm
+from glob                  import glob
+from sklearn.preprocessing import StandardScaler
+from tqdm                  import tqdm
 
 from sudsaq.config import Config
 
 # List of UTC+Offset, (West Lon, East Lon) to apply in daily()
 Timezones = [
-#  offset, (west, east)
+# offset, ( west, east)
     (  0, (  0.0, 7.5)),
     (  1, (  7.5, 22.5)),
     (  2, ( 22.5, 37.5)),
@@ -93,6 +94,11 @@ def split_and_stack(ds, config, lazy=True):
         Logger.info('Loading data into memory')
         data.load()
         target.load()
+
+    if config.scale:
+        Logger.info('Scaling data (X)')
+        scaler  = StandardScaler(**config.input.StandardScaler)
+        data[:] = scaler.fit_transform(data)
 
     return data, target
 
@@ -193,13 +199,13 @@ def load(config, split=False, lazy=True):
         Logger.info('Aligning to a daily average')
         ds = daily(ds, config)
 
-    # Hardcoded by script
+    # `split` is hardcoded by the calling script
+    # If `lazy` is set in the config use that else use the parameter
+    lazy = config.input.get('lazy', lazy)
     if split:
         Logger.debug('Performing split and stack')
         return split_and_stack(ds, config, lazy)
 
-    # If set in the config use that else use the parameter
-    lazy = config.input.get('lazy', lazy)
     if not lazy:
         Logger.info('Loading data into memory')
         ds.load()
