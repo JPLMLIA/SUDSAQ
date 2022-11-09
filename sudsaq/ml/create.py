@@ -269,16 +269,25 @@ if __name__ == '__main__':
                                             metavar  = '[section]',
                                             help     = 'Section of the config to use'
     )
+    parser.add_argument('--restart',        action   = 'store_true',
+                                            help     = 'Will auto restart the run until the state returns True'
+    )
 
     init(parser.parse_args())
 
     state = False
-    try:
-        state = create()
-    except Exception:
-        Logger.exception('Caught an exception during runtime')
-    finally:
-        if state is True:
-            Logger.info('Finished successfully')
-        else:
-            Logger.info(f'Failed to complete with status code: {state}')
+    loop  = 1
+    while args.restart or loop == 1:
+        if loop > 1:
+            Logger.info(f'Restarting, attempt {loop}')
+        try:
+            state = create()
+        except Exception:
+            Logger.exception('Caught an exception during runtime')
+        finally:
+            if state is True:
+                Logger.info('Finished successfully')
+                break
+            else:
+                Logger.info(f'Failed to complete with status code: {state}')
+                loop += 1
