@@ -95,7 +95,7 @@ def split_and_stack(ds, config, lazy=True):
         data.load()
         target.load()
 
-    if config.scale:
+    if config.input.scale:
         Logger.info('Scaling data (X)')
         scaler  = StandardScaler(**config.input.StandardScaler)
         data[:] = scaler.fit_transform(data)
@@ -177,7 +177,7 @@ def load(config, split=False, lazy=True):
         files += match
 
     Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files, parallel=True, engine='netcdf4')
+    ds = xr.open_mfdataset(files, parallel=True, engine='netcdf4', lock=False)
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
