@@ -273,7 +273,9 @@ if __name__ == '__main__':
                                             help     = 'Will auto restart the run until the state returns True'
     )
 
-    init(parser.parse_args())
+    args = parser.parse_args()
+
+    init(args)
 
     state = False
     loop  = 1
