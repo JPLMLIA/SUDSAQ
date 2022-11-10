@@ -30,10 +30,8 @@ default:
       count: 20
       labelrotation: 90
   input:
-    daily:
-      sel:
-        vars: momo.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms).*
-      lazy: True
+    sel:
+      vars: momo.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms).*
   log:
     level: debug
     reset: True
