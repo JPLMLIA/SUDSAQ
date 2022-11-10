@@ -32,9 +32,8 @@ def main(months, models_dir):
     if not os.path.exists(root_dir):
         root_dir = '/data/MLIA_active_data/data_SUDSAQ/'
     
-    out_dir = f'/summaries/{models_dir}'
-    models_dir = f'{root_dir}/{models_dir}'
-    
+    summ_dir = f'{root_dir}/summaries/{models_dir}'
+    models_dir = f'{root_dir}/models/{models_dir}'
     if months == 'all':
         months = glob.glob(f'{models_dir}/*/')
     else:
@@ -45,14 +44,14 @@ def main(months, models_dir):
     #save inputs
     for m, dirs in enumerate(months):
         m = dirs.split('/')[-2]
-        print(f'merging -----> {dirs}')
+        print(f'merging -----> {dirs}, month {m}')
 
-        out_dir = f'{root_dir}/{out_dir}/combined_data/{m}/'
+        out_dir = f'{summ_dir}/combined_data/{m}/'
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         
         print(f'merging + mean -----> X/test.data')
-        files_momo = glob.glob(f'{dirs}/rf/*/test.data.nc')
+        files_momo = glob.glob(f'{dirs}/*/test.data.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
         for f in files_momo:
@@ -73,7 +72,7 @@ def main(months, models_dir):
 
         #save predicts
         print(f'merging -----> yhat/test.predict')
-        files_momo = glob.glob(f'{dirs}/rf/*/test.predict.nc')
+        files_momo = glob.glob(f'{dirs}/*/test.predict.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
         for f in files_momo:
@@ -92,8 +91,8 @@ def main(months, models_dir):
         xr.save_mfdataset([data], [f'{out_dir}/test.target.nc'], engine = 'netcdf4')
         
 
-        print(f'merging + mean -----> contributions/test.constributions')
-        files_momo = glob.glob(f'{dirs}/rf/*/test.contributions.nc')
+        print(f'merging + mean -----> contributions/test.contributions')
+        files_momo = glob.glob(f'{dirs}/*/test.contributions.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
         for f in files_momo:
