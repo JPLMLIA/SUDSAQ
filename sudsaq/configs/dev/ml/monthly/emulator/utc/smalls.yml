@@ -1,0 +1,78 @@
+default:
+  target: momo.o3
+  train: momo.*
+  train_performance: False
+  model:
+    kind: RandomForestRegressor
+    params:
+      random_state: 0
+      n_jobs: -1
+  GroupKFold: True
+  permutation_importance:
+    random_state: 1
+    n_jobs: -1
+  treeinterpreter:
+    n_jobs: -1
+  explain: False
+  ray:
+    _plasma_directory: /scratch/jamesmo/tmp
+    _temp_dir: /scratch/jamesmo/tmp
+  output:
+    model        : True
+    data         : True
+    target       : True
+    predict      : True
+    bias         : True
+    contributions: True
+    scores       : True
+    importance   : True
+    plots        : True
+    explanation  : True
+  plots:
+    importances:
+      count: 20
+      labelrotation: 90
+  input:
+    lazy: False
+  log:
+    level: debug
+    reset: True
+    config: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/
+
+v1:
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v1/jul/
+  input:
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v1/jul/run.log
+v2:
+  input:
+    calc:
+      ch2o_no2: momo.ch2o / momo.no2
+    sel:
+      vars: [momo.ch2o_no2, momo.ps, momo.t, momo.o3]
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v2/jul/
+  input:
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v2/jul/run.log
+v3:
+  input:
+    calc:
+      a_co: momo.a + momo.co
+    sel:
+      vars: [momo.a_co, momo.so2, momo.o3]
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v3/jul/
+  input:
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v3/jul/run.log
