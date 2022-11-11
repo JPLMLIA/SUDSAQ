@@ -4,6 +4,7 @@
 Created on Mon Jan 24 17:03:01 2022
 
 @author: marchett
+@author: kelsey - refactored for feature clustering
 """
 import os, glob
 import sys
@@ -31,7 +32,6 @@ from reval.best_nclust_cv import FindBestClustCV
 from sklearn.neighbors import KNeighborsClassifier
 
 bbox = [0, 360, -90, 90]
-#bbox = [-140+180, -50+180, 10, 80]
 
 bbox_dict = {'globe':[0, 360, -90, 90],
              'europe': [-20+180, 40+180, 25, 80],

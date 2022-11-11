@@ -19,8 +19,8 @@ parser.add_argument("--region", help="Boundary region on Earth to take data. Mus
                                      "globe, europe, asia, australia, north_america, west_europe, "
                                      "east_europe, west_na, east_na.")
 parser.add_argument("--year", help="Year of query")
-#parser.add_argument("--analysis_type", help="Type of analysis. Stats for returning statistical features, "
-#                                            "full for full image return")
+parser.add_argument("--analysis_type", help="Type of analysis. Stats for returning statistical features, "
+                                            "full for full image return")
 
 args = parser.parse_args()
 
@@ -45,7 +45,7 @@ gee_data = gee_datasets[args.gee_data]['data']
 band = gee_datasets[args.gee_data]['band']
 cadence = gee_datasets[args.gee_data]['t_cadence']
 year = int(args.year)
-#analysis_type = args.analysis_type
+analysis_type = args.analysis_type
 
 # Set boundaries to analyze by region
 bbox_dict = {'globe':[-180, 180, -90, 90],
@@ -63,7 +63,7 @@ bbox = bbox_dict[region]
 
 # To-do, can put these lat, lon into text files to grab for more generalized
 # MOMO lat values
-lat = np.array([-89.142, -88.029, -86.911, -85.791, -84.67, -83.549, -82.428,
+momo_lat = np.array([-89.142, -88.029, -86.911, -85.791, -84.67, -83.549, -82.428,
                 -81.307, -80.185, -79.064, -77.943, -76.821, -75.7, -74.578,
                 -73.457, -72.336, -71.214, -70.093, -68.971, -67.85, -66.728,
                 -65.607, -64.485, -63.364, -62.242, -61.121, -60., -58.878,
@@ -87,7 +87,7 @@ lat = np.array([-89.142, -88.029, -86.911, -85.791, -84.67, -83.549, -82.428,
                 84.67, 85.791, 86.911, 88.029, 89.142])
 
 # MOMO lon values
-lon = np.array([-180., -178.875, -177.75, -176.625, -175.5, -174.375, -173.25,
+momo_lon = np.array([-180., -178.875, -177.75, -176.625, -175.5, -174.375, -173.25,
                 -172.125, -171., -169.875, -168.75, -167.625, -166.5, -165.375,
                 -164.25, -163.125, -162., -160.875, -159.75, -158.625, -157.5,
                 -156.375, -155.25, -154.125, -153., -151.875, -150.75, -149.625,
@@ -128,6 +128,47 @@ lon = np.array([-180., -178.875, -177.75, -176.625, -175.5, -174.375, -173.25,
                 164.25, 165.375, 166.5, 167.625,  168.75 , 169.875, 171., 172.125,
                 173.25, 174.375, 175.5, 176.625, 177.75, 178.875])
 
+# Mapping class value to name for modis
+modis_lc = {
+    'evergreen_conif': 1,
+    'evergreen_palmate': 2,
+    'decid_needle': 3,
+    'decid_broad': 4,
+    'mixed_forest': 5,
+    'closed_shrub': 6,
+    'open_shrub': 7,
+    'woody_savanna': 8,
+    'savanna': 9,
+    'grassland': 10,
+    'perm_wetland': 11,
+    'cropland': 12,
+    'urban': 13,
+    'crop_natural_veg': 14,
+    'perm_snow': 15,
+    'barren': 16,
+    'water_bodies': 17
+}
+
+# Mapping class value to name for modis burned area
+modis_burned = {
+    'cropland_rain': 0,
+    'cropland_irrigated': 20,
+    'crop_veg': 30,
+    'veg_crop': 40,
+    'broad_evergreen': 50,
+    'broad_decid': 60,
+    'needle_evergreen': 70,
+    'needle_decid': 80,
+    'tree_mixed': 90,
+    'tree_shrub_herb': 100,
+    'herb_tree_shrub': 110,
+    'shrubland': 120,
+    'grassland': 130,
+    'lichen_moss': 140,
+    'sparse_veg': 150,
+    'tree_flooded': 170,
+    'shrub_herb_flood': 180
+}
 
 def format_lon(x):
     '''
@@ -148,26 +189,49 @@ def get_mode(x):
     return values[m]
 
 
-def get_percent_coverage(x):
+def get_percent_coverage(x, data_name):
     '''
     TO COMPLETE: WIP
-    Calculate percentage of land cover type per 2D array
-    useful for land cover datasets
+    Calculate percentage of land cover type per
+    2D array. Useful for land cover datasets.
+    Takes in 2D array, data_name
     '''
     values, counts = np.unique(x, return_counts=True)
+    total_el = len(x)*len(x[0])
+
+    if data_name == 'modis':
+        name_map = modis_lc
+    else:
+        name_map = modis_burned
+
+    # Create empty dictionary
+    perc_dict = {}
+
+    count_dict = {}
+    for i in range(len(values)):
+        count_dict['{}'.format(values[i])] = counts[i]
+
+    for k, v in name_map.items():
+        if v in values:
+            perc_dict['{}'.format(v)] = count_dict[str(v)] / total_el
+        else:
+            perc_dict['{}'.format(v)] = 0
+    import ipdb
+    ipdb.set_trace()
+
     return
 
 
-def get_img_from_collect(dataset, cadence):
+def get_img_from_collect(data, collect_cadence):
     '''
     Get img of interest from collection.
     If yearly cadence, grab first img in collection
     else take mean
     '''
-    if cadence == 'yearly':
-        img = dataset.first()
+    if collect_cadence == 'yearly':
+        img = data.first()
     else:
-        img = dataset.mean()
+        img = data.mean()
 
     return img
 
@@ -267,7 +331,7 @@ dataset = ee.ImageCollection(gee_data).filterDate('{}-01-01'.
 print('processing {} for year {}'.format(gee_data, year))
 
 # Process data
-processed_data = process_collection(dataset, band, cadence, lat, lon)
+processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon, name)
 
 # Save file
 root_path = os.getcwd()
