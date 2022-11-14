@@ -62,6 +62,16 @@ def save_by_month(ds, path):
             Logger.info(f'- {month:02}')
             mds.to_netcdf(f'{output}/{month:02}.nc', engine='netcdf4')
 
+def calc(ds, string):
+    """
+    Performs simple calculations to create new features at runtime.
+    """
+    for key in list(ds):
+        if key in instructions:
+            instructions = f"ds['{key}']".join(instructions.split(key))
+
+    return eval(instructions)
+
 def split_and_stack(ds, config, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
@@ -72,9 +82,7 @@ def split_and_stack(ds, config, lazy=True):
         target = ds[config.target]
     # Calculated target case
     else:
-        # Only support basic operations: [-, +, /, *]
-        v1, op, v2 = re.findall(r'(\S+)', config.target)
-        target = eval(f'ds[{v1!r}] {op} ds[{v2!r}]')
+        target = calc(ds, config.target)
         Logger.info(f'Target is {config.target}')
 
     Logger.info(f'Creating the stacked training and target objects')
@@ -181,6 +189,13 @@ def load(config, split=False, lazy=True):
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
+
+    if config.input.calc:
+        Logger.info('Calculating variables')
+
+        for key, string in config.input.calc.items():
+            Logger.debug(f'- {key} = {string}')
+            ds[key] = calc(ds, string)
 
     if config.input.sel:
         Logger.info('Subselecting data')
