@@ -55,20 +55,6 @@ import read_output as read
 
 
 
-#get the mask for the top number a variables
-def get_top_mask(a, var1, var2 = None, var3 = None):
-    
-    metrics_mean = np.stack([v for v in list([var1, var2, var3]) if v is not None])
-    #metrics_mean = np.column_stack([var1, var2, var3])
-    mean_metrics = metrics_mean.mean(axis = 0)
-    mean_metrics[np.isnan(mean_metrics)] = 0. 
-    idx_sort = np.argsort(mean_metrics)[::-1]
-    mask_top = idx_sort[:a]
-    
-    return mask_top
-    
-
-
 def main(sub_dir):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
@@ -188,7 +174,16 @@ def main(sub_dir):
 
           
 
+if __name__ == '__main__':
+    import argparse
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
+    parser.add_argument('--months', default = 'all', nargs = '*', type=str)
+    #parser.add_argument('--parameter', type=str, default=None)
+
+    args = parser.parse_args()
+    main(**vars(args)) 
 
 
 

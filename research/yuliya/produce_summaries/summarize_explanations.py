@@ -69,7 +69,7 @@ def get_top_mask(a, var1, var2 = None, var3 = None):
     
 
 
-def main(sub_dir):
+def main(sub_dir, a = 20):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -89,8 +89,8 @@ def main(sub_dir):
     contributions = read.load_contributions(summaries_dir, importances['reference'])
     
     
-    #------------plots for TOP 20
-    mask_top = get_top_mask(20, var1 = importances['model']['mean'],
+    #------------plots for TOP a
+    mask_top = get_top_mask(a, var1 = importances['model']['mean'],
                                 var2 = importances['permutation']['mean'],
                                 var3 = contributions['mean'])
     
@@ -254,6 +254,18 @@ def main(sub_dir):
     #     plt.savefig(f'{plots_dir}/large_residuals/signal_{un_lons[s]}_.{un_lats[s]}.png',
     #                 bbox_inches='tight')
     #     plt.close()
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
+    #parser.add_argument('--months', default = 'all', nargs = '*', type=str)
+    parser.add_argument('--a', type=int, default = 20)
+
+    args = parser.parse_args()
+    main(**vars(args)) 
 
 
           

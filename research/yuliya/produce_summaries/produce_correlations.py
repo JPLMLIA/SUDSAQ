@@ -31,7 +31,7 @@ import read_output as read
 from sklearn.preprocessing import StandardScaler
 
 #root_dir = '/Users/marchett/Documents/SUDS_AQ/analysis_mount/'
-
+#sub_dir = '/bias/local/8hr_median/v1/'
 
 def main(sub_dir, months = 'all'):
     
@@ -59,40 +59,51 @@ def main(sub_dir, months = 'all'):
     #run correlations for all months
     for month in months:
         
-        data_file = f'{summaries_dir}/{month}/test.data.mean.nc'
+        
+        #data_file = f'{summaries_dir}/{month}/test.data.mean.nc'
+        data_file = f'{summaries_dir}/{month}/data.h5'
+        print(data_file)
         if not os.path.isfile(data_file):
             continue
          
-        data = xr.open_dataset(data_file)
-        data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
-        data = data.sortby(data.lon)
-        var_names = list(data.keys())
+        #data = xr.open_dataset(data_file)
+        # data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
+        # data = data.sortby(data.lon)
+        # var_names = list(data.keys())
+        
+        #crop the data for the region
+        # data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
+        #                         lon=slice(bbox[0], bbox[1]))
+        # data_stacked = data_cropped.stack(z=('lon', 'lat'))
+        
+        # #extract the values and remove non-TOAR locs
+        # data_array = data_stacked.to_array().values
         
         #option2: optionally can run on contributions
         # data = xr.open_dataset(f'{models_dir}/test.contributions.mean.nc')
         # data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
         # data = data.sortby(data.lon)
         
-        #crop the data for the region
-        data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
-                                lon=slice(bbox[0], bbox[1]))
-        data_stacked = data_cropped.stack(z=('lon', 'lat'))
         
+        with closing(h5py.File(data_file, 'r')) as f:
+            var_names = f['var_names'][:].astype(str)
+            data_array = f['X'][:]
+        
+
         #extract the values and remove non-TOAR locs
-        data_array = data_stacked.to_array().values
         counts_nan = np.isnan(data_array).sum(axis = 0)
         mask_locs = counts_nan < len(var_names)
         
         # some variables have all zeros, mask them
-        counts_zero = (data_array == 0).sum(axis = 1)
-        mask_zero =  counts_zero < mask_locs.sum()
+        counts_zero = (data_array == 0).sum(axis = 0)
+        mask_zero =  counts_zero < len(data_array)
     
         mask_vars = ~np.in1d(np.hstack(var_names), exclude) & mask_zero
         #mask_ = mask_zero & mask_vars
         
         #scale the data
         scaler = StandardScaler()
-        data_stand = scaler.fit(data_array.T).transform(data_array.T).T
+        data_stand = scaler.fit(data_array).transform(data_array)
 
         #optional, log transform
         # data_log = data_array.copy()
@@ -104,12 +115,12 @@ def main(sub_dir, months = 'all'):
         #         data_log[p, :] = np.log(data_array[p, :]+1)
         
 
-        corr_mat = np.corrcoef(data_stand[mask_vars, :])
+        corr_mat = np.corrcoef(data_stand[:, mask_vars].T)
         var_names = np.hstack(var_names)[mask_vars]
         output_file = f'{summaries_dir}/{month}/var_corr_matrix.h5'
         with closing(h5py.File(output_file, 'w')) as f:
             f['corr_mat'] = corr_mat
-            f['var_names'] = var_names   
+            f['var_names'] = var_names.astype(np.string_)   
         
         #clean up variable names to make them shorter
         #labels = np.hstack([x.split('.')[-1] for x in var_names])
@@ -123,6 +134,7 @@ def main(sub_dir, months = 'all'):
         d1 = sch.dendrogram(H, no_plot=True)
         idx = d1['leaves']
         X = X0[idx,:][:, idx]
+        var_names = np.hstack(var_names)[idx]
         
         mc = 0.9
         X2 = X - np.eye(X.shape[0])
@@ -134,8 +146,8 @@ def main(sub_dir, months = 'all'):
         x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
         plt.figure(figsize = (12, 10))
         plt.scatter(x, y, s = np.abs(X2)*10, c = X2, cmap = 'bwr')
-        plt.xticks(np.arange(len(labels_mask))+0.5, labels_mask, fontsize = 7, rotation = 90);
-        plt.yticks(np.arange(len(labels_mask))+0.5, labels_mask, fontsize = 7, rotation = 0);
+        plt.xticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 90);
+        plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
         plt.colorbar()
         plt.tight_layout()
         plt.title(f'momo variable correlations, truncated for {mc} max corr, {month}')
@@ -148,7 +160,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8h-median/v1/')
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
     parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 

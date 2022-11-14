@@ -6,20 +6,42 @@ Created on Thu Nov 10 14:15:44 2022
 @author: marchett
 """
 import merge_model_output as merge
-import summarize_residuals as residuals 
+import summarize_performance as evaluate 
 import produce_correlations as correlations
+import make_ml_data as extract
+import summarize_explanation as explain
 
 
-def main(sub_dir):
+def main(sub_dir, months = 'all'):
     
-    merge.main('all', sub_dir)
+    #--merge all the cross val years
+    merge.main(months, sub_dir)
     
-    explanations.main()
+    #--make and save ml-ready data
+    extract.main(sub_dir, months)
     
-    residuals.main(sub_dir)
+    #--extract all importances and plot
+    explain.main(sub_dir, a = 20)
     
-    correlations.main(sub_dir, 'all')
+    #--performance and residual analysis
+    evaluate.main(sub_dir)
     
+    #--produce raw feature correlations (toar locs only)
+    correlations.main(sub_dir, months)
+    
+    
+    
+    
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
+    parser.add_argument('--months', default = 'all', nargs = '*', type=str)
+    #parser.add_argument('--parameter', type=str, default=None)
+
+    args = parser.parse_args()
+    main(**vars(args)) 
     
     
     

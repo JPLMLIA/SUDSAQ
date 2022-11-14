@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 from scipy import stats
 import summary_plots as plots
 
-MONTHS = plots.MONTHS
+#MONTHS = plots.MONTHS
 
 #-----------------read in data
 root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
@@ -122,8 +122,8 @@ def load_contributions(summaries_dir, reference_labels):
     #read in contibutions and take absolute value
     cont_abs_mean = []
     cont_names = []
-    for m in range(len(MONTHS)):
-        mask_month = months_list_sort == MONTHS[m]
+    for m in range(len(plots.MONTHS)):
+        mask_month = months_list_sort == plots.MONTHS[m]
         if mask_month.sum() > 0:
             data = xr.open_dataset(models[mask_month][0])
             #mean of the absolute value
@@ -162,14 +162,14 @@ def load_predictions(summaries_dir):
     pred_files = glob.glob(f'{summaries_dir}/*/test.predict.nc')
     true_files = glob.glob(f'{summaries_dir}/*/test.target.nc')
     
-    months_pred = [x.split('/')[13] for x in pred_files]
-    idx = [np.where(np.hstack(months_pred) == x)[0] for x in MONTHS]
+    months_pred = [x.split('/')[-2] for x in pred_files]
+    idx = [np.where(np.hstack(months_pred) == x)[0] for x in plots.MONTHS]
     pred_files = [pred_files[x[0]] if len(x) > 0 else [] for x in idx]
     true_files = [true_files[x[0]] if len(x) > 0 else [] for x in idx]
     
     output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
-    for m in range(len(MONTHS)):
-        is_month = (np.hstack(months_pred) == MONTHS[m]).sum()
+    for m in range(len(plots.MONTHS)):
+        is_month = (np.hstack(months_pred) == plots.MONTHS[m]).sum()
         if is_month > 0:
             data_pred = xr.open_dataset(pred_files[m])
             dsp = data_pred.to_array().stack({'loc': ["lon", "lat", 'time']})
@@ -181,7 +181,7 @@ def load_predictions(summaries_dir):
             mask_truth = np.isnan(truth)
             mask_pred = np.isnan(pred)
             mask = mask_truth | mask_pred
-            
+        
             output['pred'].append(pred[~mask])
             output['truth'].append(truth[~mask])
             
