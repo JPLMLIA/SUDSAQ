@@ -331,7 +331,7 @@ dataset = ee.ImageCollection(gee_data).filterDate('{}-01-01'.
 print('processing {} for year {}'.format(gee_data, year))
 
 # Process data
-processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon, name)
+processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon)
 
 # Save file
 root_path = os.getcwd()
