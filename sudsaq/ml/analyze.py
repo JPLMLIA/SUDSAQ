@@ -21,7 +21,8 @@ from sudsaq.config import (
 )
 from sudsaq.data  import load
 from sudsaq.ml    import plots
-from sudsaq.ml    import treeinterpreter as ti
+# from sudsaq.ml    import treeinterpreter as ti
+from treeinterpreter import treeinterpreter as ti
 from sudsaq.utils import (
     align_print,
     load_pkl,
@@ -150,7 +151,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
-        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+        predicts, bias[:], contributions[:] = ti.predict(model, data)#, **config.treeinterpreter)
 
         predict[:] = predicts.flatten()
     else:
