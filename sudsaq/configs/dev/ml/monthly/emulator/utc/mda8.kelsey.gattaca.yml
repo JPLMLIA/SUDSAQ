@@ -54,12 +54,12 @@ default:
 
 jul:
   output:
-    path: /scratch_lg_edge/sudsaq/kelsey_exp/jul/   # Putting in GEE folder while I don't have permissions for others
+    path: /scratch_lg_edge/sudsaq/kelsey_exp/jul/
   input:
     glob:
       - /projects/MLIA_active_data/data_SUDSAQ/data/momo/201[1-4]/07.nc         # MOMO
       - /projects/MLIA_active_data/data_SUDSAQ/gee/fire/201[1-4]_fire_globe_mode.nc   # FIRE (YEARLY)
-      - /projects/MLIA_active_data/data_SUDSAQ/gee/modis/201[1-4]_modis_globe.nc    # MODIS LC MODE (YEARLY)
-      - /projects/MLIA_active_data/data_SUDSAQ/gee/pop/2010_population_density_globe_stat.nc    # POPULATION DATA (5-YEAR)
+      - /projects/MLIA_active_data/data_SUDSAQ/gee/modis/201[1-4]_modis_globe_mode.nc    # MODIS LC MODE (YEARLY)
+      - /projects/MLIA_active_data/data_SUDSAQ/gee/pop/2010_population_density_globe.nc    # POPULATION DATA (5-YEAR)
   log:
     file: /scratch_lg_edge/sudsaq/kelsey_exp/jul/run.log
