@@ -150,7 +150,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
-        predicts, bias[:], contributions[:] = ti.predict(model, data)#, **config.treeinterpreter)
+        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
 
         predict[:] = predicts.flatten()
     else:
