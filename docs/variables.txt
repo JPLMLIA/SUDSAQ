@@ -1,0 +1,29 @@
+
+Kazu suggested excluded variables:
+  momo:
+    hno3
+    oh
+    pan
+    q2
+    sens
+    so2
+    T2
+    taugxs
+    taugys
+    taux
+    tauy
+    twpc
+    2dsfc.CFC11
+    2dsfc.CFC113
+    2dsfc.CFC12
+    ch2o
+    cumf0
+    2dsfc.dms
+
+These can be removed during a pipeline run via the config:
+
+```
+input:
+  sel:
+    vars: (momo|toar).(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms).*
+```
