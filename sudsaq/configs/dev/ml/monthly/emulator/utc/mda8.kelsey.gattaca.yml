@@ -50,7 +50,7 @@ default:
   log:
     level: debug
     reset: True
-    config: /scratch_lg_edge/sudsaq/models/emulator/utc/
+    config: /scratch_lg_edge/sudsaq/src/suds-air-quality/sudsaq/configs/dev/ml/monthly/emulator/utc
 
 jul:
   output:
