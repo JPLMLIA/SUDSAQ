@@ -63,10 +63,8 @@ v2:
     file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v2/jul/run.log
 v3:
   input:
-    calc:
-      a_co: momo.a + momo.co
     sel:
-      vars: [a_co, momo.so2, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/updated/201[1-5]/07.nc
   output:
