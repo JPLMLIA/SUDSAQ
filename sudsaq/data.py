@@ -67,10 +67,10 @@ def calc(ds, string):
     Performs simple calculations to create new features at runtime.
     """
     for key in list(ds):
-        if key in instructions:
-            instructions = f"ds['{key}']".join(instructions.split(key))
+        if key in string:
+            string = f"ds['{key}']".join(string.split(key))
 
-    return eval(instructions)
+    return eval(string)
 
 def split_and_stack(ds, config, lazy=True):
     """
