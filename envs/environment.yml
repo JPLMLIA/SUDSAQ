@@ -1,0 +1,23 @@
+name: sudsaq
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - cartopy
+  - dask
+  - h5py
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pandas
+  - pyyaml
+  - requests
+  - scikit-learn
+  - seaborn
+  - shap
+  - tqdm
+  - xarray
+  - pip
+  - pip:
+    - ray
+    - tables

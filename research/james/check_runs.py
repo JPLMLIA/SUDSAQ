@@ -161,43 +161,30 @@ False
 0.22871956531241733
 
 #%%
-import argparse
-import os
 
-from glob import glob
+32d950ec0ccf9d2affffffffffffffffffffffff0100000001000000
+32d950ec0ccf9d2affffffffffffffffffffffff0100000001000000
 
-from sudsaq.analyze import analyze
-from sudsaq.config  import Config
-from sudsaq.utils   import load_pkl
+#%%
 
-def correct(dir):
-    rm = glob(f'{dir}/**/rf/**/*.bias.nc') + glob(f'{dir}/**/rf/**/*.contributions.nc')
-    for file in rm:
-        os.remove(file)
+from tqdm import tqdm
 
-    [yaml] = glob(f'{dir}/*.yml')
+bar = tqdm(range(0, 10))
 
-    paths = glob(f'{dir}/**/rf/*/')
-    for path in paths:
-        month, _, year, _ = path.split('/')
-        config = Config(yaml, month)
-        config.not_ti               = True
-        config.output.data          = False
-        config.output.target        = False
-        config.output.bias          = False
-        config.output.contributions = False
-        config.output.model         = False
-        data   = xr.open_dataset(f'{path}/test.data.nc').to_array().stack(loc=['lat', 'lon', 'time']).dropna('loc').transpose('loc', 'variable')
-        target = xr.open_dataarray(f'{path}/test.target.nc').stack(loc=['lat', 'lon', 'time']).dropna('loc')
-        model  = load_pkl(f'{path}/model.pkl')
-        analyze(model=model, data=data, target=target, kind='test', output=path)
+for i in bar: print(i)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+help(bar.update)()
 
-    parser.add_argument('-r', '--run',      type     = str,
-                                            required = True,
-                                            help     = 'Run directory to correct'
-    )
-    args = parser.parse_args()
-    correct(args.run)
+bar.iterable
+dir(bar)
+
+#%%
+
+384/(12*2)
+3000/(12*2)
+
+#%%
+
+a = 'a'
+abc: a = 1
+dir(abc)
