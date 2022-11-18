@@ -38,9 +38,9 @@ import summary_plots as plots
 # plots_dir = f'{root_dir}/summaries/{sub_dir}/summary_plots/'
 
 
-def main(sub_dir, months = None):
+def main(sub_dir, months = 'all'):
     
-    if months is None:
+    if months == 'all':
         months = plots.MONTHS
     
     #-----------------read in data
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr_median/v1/')
-    parser.add_argument('--months', default = None, nargs = '*', type=str)
+    parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 
     args = parser.parse_args()

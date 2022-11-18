@@ -26,6 +26,7 @@ import seaborn
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import explained_variance_score
+from sklearn.metrics import r2_score
 from scipy import stats
 import summary_plots as plots
 import read_output as read
@@ -78,7 +79,7 @@ def main(sub_dir):
     nrmse = []
     mape = []
     mae = []
-    pve = []
+    r2 = []
     for m in range(len(output['pred'])):
         
         if len(output['pred'][m]) > 1:
@@ -89,7 +90,8 @@ def main(sub_dir):
             #q = np.percentile(truth_list[m], [25, 75])
             nrmse.append(error / np.std(output['truth'][m]))
             mae.append(mean_absolute_error(output['truth'][m], output['pred'][m]))
-            pve.append(explained_variance_score(output['truth'][m], output['pred'][m]))
+            #pve.append(explained_variance_score(output['truth'][m], output['pred'][m]))
+            r2.append(r2_score(output['truth'][m], output['pred'][m]))
             rmse.append(error)
         else:
             rmse.append(np.nan)
@@ -98,28 +100,36 @@ def main(sub_dir):
     
     rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth']), 
                                             np.hstack(output['pred'])))    
-        
+    r2_total =   r2_score(np.hstack(output['truth']), 
+                                            np.hstack(output['pred']))  
+    
     #------rmse vs mae
     plt.figure()
     plt.plot(np.arange(1, len(rmse)+1), rmse, 'x', color = 'blue', label = 'rmse');
     plt.plot(np.arange(1, len(rmse)+1), rmse, ':', alpha = 0.5, color = 'blue');
     plt.plot(np.arange(1, len(mae)+1), mae, 'x', color = 'green', label = 'mae');
     plt.plot(np.arange(1, len(mae)+1), mae, ':', alpha = 0.5, color = 'green');
+    plt.ylabel('ppb')
+    plt.legend(frameon = True, loc = 'upper left')
+    plt.twinx()
+    plt.plot(np.arange(1, len(mae)+1), r2, ':', alpha = 0.5, color = 'red');
+    plt.plot(np.arange(1, len(mae)+1), r2, 'x', alpha = 0.5, color = 'red', label = 'pve');
     plt.xticks(np.arange(1, len(plots.MONTHS)+1), plots.MONTHS)
     plt.grid(ls=':', alpha = 0.5)
-    plt.ylabel('ppb')
     plt.title(f'model rmse/mae')
-    plt.legend(frameon = True)
+    plt.legend(frameon = True, loc = 'upper right')
     plt.savefig(f'{plots_dir}/rmse_mae_all.png', bbox_inches='tight')
     plt.close()
     
     
     #------histrograms and kde
+    print(f'plotting KDE and hist')
     plots.predicted_kde(output, plots_dir = plots_dir)
     plots.predicted_hist(output, plots_dir = plots_dir)
 
 
     #-------- large residuals
+    print(f'plotting residual maps')
     lon = np.hstack(output['lon'])
     lat = np.hstack(output['lat'])
     un_lons, un_lats = np.unique([lon, lat], axis = 1)

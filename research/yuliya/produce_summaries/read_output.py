@@ -73,12 +73,12 @@ def load_importances(models_dir):
         pi_sorted[:, i] = pi[i][pi_idx] / pi[i][pi_idx].max()
               
     months_list = np.hstack([x.split('/')[11] for x in output_files])
-    mi_monthly_mean = np.zeros((len(reference_labels), len(MONTHS)))
-    mi_monthly_std = np.zeros((len(reference_labels), len(MONTHS)))
-    pi_monthly_mean = np.zeros((len(reference_labels), len(MONTHS)))
-    pi_monthly_std = np.zeros((len(reference_labels), len(MONTHS)))
-    for m in range(len(MONTHS)):
-        mask_month = months_list == MONTHS[m]
+    mi_monthly_mean = np.zeros((len(reference_labels), len(plots.MONTHS)))
+    mi_monthly_std = np.zeros((len(reference_labels), len(plots.MONTHS)))
+    pi_monthly_mean = np.zeros((len(reference_labels), len(plots.MONTHS)))
+    pi_monthly_std = np.zeros((len(reference_labels), len(plots.MONTHS)))
+    for m in range(len(plots.MONTHS)):
+        mask_month = months_list == plots.MONTHS[m]
         if mask_month.sum() > 0:
             mi_monthly_mean[:, m] = mi_sorted[:, mask_month].mean(axis = 1)
             mi_monthly_std[:, m] = mi_sorted[:, mask_month].std(axis = 1)
@@ -168,7 +168,7 @@ def load_predictions(summaries_dir):
     true_files = [true_files[x[0]] if len(x) > 0 else [] for x in idx]
     
     output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
-    for m in range(len(plots.MONTHS)):
+    for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading predicts/truth'):
         is_month = (np.hstack(months_pred) == plots.MONTHS[m]).sum()
         if is_month > 0:
             data_pred = xr.open_dataset(pred_files[m])

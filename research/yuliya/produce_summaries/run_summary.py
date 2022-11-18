@@ -9,7 +9,7 @@ import merge_model_output as merge
 import summarize_performance as evaluate 
 import produce_correlations as correlations
 import make_ml_data as extract
-import summarize_explanation as explain
+import summarize_explanations as explain
 
 
 def main(sub_dir, months = 'all'):

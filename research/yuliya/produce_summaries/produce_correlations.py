@@ -80,14 +80,25 @@ def main(sub_dir, months = 'all'):
         # data_array = data_stacked.to_array().values
         
         #option2: optionally can run on contributions
-        # data = xr.open_dataset(f'{models_dir}/test.contributions.mean.nc')
-        # data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
-        # data = data.sortby(data.lon)
+        if raw:
+            with closing(h5py.File(data_file, 'r')) as f:
+                var_names = f['var_names'][:].astype(str)
+                data_array = f['X'][:]
         
+        if contributions:    
+            data = xr.open_dataset(f'{models_dir}/test.contributions.mean.nc')
+            data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
+            data = data.sortby(data.lon)
+            var_names = list(data.keys())
+            data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
+                                    lon=slice(bbox[0], bbox[1]))
+            data_stacked = data_cropped.stack(z=('lon', 'lat'))
+            data_array = data_stacked.to_array().values
+            
         
-        with closing(h5py.File(data_file, 'r')) as f:
-            var_names = f['var_names'][:].astype(str)
-            data_array = f['X'][:]
+        # with closing(h5py.File(data_file, 'r')) as f:
+        #     var_names = f['var_names'][:].astype(str)
+        #     data_array = f['X'][:]
         
 
         #extract the values and remove non-TOAR locs
@@ -134,13 +145,13 @@ def main(sub_dir, months = 'all'):
         d1 = sch.dendrogram(H, no_plot=True)
         idx = d1['leaves']
         X = X0[idx,:][:, idx]
-        var_names = np.hstack(var_names)[idx]
+        var_names_X = np.hstack(var_names)[idx]
         
         mc = 0.9
         X2 = X - np.eye(X.shape[0])
         X2_max = np.abs(X2).max(axis = 0)
         mask_corr = X2_max > mc
-        labels_mask = np.hstack(var_names)[mask_corr]
+        labels_mask = np.hstack(var_names_X)[mask_corr]
         
         X2 = X[mask_corr, :][:, mask_corr]
         x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
@@ -154,6 +165,18 @@ def main(sub_dir, months = 'all'):
         plt.savefig(f'{summaries_dir}/{month}/variable_corr_matrix.png', 
                     dpi = 150, bbox = 'tight')
         plt.close()
+        
+        name1 = 'momo.2dsfc.Cl2'
+        name2 = 'momo.2dsfc.dflx.hno3'
+        name1_idx = np.where(np.in1d(var_names_X, name1))[0]
+        name2_idx = np.where(np.in1d(var_names_X, name2))[0]
+        plt.figure()
+        plt.plot(X[:, name1_idx], X[:, name2_idx], '.')
+        
+        cluster_ids = sch.fcluster(H, 0.9, criterion="distance")
+        idx, cluster_counts = np.unique(cluster_ids, return_counts=True)
+        np.where(cluster_counts > 1)
+        var_names[cluster_ids == idx[8]]
 
 
 if __name__ == '__main__':

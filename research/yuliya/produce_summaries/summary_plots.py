@@ -7,20 +7,19 @@ Created on Wed Oct 19 17:19:54 2022
 """
 import os, glob
 import sys
-import json
 import numpy as np
 import h5py
 import xarray as xr
-from scipy.io import netcdf
 from tqdm import tqdm
 from contextlib import closing
-from datetime import datetime, timedelta, date
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+import scipy.cluster.hierarchy as sch
+from sklearn.metrics import pairwise_distances
 
 
 MONTHS = ['dec', 'jan', 'feb', 'mar', 
@@ -95,12 +94,14 @@ def imp_bubble(labels, var1, key, var2 = None, var3 = None, mask_top = None, plo
     #metrics = np.dstack([var1, var2, var3])
     if a < 50:
         scale = 200
+        w = 0.35
     else:
         scale = 50
+        w = 0.2
 
     mi_monthly_trunc = metrics.mean(axis = 0).T[:, mask_top]
     n = mi_monthly_trunc.shape[1]
-    plt.figure(figsize = (a*0.35, 5))
+    plt.figure(figsize = (a*w, 5))
     for z in range(len(mi_monthly_trunc)):
         plt.scatter(x = np.arange(1, n+1), y = np.repeat(z, n), 
                     s = mi_monthly_trunc[z,:]*scale, c = mi_monthly_trunc[z,:], 
@@ -111,7 +112,7 @@ def imp_bubble(labels, var1, key, var2 = None, var3 = None, mask_top = None, plo
                labels[mask_top], rotation = 90)
     plt.xlabel('feature')
     plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'motnhly average {key}')
+    plt.title(f'monthly average {key}')
     plt.colorbar()
     plt.tight_layout()
     if plots_dir is not None:
@@ -268,6 +269,7 @@ def predicted_hist(output, plots_dir = None):
         
         if len(output['pred'][m]) > 0:
             rmse_m = np.sqrt(mean_squared_error(output['truth'][m], output['pred'][m]))
+            r2_m = r2_score(output['truth'][m], output['pred'][m])
             
             plt.subplot(2, 6,m+1)
             plt.hist(np.hstack(output['pred'][m]), bins = 300, density = True, 
@@ -288,6 +290,10 @@ def predicted_hist(output, plots_dir = None):
             plt.text(0.1, 0.9, f'{MONTHS[m]}({np.round(rmse_m, 1)})', 
                      bbox=dict(facecolor='none', edgecolor='k'),
                      transform=plt.gca().transAxes)
+            plt.text(0.1, 0.7, f'{MONTHS[m]}({np.round(r2_m, 1)})', 
+                     bbox=dict(facecolor='none', edgecolor='k'),
+                     transform=plt.gca().transAxes)
+    
     plt.suptitle(f'true vs predicted bias histograms, per month')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/hist_predicted_monthly.png',
@@ -348,6 +354,42 @@ def predicted_hist_single(output, plots_dir = None):
         plt.savefig(f'{plots_dir}/hist_predicted_all.png',
                      bbox_inches='tight')
         plt.close()
+
+
+
+
+#------- clustered correlation matrix
+def plot_correlations(corr_mat, var_names, mc = 0.9, plot_name = None):
+    
+    X0 = corr_mat.copy()
+    X0[np.isnan(X0)] = 0.
+    D = pairwise_distances(X0)
+    H = sch.linkage(D, method='average')
+    d1 = sch.dendrogram(H, no_plot=True)
+    idx = d1['leaves']
+    X = X0[idx,:][:, idx]
+    var_names_X = np.hstack(var_names)[idx]
+    
+    X2 = X - np.eye(X.shape[0])
+    X2_max = np.abs(X2).max(axis = 0)
+    mask_corr = X2_max > mc
+    labels_mask = np.hstack(var_names_X)[mask_corr]
+    
+    X2 = X[mask_corr, :][:, mask_corr]
+    x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
+    plt.figure(figsize = (12, 10))
+    plt.scatter(x, y, s = np.abs(X2)*10, c = X2, cmap = 'bwr')
+    plt.xticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 90);
+    plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
+    plt.colorbar()
+    plt.tight_layout()
+    plt.title(f'momo variable correlations, truncated for {mc} max corr, {month}')
+    if plot_name is not None:
+        plt.savefig(f'{plot_name}', dpi = 150, bbox_inches = 'tight')
+        plt.close()
+    
+
+
 
 
 

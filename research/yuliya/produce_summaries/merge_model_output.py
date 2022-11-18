@@ -82,7 +82,7 @@ def main(months, models_dir):
     
         #save truth
         print(f'merging -----> y/test.target')
-        files_momo = glob.glob(f'{dirs}/rf/*/test.target.nc')
+        files_momo = glob.glob(f'{dirs}/*/test.target.nc')
         #ds_momo = xr.open_mfdataset(files_momo, parallel=True)
         dat_momo = []
         for f in files_momo:
