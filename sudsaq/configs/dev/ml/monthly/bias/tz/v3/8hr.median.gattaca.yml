@@ -55,124 +55,124 @@ default:
   log:
     level: debug
     reset: True
-    config: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/
+    config: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/
 
 jan:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jan/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jan/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jan/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jan/run.log
 
 feb:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/feb/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/feb/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/02.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/02.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/feb/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/feb/run.log
 
 mar:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/mar/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/mar/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/03.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/03.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/mar/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/mar/run.log
 
 apr:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/apr/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/apr/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/04.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/04.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/apr/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/apr/run.log
 
 may:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/may/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/may/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/05.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/05.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/may/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/may/run.log
 
 jun:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jun/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jun/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/06.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/06.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jun/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jun/run.log
 
 jul:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jul/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jul/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/jul/run.log
 
 aug:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/aug/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/aug/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/08.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/08.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/aug/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/aug/run.log
 
 sep:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/sep/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/sep/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/09.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/09.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/sep/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/sep/run.log
 
 oct:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/oct/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/oct/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/10.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/10.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/oct/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/oct/run.log
 
 nov:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/nov/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/nov/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/11.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/11.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/nov/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/nov/run.log
 
 dec:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/dec/
+    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/dec/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/12.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/12.nc # TOAR
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v2/dec/run.log
+    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v3/dec/run.log
