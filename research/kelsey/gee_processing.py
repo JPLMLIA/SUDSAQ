@@ -10,23 +10,19 @@ import ee
 import argparse
 import xarray as xr
 import warnings
-import h5py
-
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 parser = argparse.ArgumentParser(description='GEE Processing')
 parser.add_argument("--gee_data", help="Google Earth Engine Dataset of interest. Must be one of: "
-                                       "modis, pop, or fire")
+                                       "modis, population, or fire")
 parser.add_argument("--region", help="Boundary region on Earth to take data. Must be one of: "
                                      "globe, europe, asia, australia, north_america, west_europe, "
                                      "east_europe, west_na, east_na.")
 parser.add_argument("--year", help="Year of query")
-parser.add_argument("--month", help="Month of query")
 parser.add_argument("--analysis_type", help="Type of analysis. Stats for returning statistical features, "
                                             "full for full image return")
 
 args = parser.parse_args()
-
 
 # GEE datasets to query, can add more if you want to grab them!
 gee_datasets = {
@@ -34,7 +30,7 @@ gee_datasets = {
               'data': 'MODIS/006/MCD12Q1',
               'band': 'LC_Type1',
               't_cadence': 'yearly'},
-    'pop': {'name': 'population_density',
+    'population': {'name': 'population_density',
                    'data': 'CIESIN/GPWv411/GPW_Population_Density',
                    'band': 'population_density',
                    't_cadence': 'yearly'},
@@ -50,7 +46,6 @@ band = gee_datasets[args.gee_data]['band']
 cadence = gee_datasets[args.gee_data]['t_cadence']
 year = int(args.year)
 analysis_type = args.analysis_type
-month = args.month
 
 # Set boundaries to analyze by region
 bbox_dict = {'globe':[-180, 180, -90, 90],
@@ -65,51 +60,6 @@ bbox_dict = {'globe':[-180, 180, -90, 90],
 
 region = args.region
 bbox = bbox_dict[region]
-
-months_dict = {
-    'jan': {
-        'val': '01',
-        'last_day': '31'
-            },
-    'feb': {
-        'val': '02',
-        'last_day': '28'},
-    'mar': {
-        'val': '03',
-        'last_day': '31'
-    },
-    'apr': {
-        'val': '04',
-        'last_day': '30'
-    },
-    'may': {
-        'val': '05',
-        'last_day': '31'
-    },
-    'jun': {
-        'val': '06',
-        'last_day': '30'
-    },
-    'jul': {
-        'val': '07',
-        'last_day': '31'},
-    'aug': {
-        'val': '08',
-        'last_day': '31'},
-    'sept': {
-        'val': '09',
-        'last_day': '30'},
-    'oct': {
-        'val': '10',
-        'last_day': '31'
-    },
-    'nov': {
-        'val': '11',
-        'last_day': '30'},
-    'dec': {
-        'val': '12',
-        'last_day': '31'}
-}
 
 # To-do, can put these lat, lon into text files to grab for more generalized
 # MOMO lat values
@@ -178,6 +128,47 @@ momo_lon = np.array([-180., -178.875, -177.75, -176.625, -175.5, -174.375, -173.
                 164.25, 165.375, 166.5, 167.625,  168.75 , 169.875, 171., 172.125,
                 173.25, 174.375, 175.5, 176.625, 177.75, 178.875])
 
+# Mapping class value to name for modis
+modis_lc = {
+    'evergreen_conif': 1,
+    'evergreen_palmate': 2,
+    'decid_needle': 3,
+    'decid_broad': 4,
+    'mixed_forest': 5,
+    'closed_shrub': 6,
+    'open_shrub': 7,
+    'woody_savanna': 8,
+    'savanna': 9,
+    'grassland': 10,
+    'perm_wetland': 11,
+    'cropland': 12,
+    'urban': 13,
+    'crop_natural_veg': 14,
+    'perm_snow': 15,
+    'barren': 16,
+    'water_bodies': 17
+}
+
+# Mapping class value to name for modis burned area
+modis_burned = {
+    'cropland_rain': 0,
+    'cropland_irrigated': 20,
+    'crop_veg': 30,
+    'veg_crop': 40,
+    'broad_evergreen': 50,
+    'broad_decid': 60,
+    'needle_evergreen': 70,
+    'needle_decid': 80,
+    'tree_mixed': 90,
+    'tree_shrub_herb': 100,
+    'herb_tree_shrub': 110,
+    'shrubland': 120,
+    'grassland': 130,
+    'lichen_moss': 140,
+    'sparse_veg': 150,
+    'tree_flooded': 170,
+    'shrub_herb_flood': 180
+}
 
 def format_lon(x):
     '''
@@ -198,7 +189,41 @@ def get_mode(x):
     return values[m]
 
 
-def get_img_from_collect(data, collect_cadence, analysis_month, analysis_year):
+def get_percent_coverage(x, data_name):
+    '''
+    TO COMPLETE: WIP
+    Calculate percentage of land cover type per
+    2D array. Useful for land cover datasets.
+    Takes in 2D array, data_name
+    '''
+    values, counts = np.unique(x, return_counts=True)
+    total_el = len(x)*len(x[0])
+
+    if data_name == 'modis':
+        name_map = modis_lc
+    else:
+        name_map = modis_burned
+
+    # Create empty dictionary
+    perc_dict = {}
+
+    count_dict = {}
+    for i in range(len(values)):
+        count_dict['{}'.format(values[i])] = counts[i]
+
+    # Iteratively get the % coverage for lc type
+    for k, v in name_map.items():
+        if v in values:
+            perc_dict['{}'.format(v)] = count_dict[str(v)] / total_el
+        else:
+            perc_dict['{}'.format(v)] = 0
+    import ipdb
+    ipdb.set_trace()
+
+    return
+
+
+def get_img_from_collect(data, collect_cadence):
     '''
     Get img of interest from collection.
     If yearly cadence, grab first img in collection
@@ -206,12 +231,8 @@ def get_img_from_collect(data, collect_cadence, analysis_month, analysis_year):
     '''
     if collect_cadence == 'yearly':
         img = data.first()
-    if collect_cadence == 'monthly':
-        mon = months_dict[analysis_month]['val']
-        last_day = months_dict[analysis_month]['last_day']
-        im = data.filterDate('{}-{}-01'.format(analysis_year, mon),
-                              '{}-{}-{}'.format(analysis_year, mon, last_day))
-        img = im.first()
+    else:
+        img = data.mean()
 
     return img
 
@@ -222,26 +243,32 @@ def make_dataset(array, var, lats, lons):
     lat, lon for specified variable
     '''
 
-    xr_data = xr.DataArray(array, coords={'lat': lats, 'lon': lons})
+    xr_data = xr.DataArray(array, coords={'lat': lats, 'lon': lons}, dims=['lat', 'lon'])
     xr_dataset = xr_data.to_dataset(name='{}'.format(var))
     return xr_dataset
 
 
-def process_collection(collection, band, cadence, lat, lon, month, analysis_year):
+def process_collection(collection, band, cadence, lat, lon):
     '''
     Process GEE collection to return ndarray
     '''
     # arrays for statistical features from GEE
     all_dat = []
+    #mean_dat = []
     mode_dat = []
-    mon = month
+    #min_dat = []
+    #max_dat = []
+
     # Select band type
     data = collection.select(band)
     # Get img from collection based on temporal cadence
-    img = get_img_from_collect(data, cadence, mon, analysis_year)
+    img = get_img_from_collect(data, cadence)
     for k in range(len(lat)):
         print('Processing for lat {} for all lon'.format(lat[k]))
         arr = []
+        #mean_arr = []
+        #min_arr = []
+        #max_arr = []
         mode_arr = []
         for m in range(len(lon)):
             point = ee.Geometry.Point(lon[m], lat[k])
@@ -253,76 +280,45 @@ def process_collection(collection, band, cadence, lat, lon, month, analysis_year
             band_arr = sq_extent.get(band)
             try:
                 np_arr = np.array(band_arr.getInfo())
-                import ipdb
-                ipdb.set_trace()
                 arr.append(np_arr)
+                #mean_arr.append(np_arr.mean())
+                #max_arr.append(np.amax(np_arr))
+                #min_arr.append(np.amin(np_arr))
                 mode_arr.append(get_mode(np_arr))
             except:
                 arr.append(np.nan)
+                #mean_arr.append(np.nan)
+                #max_arr.append(np.nan)
+                #min_arr.append(np.nan)
                 mode_arr.append(np.nan)
 
         all_dat.append(arr)
+        #mean_dat.append(mean_arr)
+        #min_dat.append(min_arr)
+        #max_dat.append(max_arr)
         mode_dat.append(mode_arr)
 
     arr_all = np.array(all_dat)
+    #mean_all = np.array(mean_dat)
+    #min_all = np.array(min_dat)
+    #max_all = np.array(max_dat)
     mode_all = np.array(mode_dat)
 
+    #data_xr = xr.DataArray(arr_all, coords={'lat': lat, 'lon': lon}, dims=['lat', 'lon'])
+    #df = pd.DataFrame(arr_all, index=lat, columns=lon)
+
     # Make xr datasets
+    #mean_xr = make_dataset(mean_all, 'mean', lat, lon)
+    #max_xr = make_dataset(max_all, 'max', lat, lon)
+    #min_xr = make_dataset(min_all, 'min', lat, lon)
     mode_xr = make_dataset(mode_all, 'mode', lat, lon)
 
     # Combine datasets
+    #combined_xr = mean_xr.merge(max_xr).merge(min_xr)
     combined_xr = mode_xr
 
     return combined_xr
 
-def process_collection_for_img(collection, band, cadence, locations, toar_dir, month, analysis_year):
-    '''
-    Processes image collection and saves image for the toar locations
-    '''
-    # Select band type
-    data = collection.select(band)
-    mon = month
-    # Get img from collection based on temporal cadence
-    img = get_img_from_collect(data, cadence, mon, analysis_year)
-    print('Number of stations is: {}'.format(len(locations)))
-    for station in locations:
-        lat = station[0]
-        lon = station[1]
-        point = ee.Geometry.Point(lon, lat)
-        # Create 55km buffer will match the 1x1deg momo grid
-        roi = point.buffer(55500)
-        # Sample img over roi
-        sq_extent = img.sampleRectangle(region=roi)
-        # Get band of interest
-        band_arr = sq_extent.get(band)
-        try:
-            np_arr = np.array(band_arr.getInfo())
-        except:
-            np_arr = np.nan
-
-        # Read to hdf file
-        with h5py.File('{}/{}_{}_data.hdf'.format(toar_dir, lat, lon), 'w') as outfile:
-            h5_dataset = outfile.create_dataset('gee data', data= np_arr)
-            h5_dataset.attrs['lat'] = lat
-            h5_dataset.attrs['lon'] = lon
-            h5_dataset.attrs['year'] = analysis_year
-
-def get_toar_locations(dataset):
-    '''
-    Grab toar stations from xarray
-    return list
-    '''
-    dataset = format_lon(dataset)
-    points = dataset.to_dataframe().dropna().reset_index()[['lat', 'lon']].values
-    station_list = []
-    seen = set()
-    for item in points:
-        t = tuple(item)
-        if not t in seen:
-            station_list.append(item)
-            seen.add(t)
-
-    return station_list
 
 # Authenticate ee
 ee.Authenticate()
@@ -333,22 +329,11 @@ ee.Initialize()
 # Grab data
 dataset = ee.ImageCollection(gee_data).filterDate('{}-01-01'.
                                                   format(year), '{}-01-01'.format(year+1))
-print('processing {} for {} {}'.format(gee_data, month, year))
+print('processing {} for year {}'.format(gee_data, year))
 
-
-# Extract and save gee data for TOAR locations to begin with
-data_name = gee_datasets[args.gee_data]['name']
-data_name = 'pop'
-toar_dir = '/Users/kelseydoerksen/gee/{}/jan_{}_TOAR'.format(data_name, year)
-toar_ds = xr.open_dataset('/Users/kelseydoerksen/exp_runs/rf/jan/all_gee_added/{}/test.target.nc'.format(year))
-toar_stations = get_toar_locations(toar_ds)
-process_collection_for_img(dataset, band, cadence, toar_stations, toar_dir, month, year)
-'''
-
-# Process data with calculations
-processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon, month, year)
+# Process data
+processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon)
 
 # Save file
 root_path = os.getcwd()
 processed_data.to_netcdf('{}/{}_{}_{}_mode.nc'.format(root_path, year, name, region))
-'''
