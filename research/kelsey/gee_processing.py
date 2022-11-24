@@ -211,6 +211,7 @@ def get_percent_coverage(x, data_name):
     for i in range(len(values)):
         count_dict['{}'.format(values[i])] = counts[i]
 
+    # Iteratively get the % coverage for lc type
     for k, v in name_map.items():
         if v in values:
             perc_dict['{}'.format(v)] = count_dict[str(v)] / total_el
