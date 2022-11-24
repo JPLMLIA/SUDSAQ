@@ -1,6 +1,6 @@
 default:
   target: momo.mda8
-  train: momo.(?!o3|mda8).*
+  train: [momo.2dsfc.Br2, momo.2dsfc.BrCl, momo.2dsfc.BrONO2, momo.2dsfc.BrOX, momo.2dsfc.C10H16, momo.2dsfc.C2H5OOH, momo.2dsfc.C2H6, momo.2dsfc.C3H6, momo.2dsfc.C3H7OOH, momo.2dsfc.C5H8, momo.2dsfc.CCl4, momo.2dsfc.CFC11, momo.2dsfc.CFC113, momo.2dsfc.CFC12, momo.2dsfc.CH2O, momo.2dsfc.CH3Br, momo.2dsfc.CH3CCl3, momo.2dsfc.CH3CHO, momo.2dsfc.CH3COCH3, momo.2dsfc.CH3COO2, momo.2dsfc.CH3COOOH, momo.2dsfc.CH3Cl, momo.2dsfc.CH3O2, momo.2dsfc.CH3OH, momo.2dsfc.CH3OOH, momo.2dsfc.CHBr3, momo.2dsfc.Cl2, momo.2dsfc.ClONO2, momo.2dsfc.ClOX, momo.2dsfc.DCDT.HOX, momo.2dsfc.DCDT.OY, momo.2dsfc.DCDT.SO2, momo.2dsfc.DMS, momo.2dsfc.H1211, momo.2dsfc.H1301, momo.2dsfc.H2O2, momo.2dsfc.HACET, momo.2dsfc.HBr, momo.2dsfc.HCFC22, momo.2dsfc.HCl, momo.2dsfc.HNO3, momo.2dsfc.HNO4, momo.2dsfc.HO2, momo.2dsfc.HOBr, momo.2dsfc.HOCl, momo.2dsfc.HOROOH, momo.2dsfc.ISON, momo.2dsfc.ISOOH, momo.2dsfc.LR.HOX, momo.2dsfc.LR.OY, momo.2dsfc.LR.SO2, momo.2dsfc.MACR, momo.2dsfc.MACROOH, momo.2dsfc.MGLY, momo.2dsfc.MPAN, momo.2dsfc.N2O5, momo.2dsfc.NALD, momo.2dsfc.NH3, momo.2dsfc.NH4, momo.2dsfc.OCS, momo.2dsfc.OH, momo.2dsfc.ONMV, momo.2dsfc.PAN, momo.2dsfc.PROD.HOX, momo.2dsfc.PROD.OY, momo.2dsfc.SO2, momo.2dsfc.SO4, momo.2dsfc.dflx.bc, momo.2dsfc.dflx.dust, momo.2dsfc.dflx.hno3, momo.2dsfc.dflx.nh3, momo.2dsfc.dflx.nh4, momo.2dsfc.dflx.oc, momo.2dsfc.dflx.salt, momo.2dsfc.dms, momo.2dsfc.doxdyn, momo.2dsfc.doxphy, momo.2dsfc.mc.bc, momo.2dsfc.mc.dust, momo.2dsfc.mc.nh4, momo.2dsfc.mc.nitr, momo.2dsfc.mc.oc, momo.2dsfc.mc.pm25.dust, momo.2dsfc.mc.pm25.salt, momo.2dsfc.mc.salt, momo.2dsfc.mc.sulf, momo.2dsfc.taut, momo.T2, momo.ccover, momo.ccoverh, momo.ccoverl, momo.ccoverm, momo.cumf, momo.cumf0, momo.dqcum, momo.dqdad, momo.dqdyn, momo.dqlsc, momo.dqvdf, momo.dtcum, momo.dtdad, momo.dtdyn, momo.dtlsc, momo.dtradl, momo.dtrads, momo.dtvdf, momo.evap, momo.olr, momo.olrc, momo.osr, momo.osrc, momo.prcp, momo.prcpc, momo.prcpl, momo.precw, momo.q2, momo.sens, momo.slrc, momo.slrdc, momo.snow, momo.ssrc, momo.taugxs, momo.taugys, momo.taux, momo.tauy, momo.twpc, momo.u10, momo.uvabs, momo.v10, momo.aerosol.nh4, momo.aerosol.no3, momo.aerosol.sul, momo.ch2o, momo.co, momo.hno3, momo.oh, momo.pan, momo.ps, momo.q, momo.so2, momo.t, momo.u, momo.v, momo.o3, momo.no, momo.no2, modis.mode, fire.mode]
   train_performance: False
   model:
     kind: RandomForestRegressor
@@ -33,30 +33,36 @@ default:
       count: 20
       labelrotation: 90
   input:
-    # sel:
-      # lat: [10, 80]   # America
-      # lon: [220, 310] # America
+    #sel:
+    #  lat: [10, 80]   # America
+    #  lon: [220, 310] # America
     daily:
       mda8:
         vars: [momo.mda8]
         time: 1
       momo:
-        vars: momo.(?!mda8).* # Match all momo variables except mda8
+        vars: [momo.2dsfc.Br2, momo.2dsfc.BrCl, momo.2dsfc.BrONO2, momo.2dsfc.BrOX, momo.2dsfc.C10H16, momo.2dsfc.C2H5OOH, momo.2dsfc.C2H6, momo.2dsfc.C3H6, momo.2dsfc.C3H7OOH, momo.2dsfc.C5H8, momo.2dsfc.CCl4, momo.2dsfc.CFC11, momo.2dsfc.CFC113, momo.2dsfc.CFC12, momo.2dsfc.CH2O, momo.2dsfc.CH3Br, momo.2dsfc.CH3CCl3, momo.2dsfc.CH3CHO, momo.2dsfc.CH3COCH3, momo.2dsfc.CH3COO2, momo.2dsfc.CH3COOOH, momo.2dsfc.CH3Cl, momo.2dsfc.CH3O2, momo.2dsfc.CH3OH, momo.2dsfc.CH3OOH, momo.2dsfc.CHBr3, momo.2dsfc.Cl2, momo.2dsfc.ClONO2, momo.2dsfc.ClOX, momo.2dsfc.DCDT.HOX, momo.2dsfc.DCDT.OY, momo.2dsfc.DCDT.SO2, momo.2dsfc.DMS, momo.2dsfc.H1211, momo.2dsfc.H1301, momo.2dsfc.H2O2, momo.2dsfc.HACET, momo.2dsfc.HBr, momo.2dsfc.HCFC22, momo.2dsfc.HCl, momo.2dsfc.HNO3, momo.2dsfc.HNO4, momo.2dsfc.HO2, momo.2dsfc.HOBr, momo.2dsfc.HOCl, momo.2dsfc.HOROOH, momo.2dsfc.ISON, momo.2dsfc.ISOOH, momo.2dsfc.LR.HOX, momo.2dsfc.LR.OY, momo.2dsfc.LR.SO2, momo.2dsfc.MACR, momo.2dsfc.MACROOH, momo.2dsfc.MGLY, momo.2dsfc.MPAN, momo.2dsfc.N2O5, momo.2dsfc.NALD, momo.2dsfc.NH3, momo.2dsfc.NH4, momo.2dsfc.OCS, momo.2dsfc.OH, momo.2dsfc.ONMV, momo.2dsfc.PAN, momo.2dsfc.PROD.HOX, momo.2dsfc.PROD.OY, momo.2dsfc.SO2, momo.2dsfc.SO4, momo.2dsfc.dflx.bc, momo.2dsfc.dflx.dust, momo.2dsfc.dflx.hno3, momo.2dsfc.dflx.nh3, momo.2dsfc.dflx.nh4, momo.2dsfc.dflx.oc, momo.2dsfc.dflx.salt, momo.2dsfc.dms, momo.2dsfc.doxdyn, momo.2dsfc.doxphy, momo.2dsfc.mc.bc, momo.2dsfc.mc.dust, momo.2dsfc.mc.nh4, momo.2dsfc.mc.nitr, momo.2dsfc.mc.oc, momo.2dsfc.mc.pm25.dust, momo.2dsfc.mc.pm25.salt, momo.2dsfc.mc.salt, momo.2dsfc.mc.sulf, momo.2dsfc.taut, momo.T2, momo.ccover, momo.ccoverh, momo.ccoverl, momo.ccoverm, momo.cumf, momo.cumf0, momo.dqcum, momo.dqdad, momo.dqdyn, momo.dqlsc, momo.dqvdf, momo.dtcum, momo.dtdad, momo.dtdyn, momo.dtlsc, momo.dtradl, momo.dtrads, momo.dtvdf, momo.evap, momo.olr, momo.olrc, momo.osr, momo.osrc, momo.prcp, momo.prcpc, momo.prcpl, momo.precw, momo.q2, momo.sens, momo.slrc, momo.slrdc, momo.snow, momo.ssrc, momo.taugxs, momo.taugys, momo.taux, momo.tauy, momo.twpc, momo.u10, momo.uvabs, momo.v10, momo.aerosol.nh4, momo.aerosol.no3, momo.aerosol.sul, momo.ch2o, momo.co, momo.hno3, momo.oh, momo.pan, momo.ps, momo.q, momo.so2, momo.t, momo.u, momo.v, momo.o3, momo.no, momo.no2]
         time: [8, 15]
         local: False
+      modis:
+        vars: [modis.mode]
+        time: [8, 15]
+      fire:
+        vars: [fire.mode]
+        time: [8, 15]
   log:
     level: debug
     reset: True
-    config: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/
+    config: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/jul/modis_2011-12_gee/
 
 jul:
   output:
-    path: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/jul/
+    path: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/jul/modis_2011-12_gee/
   input:
     glob:
-      - /Users/kelseydoerksen/201[0-2]/07.nc    # MOMO
-      - /Users/kelseydoerksen/gee/fire/201[0-2]_fire_globe_mode.nc   # FIRE (YEARLY)
-      - /Users/kelseydoerksen/gee/modis/201[0-2]_modis_globe_mode.nc    # MODIS LC MODE (YEARLY)
-      - /Users/kelseydoerksen/gee/pop/2010_population_density_globe.nc    # POPULATION DATA (5-YEAR)
+      - /Users/kelseydoerksen/201[1-2]/07.nc    # MOMO
+      - /Users/kelseydoerksen/gee/all_with_time/fire_201[1-2]_filled.nc   # FIRE (YEARLY)
+      - /Users/kelseydoerksen/gee/all_with_time/modis_201[1-2].nc    # MODIS LC MODE (YEARLY)
+      #- /Users/kelseydoerksen/gee/all_with_time/pop_2011.nc    # POPULATION DATA (5-YEAR)
   log:
-    file: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/jul/run.log
+    file: /Users/kelseydoerksen/code/suds-air-quality/research/kelsey/jul/modis_2011-12_gee/run.log
