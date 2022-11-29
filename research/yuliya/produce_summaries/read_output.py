@@ -54,6 +54,7 @@ def load_importances(models_dir):
                 pi_names.append(f['permutation']['axis0'][:].astype(str))
                 pi_months.append(file.split('/')[8])
         except:
+            mi_months[-1] = np.nan
             pi_months[-1] = np.nan
             continue
     

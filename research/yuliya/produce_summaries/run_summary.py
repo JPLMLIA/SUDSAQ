@@ -36,7 +36,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr_median/v1/')
     parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 

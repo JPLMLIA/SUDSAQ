@@ -383,7 +383,7 @@ def plot_correlations(corr_mat, var_names, mc = 0.9, plot_name = None):
     plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
     plt.colorbar()
     plt.tight_layout()
-    plt.title(f'momo variable correlations, truncated for {mc} max corr, {month}')
+    plt.title(f'momo variable correlations, truncated for {mc} max corr')
     if plot_name is not None:
         plt.savefig(f'{plot_name}', dpi = 150, bbox_inches = 'tight')
         plt.close()
