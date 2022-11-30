@@ -75,6 +75,9 @@ def fit(model, data, target, i=None, test=True):
     Logger.debug('Train set:')
     Logger.debug(f'- Target shape: {list(zip(target.train.dims, target.train.shape))}')
     Logger.debug(f'- Data   shape: {list(zip(data.train.dims, data.train.shape))}')
+    Logger.debug(f'Memory footprint for train in GB:')
+    Logger.debug(f'- Data   = {data.train.nbytes / 2**30:.3f}')
+    Logger.debug(f'- Target = {target.train.nbytes / 2**30:.3f}')
 
     if target.train.size == 0:
         Logger.error('Train target detected to be empty, skipping this fold')
@@ -130,6 +133,9 @@ def fit(model, data, target, i=None, test=True):
         Logger.debug('Test set:')
         Logger.debug(f'- Target shape: {list(zip(target.test.dims, target.test.shape))}')
         Logger.debug(f'- Data   shape: {list(zip(data.test.dims, data.test.shape))}')
+        Logger.debug(f'Memory footprint for train in GB:')
+        Logger.debug(f'- Data   = {data.test.nbytes / 2**30:.3f}')
+        Logger.debug(f'- Target = {target.test.nbytes / 2**30:.3f}')
 
         if target.test.size == 0:
             Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
