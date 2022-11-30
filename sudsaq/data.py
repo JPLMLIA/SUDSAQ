@@ -98,7 +98,7 @@ def split_and_stack(ds, config, lazy=True):
     if config.use_locs_of:
         Logger.debug(f'Using locations from variable: {config.use_locs_of}')
         # mean('time') removes the time dimension so it is ignored
-        target = xr.merge([target, ds[config.use_locs_of].mean('time')])
+        merged = xr.merge([target, ds[config.use_locs_of].mean('time')])
         merged = merged.to_array().stack({'loc': ['lat', 'lon', 'time']})
         merged = merged.dropna('loc')
         target = merged.isel(variable=0)

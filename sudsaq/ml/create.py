@@ -60,6 +60,10 @@ def fit(model, data, target, i=None, test=True):
     data.train   = data.train.load()
     target.train = target.train.load()
 
+    # Replace inf values if they exist
+    data.train   = data.train.where(data.train.apply(np.isfinite), np.nan)
+    target.train = target.train.where(target.train.apply(np.isfinite), np.nan)
+
     # Always remove NaNs on the training set
     Logger.debug('Dropping NaNs from training data')
     data.train   = data.train.dropna('loc')
@@ -109,6 +113,10 @@ def fit(model, data, target, i=None, test=True):
         Logger.debug('Loading test data')
         target.test = target.test.load()
         data.test   = data.test.load()
+
+        # Replace inf values if they exist
+        data.test   = data.test.where(data.test.apply(np.isfinite), np.nan)
+        target.test = target.test.where(target.test.apply(np.isfinite), np.nan)
 
         Logger.debug('Dropping NaNs in test data')
         # Target and data drop NaNs separately for prediction, will be aligned afterwards
