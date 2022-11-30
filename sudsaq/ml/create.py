@@ -68,6 +68,10 @@ def fit(model, data, target, i=None, test=True):
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train, target.train, copy=False)
 
+    Logger.debug('Train set:')
+    Logger.debug(f'- Target shape: {list(zip(target.train.dims, target.train.shape))}')
+    Logger.debug(f'- Data   shape: {list(zip(data.train.dims, data.train.shape))}')
+
     if target.train.size == 0:
         Logger.error('Train target detected to be empty, skipping this fold')
         return
@@ -114,6 +118,10 @@ def fit(model, data, target, i=None, test=True):
         if config.align_test:
             Logger.debug('Aligning test data')
             data.test, target.test = xr.align(data.test, target.test, copy=False)
+
+        Logger.debug('Test set:')
+        Logger.debug(f'- Target shape: {list(zip(target.test.dims, target.test.shape))}')
+        Logger.debug(f'- Data   shape: {list(zip(data.test.dims, data.test.shape))}')
 
         if target.test.size == 0:
             Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
