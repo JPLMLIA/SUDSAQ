@@ -67,8 +67,8 @@ def calc(ds, string):
     Performs simple calculations to create new features at runtime.
     """
     for key in list(ds):
-        if key in string:
-            string = f"ds['{key}']".join(string.split(key))
+        # Find this key not followed by a digit or word character (eg. prevents momo.no matching to momo.no2)
+        string = re.sub(fr'({key})(?!\d|\w)', f"ds['{key}']", string)
 
     return eval(string)
 
