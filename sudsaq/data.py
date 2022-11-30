@@ -114,6 +114,9 @@ def split_and_stack(ds, config, lazy=True):
         Logger.info('Loading data into memory')
         data.load()
         target.load()
+        Logger.debug(f'Memory footprint in GB:')
+        Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
+        Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
 
     if config.input.scale:
         Logger.info('Scaling data (X)')
