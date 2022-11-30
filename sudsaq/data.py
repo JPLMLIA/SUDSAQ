@@ -99,7 +99,8 @@ def split_and_stack(ds, config, lazy=True):
     if config.use_locs_of:
         Logger.debug(f'Using locations from variable: {config.use_locs_of}')
         locs   = ds[config.use_locs_of].stack({'loc': ['lat', 'lon', 'time']})
-        locs   = locs.dropna('loc')['loc']
+        locs   = locs.dropna('loc').load()['loc']
+        Logger.debug(f'Locations count: {locs.size}')
         data   = data.sel(loc=locs)
         target = target.sel(loc=locs)
 
