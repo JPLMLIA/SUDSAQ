@@ -40,22 +40,20 @@ v1:
   split_predict: 100
   input:
     sel:
-      lat: [10, 80]   # America
-      lon: [220, 310] # America
+      lat: [40, 140]
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v1/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v1/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v1/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v1/jul/run.log
 v2:
   split_predict: 100
   input:
     sel:
-      lat: [10, 80]   # America
-      lon: [220, 310] # America
+      lat: [40, 140]
     calc:
       ch2o_no2: momo.ch2o / momo.no2
     sel:
@@ -63,23 +61,22 @@ v2:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v2/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v2/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v2/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v2/jul/run.log
 v3:
   split_predict: 100
   input:
     sel:
-      lat: [10, 80]   # America
-      lon: [220, 310] # America
+      lat: [40, 140]
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v3/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v3/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/america/v3/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v3/jul/run.log
 
 v1_limited:
   use_locs_of: toar.o3.dma8epa.mean
