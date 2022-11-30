@@ -142,16 +142,41 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Prepare the storage variables
     bias, contributions = None, None
-    predict = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+
 
     if not config.not_ti and 'Forest' in str(model):
         Logger.info('Predicting using TreeInterpreter')
-        bias          = xr.zeros_like(predict)
-        contributions = xr.zeros_like(data)
+        if config.split_predict:
+            Logger.debug(f'Using {config.split_predict} splits for prediction')
+            predicts = []
+            biases   = []
+            contribs = []
 
-        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+            for split in tqdm(np.split(data, config.split_predict), desc='Processed Splits'):
+                predict       = xr.zeros_like(split.isel(variable=0).drop_vars('variable'))
+                bias          = xr.zeros_like(predict)
+                contributions = xr.zeros_like(split)
 
-        predict[:] = predicts.flatten()
+                predicts, bias[:], contributions[:] = ti.predict(model, split, **config.treeinterpreter)
+
+                predict[:] = predicts.flatten()
+
+                predicts.append(predict)
+                biases.append(bias)
+                contribs.append(contributions)
+
+            Logger.debug('Combining splits')
+            predict       = xr.concat(predicts, 'loc')
+            bias          = xr.concat(biases, 'loc')
+            contributions = xr.concat(contribs, 'loc')
+        else:
+            predict       = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+            bias          = xr.zeros_like(predict)
+            contributions = xr.zeros_like(data)
+
+            predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+
+            predict[:] = predicts.flatten()
     else:
         Logger.info('Predicting')
         predict[:] = model.predict(data.values)

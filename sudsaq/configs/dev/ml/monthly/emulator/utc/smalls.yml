@@ -40,34 +40,73 @@ default:
     config: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/
 
 v1:
+  split_predict: True
   input:
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
     glob:
-      - /data/MLIA_active_data/data_SUDSAQ/data/momo/updated/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v1/jul/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v1/jul/
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v1/jul/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v1/jul/run.log
 v2:
+  split_predict: True
   input:
     calc:
       ch2o_no2: momo.ch2o / momo.no2
     sel:
       vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
     glob:
-      - /data/MLIA_active_data/data_SUDSAQ/data/momo/updated/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v2/jul/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v2/jul/
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v2/jul/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v2/jul/run.log
 v3:
+  split_predict: True
   input:
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
     glob:
-      - /data/MLIA_active_data/data_SUDSAQ/data/momo/updated/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v3/jul/
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v3/jul/
   log:
-    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/v3/jul/run.log
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/full/v3/jul/run.log
+
+v1_limited:
+  use_locs_of: toar.o3.dma8epa.mean
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v1/jul/
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v1/jul/run.log
+v2_limited:
+  use_locs_of: toar.o3.dma8epa.mean
+  input:
+    calc:
+      ch2o_no2: momo.ch2o / momo.no2
+    sel:
+      vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v2/jul/
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v2/jul/run.log
+v3_limited:
+  use_locs_of: toar.o3.dma8epa.mean
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
+    glob:
+      - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v3/jul/
+  log:
+    file: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v3/jul/run.log

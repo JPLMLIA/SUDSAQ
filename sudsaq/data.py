@@ -95,6 +95,13 @@ def split_and_stack(ds, config, lazy=True):
     data   = data.transpose('loc', 'variable')
     target = target.stack({'loc': ['lat', 'lon', 'time']})
 
+    # Use the locations valid by this variable only, but this variable may be excluded otherwise
+    if config.use_locs_of:
+        Logger.debug(f'Using locations from variable: {config.use_locs_of}')
+        locs   = ds[config.use_locs_of].stack({'loc': ['lat', 'lon', 'time']})
+        locs   = locs.dropna('loc')['loc']
+        target = target.sel(loc=locs)
+
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
 
