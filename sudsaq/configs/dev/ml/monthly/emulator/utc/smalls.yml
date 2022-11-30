@@ -1,6 +1,6 @@
 default:
   target: momo.o3
-  train: .*
+  train: (?!toar|momo.o3).*
   train_performance: False
   model:
     kind: RandomForestRegressor
@@ -82,6 +82,7 @@ v1_limited:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
   output:
     path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v1/jul/
   log:
@@ -95,6 +96,7 @@ v2_limited:
       vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
   output:
     path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v2/jul/
   log:
@@ -106,6 +108,7 @@ v3_limited:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
     glob:
       - /data/MLIA_active_data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /data/MLIA_active_data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
   output:
     path: /data/MLIA_active_data/data_SUDSAQ/models/emulator/utc/o3/smalls/limited/v3/jul/
   log:

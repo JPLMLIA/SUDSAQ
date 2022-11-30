@@ -91,18 +91,19 @@ def split_and_stack(ds, config, lazy=True):
     config._reindex = ds[['lat', 'lon']]
 
     # Create the stacked objects
-    data   = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
-    data   = data.transpose('loc', 'variable')
-    target = target.stack({'loc': ['lat', 'lon', 'time']})
+    data = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
+    data = data.transpose('loc', 'variable')
 
     # Use the locations valid by this variable only, but this variable may be excluded otherwise
     if config.use_locs_of:
         Logger.debug(f'Using locations from variable: {config.use_locs_of}')
-        locs   = ds[config.use_locs_of].stack({'loc': ['lat', 'lon', 'time']})
-        locs   = locs.dropna('loc').load()['loc']
-        Logger.debug(f'Locations count: {locs.size}')
-        data   = data.sel(loc=locs)
-        target = target.sel(loc=locs)
+        # mean('time') removes the time dimension so it is ignored
+        target = xr.merge([target, ds[config.use_locs_of].mean('time')])
+        merged = merged.to_array().stack({'loc': ['lat', 'lon', 'time']})
+        merged = merged.dropna('loc')
+        target = merged.isel(variable=0)
+    else:
+        target = target.stack({'loc': ['lat', 'lon', 'time']})
 
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')

@@ -1,6 +1,6 @@
 default:
   target: momo.o3
-  train: (?!toar).*
+  train: (?!toar|momo.o3).*
   train_performance: False
   model:
     kind: RandomForestRegressor
