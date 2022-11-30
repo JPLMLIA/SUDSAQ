@@ -100,7 +100,9 @@ def split_and_stack(ds, config, lazy=True):
         # mean('time') removes the time dimension so it is ignored
         merged = xr.merge([target, ds[config.use_locs_of].mean('time')])
         merged = merged.to_array().stack({'loc': ['lat', 'lon', 'time']})
-        merged = merged.dropna('loc')
+        # Replace locs in the target with NaNs if the use_locs_of had a NaN
+        merged = merged.where(~merged.isel(variable=1).isnull())
+        # Extract the target, garbage collect the other
         target = merged.isel(variable=0)
     else:
         target = target.stack({'loc': ['lat', 'lon', 'time']})
