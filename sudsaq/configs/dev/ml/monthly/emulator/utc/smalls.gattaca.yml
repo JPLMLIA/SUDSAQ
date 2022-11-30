@@ -1,6 +1,6 @@
 default:
   target: momo.o3
-  train: .*
+  train: (?!toar).*
   train_performance: False
   model:
     kind: RandomForestRegressor
@@ -76,7 +76,7 @@ v1_limited:
   use_locs_of: toar.o3.dma8epa.mean
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
@@ -90,7 +90,7 @@ v2_limited:
     calc:
       ch2o_no2: momo.ch2o / momo.no2
     sel:
-      vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
+      vars: [ch2o_no2, momo.ps, momo.t, momo.o3, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
@@ -102,7 +102,7 @@ v3_limited:
   use_locs_of: toar.o3.dma8epa.mean
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
