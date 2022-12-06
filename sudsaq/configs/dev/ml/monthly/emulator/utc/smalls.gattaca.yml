@@ -54,7 +54,7 @@ v2:
   input:
     replace_vals:
       momo.no2:
-        bounds: [-.1, .1]
+        bounds: [-0.1, .1]
         value: 1e32
     calc:
       ch2o_no2: momo.ch2o / momo.no2
@@ -96,7 +96,7 @@ v2-ls:
   input:
     replace_vals:
       momo.no2:
-        bounds: [-.1, .1]
+        bounds: [-0.1, .1]
         value: 1e32
     sel:
       lat: [40, 140]
@@ -141,7 +141,7 @@ v2_limited:
   input:
     replace_vals:
       momo.no2:
-        bounds: [-.1, .1]
+        bounds: [-0.1, .1]
         value: 1e32
     calc:
       ch2o_no2: momo.ch2o / momo.no2
