@@ -207,7 +207,7 @@ def load(config, split=False, lazy=True):
 
     for key, args in config.input.replace_vals.items():
         left, right = args.bounds
-        value       = args.value or np.nan
+        value       = float(args.value) or np.nan
         Logger.debug(f'Replacing values between ({left}, {right}) with {value} for key {key}')
 
         ds[key] = ds[key].where(
