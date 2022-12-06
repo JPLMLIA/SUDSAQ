@@ -52,6 +52,10 @@ v1:
 v2:
   # split_predict: 100
   input:
+    replace_vals:
+      momo.no2:
+        bounds: [-.1, .1]
+        value: 1e32
     calc:
       ch2o_no2: momo.ch2o / momo.no2
     sel:
@@ -90,6 +94,10 @@ v1-ls:
 v2-ls:
   split_predict: 100
   input:
+    replace_vals:
+      momo.no2:
+        bounds: [-.1, .1]
+        value: 1e32
     sel:
       lat: [40, 140]
     calc:
@@ -131,6 +139,10 @@ v1_limited:
 v2_limited:
   use_locs_of: toar.o3.dma8epa.mean
   input:
+    replace_vals:
+      momo.no2:
+        bounds: [-.1, .1]
+        value: 1e32
     calc:
       ch2o_no2: momo.ch2o / momo.no2
     sel:
