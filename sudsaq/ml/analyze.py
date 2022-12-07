@@ -13,6 +13,7 @@ from sklearn.metrics    import (
     mean_squared_error,
     r2_score
 )
+from tqdm import tqdm
 
 from sudsaq.config import (
     Config,

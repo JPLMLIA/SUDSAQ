@@ -42,7 +42,7 @@ v1:
   # split_predict: 100
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.ch2o, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
@@ -70,7 +70,7 @@ v3:
   # split_predict: 100
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
@@ -84,7 +84,7 @@ v1-ls:
     sel:
       lat: [40, 140]
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.ch2o, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
@@ -116,7 +116,7 @@ v3-ls:
     sel:
       lat: [40, 140]
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
@@ -128,7 +128,7 @@ v1_limited:
   use_locs_of: toar.o3.dma8epa.mean
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3, toar.o3.dma8epa.mean]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
@@ -158,7 +158,7 @@ v3_limited:
   use_locs_of: toar.o3.dma8epa.mean
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3, toar.o3.dma8epa.mean]
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
