@@ -158,9 +158,9 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
                 bias          = xr.zeros_like(predict)
                 contributions = xr.zeros_like(split)
 
-                predicts, bias[:], contributions[:] = ti.predict(model, split, **config.treeinterpreter)
+                _predict, bias[:], contributions[:] = ti.predict(model, split, **config.treeinterpreter)
 
-                predict[:] = predicts.flatten()
+                predict[:] = _predict.flatten()
 
                 predicts.append(predict)
                 biases.append(bias)
@@ -175,9 +175,9 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
             bias          = xr.zeros_like(predict)
             contributions = xr.zeros_like(data)
 
-            predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+            _predict, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
 
-            predict[:] = predicts.flatten()
+            predict[:] = _predict.flatten()
     else:
         Logger.info('Predicting')
         predict[:] = model.predict(data.values)

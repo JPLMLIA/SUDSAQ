@@ -2,6 +2,7 @@
 """
 import logging
 import datetime as dt
+import h5py
 import numpy    as np
 import os
 import re
@@ -12,6 +13,8 @@ from sklearn.preprocessing import StandardScaler
 from tqdm                  import tqdm
 
 from sudsaq.config import Config
+
+h5py._errors.silence_errors()
 
 # List of UTC+Offset, (West Lon, East Lon) to apply in daily()
 Timezones = [
