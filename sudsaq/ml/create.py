@@ -318,6 +318,7 @@ if __name__ == '__main__':
             Logger.error(f'Restarting, attempt {loop}')
         elif loop > 10:
             Logger.error('10 attempts have failed, exiting')
+            break
         try:
             state = create()
         except Exception:
