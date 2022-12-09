@@ -108,7 +108,7 @@ def pbc(model, data):
                 unstacked.sel(
                     lat = slice(*bounds.lat),
                     lon = slice(*bounds.lon)
-                )
+                ).to_dataset('variable')
             )
 
         data = flatten(xr.merge(regions)).dropna('loc').transpose('loc', 'variable')
