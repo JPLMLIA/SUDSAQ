@@ -94,7 +94,7 @@ def split_and_stack(ds, config, lazy=True):
     config._reindex = ds[['lat', 'lon']]
 
     # Create the stacked objects
-    data = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
+    data = ds[config.train].to_array().flatten()
     data = data.transpose('loc', 'variable')
 
     # Use the locations valid by this variable only, but this variable may be excluded otherwise
@@ -102,13 +102,13 @@ def split_and_stack(ds, config, lazy=True):
         Logger.debug(f'Using locations from variable: {config.use_locs_of}')
         # mean('time') removes the time dimension so it is ignored
         merged = xr.merge([target, ds[config.use_locs_of].mean('time')])
-        merged = merged.to_array().stack({'loc': ['lat', 'lon', 'time']})
+        merged = Dataset(merged).to_array().flatten()
         # Replace locs in the target with NaNs if the use_locs_of had a NaN
         merged = merged.where(~merged.isel(variable=1).isnull())
         # Extract the target, garbage collect the other
         target = merged.isel(variable=0)
     else:
-        target = target.stack({'loc': ['lat', 'lon', 'time']})
+        target = DataArray(target).flatten()
 
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
@@ -203,7 +203,7 @@ def load(config, split=False, lazy=True):
         files += match
 
     Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files, parallel=True, engine='netcdf4', lock=False)
+    ds = xr.open_mfdataset(files, engine='netcdf4', lock=False, parallel=config.get('_parallel', True))
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
@@ -258,8 +258,8 @@ def load(config, split=False, lazy=True):
 
 class Dataset(xr.Dataset):
     """
-    Small override of xarray.Dataset that enables regex matching
-    names in the variables list
+    Small override of xarray.Dataset that enables regex matching names in the variables
+    list
     """
     # TODO: Bad keys failing to report which keys are bad: KeyError: 'momo'
     __slots__ = () # Required for subclassing
@@ -274,3 +274,20 @@ class Dataset(xr.Dataset):
                     Logger.debug(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
                     return super().__getitem__(keys)
             raise e
+
+    def to_array(self, *args, **kwargs):
+        """
+        """
+        return DataArray(super().to_array(*args, **kwargs))
+
+class DataArray(xr.DataArray):
+    """
+    """
+    def flatten(self, *args, **kwargs):
+        dims = ['lat', 'lon']
+        if 'time' in self.dims:
+            dims.append('time')
+        return self.stack({'loc': dims})
+
+    def to_dataset(self, *args, **kwargs):
+        return Dataset(super().to_dataset(*args, **kwargs))
