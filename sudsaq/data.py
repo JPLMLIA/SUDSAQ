@@ -213,7 +213,7 @@ def load(config, split=False, lazy=True):
         files += match
 
     Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files, engine='netcdf4', lock=False, parallel=config.get('_parallel', True))
+    ds = xr.open_mfdataset(files, engine='netcdf4', lock=False, parallel=config.input.get('parallel', True))
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
