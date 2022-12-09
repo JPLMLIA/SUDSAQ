@@ -55,6 +55,9 @@ class Null:
     def keys(self):
         return []
 
+    def items(self):
+        return {}
+
 class Section:
     """
     A section of the Config, essentially acts like a dict with dot notation
