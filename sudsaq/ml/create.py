@@ -105,6 +105,7 @@ def fit(model, data, target, i=None, test=True):
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
     else:
+        Logger.debug('Saving train objects')
         save_objects(
             output = output,
             kind   = 'train',
@@ -137,6 +138,14 @@ def fit(model, data, target, i=None, test=True):
         Logger.debug(f'- Data   = {data.test.nbytes / 2**30:.3f}')
         Logger.debug(f'- Target = {target.test.nbytes / 2**30:.3f}')
 
+        Logger.debug('Saving test objects')
+        save_objects(
+            output  = output,
+            kind    = 'test',
+            data    = data.test,
+            target  = target.test
+        )
+
         if target.test.size == 0:
             Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
             return
@@ -146,13 +155,16 @@ def fit(model, data, target, i=None, test=True):
             return
 
         Logger.info(f'Creating test set performance analysis')
-        analyze(
-            model  = model,
-            data   = data.test,
-            target = target.test,
-            kind   = 'test',
-            output = output
-        )
+        try:
+            analyze(
+                model  = model,
+                data   = data.test,
+                target = target.test,
+                kind   = 'test',
+                output = output
+            )
+        except:
+            Logger.exception('Test analysis raised an exception')
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
