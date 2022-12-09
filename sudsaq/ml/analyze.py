@@ -21,7 +21,7 @@ from sudsaq.config import (
     Null
 )
 from sudsaq.data  import (
-    Dataset
+    Dataset,
     load
 )
 from sudsaq.ml    import plots
