@@ -45,6 +45,7 @@ default:
       count: 20
       labelrotation: 90
   input:
+    parallel: False
     lazy: False
   log:
     level: debug
