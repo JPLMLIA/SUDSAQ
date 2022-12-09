@@ -75,6 +75,18 @@ def calc(ds, string):
 
     return eval(string)
 
+def flatten(data):
+    """
+    """
+    if isinstance(data, xr.core.dataarray.Dataset):
+        data = data.to_array()
+
+    dims = ['lat', 'lon']
+    if 'time' in data.dims:
+        dims.append('time')
+    return data.stack({'loc': dims})
+
+
 def split_and_stack(ds, config, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
@@ -94,21 +106,19 @@ def split_and_stack(ds, config, lazy=True):
     config._reindex = ds[['lat', 'lon']]
 
     # Create the stacked objects
-    data = ds[config.train].to_array().flatten()
-    data = data.transpose('loc', 'variable')
+    data = flatten(ds[config.train]).transpose('loc', 'variable')
 
     # Use the locations valid by this variable only, but this variable may be excluded otherwise
     if config.use_locs_of:
         Logger.debug(f'Using locations from variable: {config.use_locs_of}')
         # mean('time') removes the time dimension so it is ignored
-        merged = xr.merge([target, ds[config.use_locs_of].mean('time')])
-        merged = Dataset(merged).to_array().flatten()
+        merged = flatten(xr.merge([target, ds[config.use_locs_of].mean('time')]))
         # Replace locs in the target with NaNs if the use_locs_of had a NaN
         merged = merged.where(~merged.isel(variable=1).isnull())
         # Extract the target, garbage collect the other
         target = merged.isel(variable=0)
     else:
-        target = DataArray(target).flatten()
+        target = flatten(target)
 
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
@@ -274,20 +284,3 @@ class Dataset(xr.Dataset):
                     Logger.debug(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
                     return super().__getitem__(keys)
             raise e
-
-    def to_array(self, *args, **kwargs):
-        """
-        """
-        return DataArray(super().to_array(*args, **kwargs))
-
-class DataArray(xr.DataArray):
-    """
-    """
-    def flatten(self, *args, **kwargs):
-        dims = ['lat', 'lon']
-        if 'time' in self.dims:
-            dims.append('time')
-        return self.stack({'loc': dims})
-
-    def to_dataset(self, *args, **kwargs):
-        return Dataset(super().to_dataset(*args, **kwargs))

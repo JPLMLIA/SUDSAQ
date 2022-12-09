@@ -21,7 +21,7 @@ from sudsaq.config import (
     Null
 )
 from sudsaq.data  import (
-    Dataset,
+    flatten,
     load
 )
 from sudsaq.ml    import plots
@@ -111,7 +111,7 @@ def pbc(model, data):
                 )
             )
 
-        data = Dataset(xr.merge(regions)).to_array().flatten().dropna('loc').transpose('loc', 'variable')
+        data = flatten(xr.merge(regions)).dropna('loc').transpose('loc', 'variable')
 
     Logger.info('Predicting using TreeInterpreter')
     if config.split_predict:
