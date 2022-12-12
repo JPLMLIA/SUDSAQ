@@ -62,7 +62,7 @@ def create_job(file, sections, logs, preview=False, history={}):
 
     if preview:
         history['launched'] = False
-        print(f'Job to be submitted:\n\n{job}\n')
+        print(f'Job to be submitted:\n"""\n{job}"""')
     else:
         print('Preparing job for launch')
         os.mkdir(logs)
