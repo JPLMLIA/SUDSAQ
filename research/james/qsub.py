@@ -46,7 +46,7 @@ python {repo}/ml/create.py -c {config} -s ${_sects} --restart
 def create_job(file, sections, logs, preview=False, history={}):
     """
     """
-    id   = len(logs.glob('job_*'))
+    id   = len(list(logs.glob('job_*')))
     logs = f'{logs}/job_{id}'
     job  = PBS.format(
         user     = os.getlogin()[0], # Only take the first character for privacy
