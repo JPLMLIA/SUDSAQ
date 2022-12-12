@@ -54,7 +54,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         logs     = logs,
         range    = f'0-{len(sections)}',
         env      = os.environ['CONDA_DEFAULT_ENV'],
-        sections = ''.join([f'\n\t"{sect}"' for sect in sections]),
+        sections = ''.join([f'\n  "{sect}"' for sect in sections]),
         repo     = sudsaq.__path__[0],
         config   = file,
         _sects   = '{SECTIONS[$PBS_ARRAY_INDEX]}'
