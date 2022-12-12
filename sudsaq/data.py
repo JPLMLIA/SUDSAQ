@@ -73,6 +73,7 @@ def calc(ds, string):
         # Find this key not followed by a digit or word character (eg. prevents momo.no matching to momo.no2)
         string = re.sub(fr'({key})(?!\d|\w)', f"ds['{key}']", string)
 
+    Logger.debug(f'Attempting to evaluate: {string!r}')
     return eval(string)
 
 def flatten(data):
