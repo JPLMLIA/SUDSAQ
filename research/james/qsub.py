@@ -67,7 +67,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         print('Preparing job for launch')
         os.mkdir(logs)
 
-        with open(f'{logs}/job.pbs') as output:
+        with open(f'{logs}/job.pbs', 'w') as output:
             output.write(job)
 
         print(f'Launching job {logs}/job.pbs')
@@ -139,7 +139,7 @@ if __name__ == '__main__':
                 print(f'Section {section!r} encountered errors')
                 sys.exit(3)
 
-        create_job(file, args.sections, logs, preview=preview, history=run)
+        create_job(file, args.sections, logs, preview=args.preview, history=run)
 
         print('Saving history')
         save_pkl(history, hfile)
