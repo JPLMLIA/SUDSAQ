@@ -48,7 +48,6 @@ default:
   log:
     level: debug
     reset: True
-    config: /scratch_lg_edge/sudsaq/src/suds-air-quality/research/kelsey
 
 jan:
   output:
