@@ -23,8 +23,8 @@ PBS = """\
 #PBS -q array-sn
 #PBS -l select=1:ncpus=48:mem=366gb
 #PBS -l walltime=240:00:00
-#PBS -e {logs}/$TASK_ID.error.txt
-#PBS -o {logs}/$TASK_ID.output.txt
+#PBS -e {logs}/batch_$PBS_JOBID.err
+#PBS -o {logs}/batch_$PBS_JOBID.out
 #PBS -v summary=true
 #PBS -J {range}
 #PBS -W group_list=mlia-active-data
@@ -52,7 +52,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         user     = os.getlogin()[0], # Only take the first character for privacy
         id       = id,
         logs     = logs,
-        range    = f'0-{len(sections)}',
+        range    = f'0-{len(sections)-1}',
         env      = os.environ['CONDA_DEFAULT_ENV'],
         sections = ''.join([f'\n  "{sect}"' for sect in sections]),
         repo     = sudsaq.__path__[0],
@@ -71,11 +71,10 @@ def create_job(file, sections, logs, preview=False, history={}):
             output.write(job)
 
         print(f'Launching job {logs}/job.pbs')
-        history['job']      = os.system(f'qsub {logs}/job.pbs')
+        history['job_id']   = os.popen(f'qsub {logs}/job.pbs').read()
         history['launched'] = True
-        history['id']       = id,
+        history['run_id']   = id,
         history['logs']     = logs
-        print(history['job'])
 
 
 if __name__ == '__main__':
@@ -124,7 +123,7 @@ if __name__ == '__main__':
 
     if args.history:
         for id, run in history.items():
-            print(f'Run ID: {id}')
+            print(f'History ID: {id}')
             align_print(run, prepend='  ')
     else:
         file = pathlib.Path(args.config).resolve()
