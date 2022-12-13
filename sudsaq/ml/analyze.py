@@ -144,7 +144,6 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     bias, contributions = None, None
     predict = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
 
-    '''
     if 'Forest' in str(model):
         Logger.info('Predicting using TreeInterpreter')
         bias          = xr.zeros_like(predict)
@@ -154,9 +153,8 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
         predict[:] = predicts.flatten()
     else:
-    '''
-    Logger.info('Predicting')
-    predict[:] = model.predict(data.values)
+        Logger.info('Predicting')
+        predict[:] = model.predict(data.values)
 
     # Some functions require the target and predict be the same shape
     target, aligned = xr.align(target, predict)
