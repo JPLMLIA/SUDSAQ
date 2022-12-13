@@ -30,6 +30,7 @@ default:
       count: 20
       labelrotation: 90
   input:
+    parallel: False
     daily:
       mda8:
         vars: [momo.mda8]
