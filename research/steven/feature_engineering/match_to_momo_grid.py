@@ -34,10 +34,11 @@ def feature_extraction_continous_var(toar_data, feature_name, out_data,
 
 def feature_extraction_discrete_var(toar_data, feature_name, out_data, momo_lat,
                                     momo_lon, station_lat, station_lon):
-    all_values = np.array(toar_data[feature_name])
     try:
+        all_values = np.array(toar_data[feature_name]).astype(np.str_)
         unique_values = np.unique(all_values).astype(np.str_)
     except Exception:
+        all_values = np.array(toar_data[feature_name]).astype(np.str_)
         unique_values = np.unique(all_values)
         unique_values = np.array([uv.decode('utf-8') for uv in unique_values])
         unique_values = unique_values.astype(np.str_)
@@ -47,6 +48,7 @@ def feature_extraction_discrete_var(toar_data, feature_name, out_data, momo_lat,
 
     def _feature_entropy(binned_values):
         onehot = lb.transform(binned_values)
+
         hist = np.sum(onehot, axis=0)
         entropy = stats.entropy(hist, base=2)
 
@@ -54,6 +56,7 @@ def feature_extraction_discrete_var(toar_data, feature_name, out_data, momo_lat,
 
     def _feature_skewness(binned_values):
         onehot = lb.transform(binned_values)
+
         hist = np.sum(onehot, axis=0)
         skewness = stats.skew(hist)
 
