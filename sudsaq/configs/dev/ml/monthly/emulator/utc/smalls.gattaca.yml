@@ -182,6 +182,7 @@ v3_limited:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/limited/v3/jul/run.log
 
 mda8_v1:
+  not_ti: True
   target: momo.mda8
   input:
     sel:
@@ -199,6 +200,7 @@ mda8_v1:
       momo:
         vars: momo.(?!mda8).*
         time: [8, 15]
+        local: True
   output:
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v1/jul/
   log:
@@ -223,6 +225,7 @@ mda8_v1_limited:
       momo:
         vars: momo.(?!mda8).*
         time: [8, 15]
+        local: True
   output:
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v1/jul/
   log:
