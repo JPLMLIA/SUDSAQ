@@ -71,11 +71,11 @@ def create_job(file, sections, logs, preview=False, history={}):
             output.write(job)
 
         print(f'Launching job {logs}/job.pbs')
-        print(os.system(f'qsub {logs}/job.pbs'))
-
+        history['job']      = os.system(f'qsub {logs}/job.pbs')
         history['launched'] = True
         history['id']       = id,
         history['logs']     = logs
+        print(history['job'])
 
 
 if __name__ == '__main__':
