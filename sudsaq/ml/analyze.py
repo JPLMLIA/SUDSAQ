@@ -198,6 +198,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         predict, bias, contributions = pbc(model, data)
     else:
         Logger.info('Predicting')
+        predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
         predict[:] = model.predict(data.values)
 
     # Some functions require the target and predict be the same shape
