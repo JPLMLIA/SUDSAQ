@@ -23,8 +23,8 @@ PBS = """\
 #PBS -q array-sn
 #PBS -l select=1:ncpus=48:mem=366gb
 #PBS -l walltime=240:00:00
-#PBS -e {logs}/batch_$PBS_JOBID.err
-#PBS -o {logs}/batch_$PBS_JOBID.out
+#PBS -e {logs}/
+#PBS -o {logs}/
 #PBS -v summary=true
 #PBS -J {range}
 #PBS -W group_list=mlia-active-data
