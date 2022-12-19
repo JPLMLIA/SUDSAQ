@@ -43,17 +43,55 @@ SECTIONS=(\
 python {repo}/ml/create.py -c {config} -s ${_sects} --restart
 """
 
-TAIL1 = """\
+def tail1(logs, file, sections):
+    """
+    """
+    template = """\
 #!/bin/bash
 
-tail -n 1 {sections}
-"""
+tail -n 1 {files}
+    """
+    files = []
+    for section in sections:
+        log = Config(file, section).log.file
+        if log:
+            files.append(log)
 
-QSTAT = """\
+    if files:
+        with open(f'{logs}/tail1.sh', 'w') as output:
+            output.write(TAIL1.format(files=' '.join(files)))
+        os.chmod(f'{logs}/tail1.sh', 0o775)
+
+def qstat(logs, user):
+    """
+    """
+    template = """\
 #!/bin/bash
 
 qstat -as @gattaca-edge -u {user}
-"""
+    """
+    with open(f'{logs}/qstat.sh', 'w') as output:
+        output.write(template.format(user=user))
+    os.chmod(f'{logs}/qstat.sh', 0o775)
+
+def ls(logs, file, sections):
+    """
+    """
+    template = """\
+#!/bin/bash
+
+{cmds}
+    """
+    ls = []
+    for section in sections:
+        dir = Config(file, section).output.path
+        cmd = f'ls {dir}/**'
+        ls.append(f'echo "Section {section}: {cmd}')
+
+    with open(f'{logs}/ls_run.sh', 'w') as output:
+        output.write(template.format(cmds='\n'.join(ls)))
+    os.chmod(f'{logs}/qstat.sh', 0o775)
+
 
 def create_job(file, sections, logs, preview=False, history={}):
     """
@@ -91,20 +129,9 @@ def create_job(file, sections, logs, preview=False, history={}):
         print(f"PBS ID is {history['job_id']}")
 
         print('Creating utility scripts for this job')
-        with open(f'{logs}/qstat.sh', 'w') as output:
-            output.write(QSTAT.format(user=user))
-        os.chmod(f'{logs}/qstat.sh', 0o775)
 
-        files = []
-        for section in sections:
-            log = Config(file, section).log.file
-            if log:
-                files.append(log)
 
-        if files:
-            with open(f'{logs}/tail1.sh', 'w') as output:
-                output.write(TAIL1.format(sections=' '.join(files)))
-            os.chmod(f'{logs}/tail1.sh', 0o775)
+
 
 
 if __name__ == '__main__':
