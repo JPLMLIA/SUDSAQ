@@ -44,6 +44,7 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
+    Logger.info('Generating plot: compare_target_predict')
     fig = plt.figure(figsize=(20*3, 12*2))
     if title:
         fig.suptitle(title, fontsize=44)
@@ -105,6 +106,7 @@ def compare_target_predict(target, predict, reindex=None, title=None, save=None)
 def truth_vs_predicted(target, predict, label=None, save=None):
     """
     """
+    Logger.info('Generating plot: truth_vs_predicted')
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Retrieve the limits and expand them by 5% so everything fits into a square grid
@@ -146,9 +148,12 @@ def truth_vs_predicted(target, predict, label=None, save=None):
 def importance(df, pdf=None, save=None):
     """
     """
+    Logger.info('Generating plot: importance')
+
     # Retrieve the config for this plot type
     config = Config().plots.importances
 
+    perm = False
     if isinstance(pdf, pd.core.frame.DataFrame):
         perm = True
 
