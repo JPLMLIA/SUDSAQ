@@ -4,6 +4,7 @@ import argparse
 import os
 import pathlib
 import pickle
+import stat
 import sys
 
 from datetime import datetime as dtt
@@ -43,13 +44,26 @@ SECTIONS=(\
 python {repo}/ml/create.py -c {config} -s ${_sects} --restart
 """
 
+TAIL1 = """\
+#!/bin/bash
+
+tail -n 1 {sections}
+"""
+
+QSTAT = """\
+#!/bin/bash
+
+qstat -as @gattaca-edge -u {user}
+"""
+
 def create_job(file, sections, logs, preview=False, history={}):
     """
     """
     id   = len(list(logs.glob('job_*')))
+    user = os.getlogin()
     logs = f'{logs}/job_{id}'
     job  = PBS.format(
-        user     = os.getlogin()[0], # Only take the first character for privacy
+        user     = user[0], # Only take the first character for privacy
         id       = id,
         logs     = logs,
         range    = f'0-{len(sections)-1}',
@@ -76,6 +90,22 @@ def create_job(file, sections, logs, preview=False, history={}):
         history['run_id']   = id,
         history['logs']     = logs
         print(f"PBS ID is {history['job_id']}")
+
+        print('Creating utility scripts for this job')
+        with open(f'{logs}/qstat.sh', 'w') as output:
+            output.write(qstat.format(user=user))
+        os.chmod(f'{logs}/qstat.sh', stat.S_IXUSR | stat.S_IXGRP)
+
+        logs = []
+        for section in sections:
+            log = Config(file, section).log.file
+            if log:
+                logs.append(log)
+
+        if logs:
+            with open(f'{logs}/tail1.sh', 'w') as output:
+                output.write(TAIL1.format(sections=' '.join(logs)))
+            os.chmod(f'{logs}/tail1.sh', stat.S_IXUSR | stat.S_IXGRP)
 
 
 if __name__ == '__main__':
