@@ -4,7 +4,6 @@ import argparse
 import os
 import pathlib
 import pickle
-import stat
 import sys
 
 from datetime import datetime as dtt
@@ -94,18 +93,18 @@ def create_job(file, sections, logs, preview=False, history={}):
         print('Creating utility scripts for this job')
         with open(f'{logs}/qstat.sh', 'w') as output:
             output.write(QSTAT.format(user=user))
-        os.chmod(f'{logs}/qstat.sh', stat.S_IXUSR | stat.S_IXGRP)
+        os.chmod(f'{logs}/qstat.sh', 0o775)
 
-        logs = []
+        files = []
         for section in sections:
             log = Config(file, section).log.file
             if log:
-                logs.append(log)
+                files.append(log)
 
-        if logs:
+        if files:
             with open(f'{logs}/tail1.sh', 'w') as output:
-                output.write(TAIL1.format(sections=' '.join(logs)))
-            os.chmod(f'{logs}/tail1.sh', stat.S_IXUSR | stat.S_IXGRP)
+                output.write(TAIL1.format(sections=' '.join(files)))
+            os.chmod(f'{logs}/tail1.sh', 0o775)
 
 
 if __name__ == '__main__':
