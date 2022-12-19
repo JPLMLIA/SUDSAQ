@@ -52,7 +52,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         user     = os.getlogin()[0], # Only take the first character for privacy
         id       = id,
         logs     = logs,
-        range    = f'0-{len(sections)}',
+        range    = f'0-{len(sections)-1}',
         env      = os.environ['CONDA_DEFAULT_ENV'],
         sections = ''.join([f'\n  "{sect}"' for sect in sections]),
         repo     = sudsaq.__path__[0],

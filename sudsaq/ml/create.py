@@ -134,7 +134,7 @@ def fit(model, data, target, i=None, test=True):
         Logger.debug('Test set:')
         Logger.debug(f'- Target shape: {list(zip(target.test.dims, target.test.shape))}')
         Logger.debug(f'- Data   shape: {list(zip(data.test.dims, data.test.shape))}')
-        Logger.debug(f'Memory footprint for train in GB:')
+        Logger.debug(f'Memory footprint for test in GB:')
         Logger.debug(f'- Data   = {data.test.nbytes / 2**30:.3f}')
         Logger.debug(f'- Target = {target.test.nbytes / 2**30:.3f}')
 

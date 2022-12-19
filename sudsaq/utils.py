@@ -192,6 +192,10 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
         This is primarily used to expand dimensions back to the MOMO grid after having
         shrunk from dropna
     """
+    if not isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
+        Logger.error('Wrong dtype for object {name!r}, cannot save netcdf. Got: {type(data)}')
+        return
+
     if 'loc' in data.dims:
         Logger.warning(f'Saving {name} must be done unstacked')
         data = data.unstack()
