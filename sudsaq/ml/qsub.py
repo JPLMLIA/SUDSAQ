@@ -43,25 +43,6 @@ SECTIONS=(\
 python {repo}/ml/create.py -c {config} -s ${_sects} --restart
 """
 
-def tail1(logs, file, sections):
-    """
-    """
-    template = """\
-#!/bin/bash
-
-tail -n 1 {files}
-    """
-    files = []
-    for section in sections:
-        log = Config(file, section).log.file
-        if log:
-            files.append(log)
-
-    if files:
-        with open(f'{logs}/tail1.sh', 'w') as output:
-            output.write(TAIL1.format(files=' '.join(files)))
-        os.chmod(f'{logs}/tail1.sh', 0o775)
-
 def qstat(logs, user):
     """
     """
@@ -90,8 +71,26 @@ def ls(logs, file, sections):
 
     with open(f'{logs}/ls_run.sh', 'w') as output:
         output.write(template.format(cmds='\n'.join(ls)))
-    os.chmod(f'{logs}/qstat.sh', 0o775)
+    os.chmod(f'{logs}/ls_run.sh', 0o775)
 
+def tail1(logs, file, sections):
+    """
+    """
+    template = """\
+#!/bin/bash
+
+tail -n 1 {files}
+    """
+    files = []
+    for section in sections:
+        log = Config(file, section).log.file
+        if log:
+            files.append(log)
+
+    if files:
+        with open(f'{logs}/tail1.sh', 'w') as output:
+            output.write(TAIL1.format(files=' '.join(files)))
+        os.chmod(f'{logs}/tail1.sh', 0o775)
 
 def create_job(file, sections, logs, preview=False, history={}):
     """
@@ -129,9 +128,9 @@ def create_job(file, sections, logs, preview=False, history={}):
         print(f"PBS ID is {history['job_id']}")
 
         print('Creating utility scripts for this job')
-
-
-
+        qstat(logs, user)
+        ls(logs, file, sections)
+        tail1(logs, file, sections)
 
 
 if __name__ == '__main__':
