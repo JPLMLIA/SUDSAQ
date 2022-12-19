@@ -68,6 +68,7 @@ def ls(logs, file, sections):
         dir = Config(file, section).output.path
         cmd = f'ls {dir}/**'
         ls.append(f'echo "Section {section}: {cmd}')
+        ls.append(cmd)
 
     with open(f'{logs}/ls_run.sh', 'w') as output:
         output.write(template.format(cmds='\n'.join(ls)))
