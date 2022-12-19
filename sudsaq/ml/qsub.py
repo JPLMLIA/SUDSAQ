@@ -93,7 +93,7 @@ def create_job(file, sections, logs, preview=False, history={}):
 
         print('Creating utility scripts for this job')
         with open(f'{logs}/qstat.sh', 'w') as output:
-            output.write(qstat.format(user=user))
+            output.write(QSTAT.format(user=user))
         os.chmod(f'{logs}/qstat.sh', stat.S_IXUSR | stat.S_IXGRP)
 
         logs = []
@@ -148,7 +148,7 @@ if __name__ == '__main__':
         history = load_pkl(hfile)
 
     run = history[len(history)] = {
-        'cmd' : ' '.join(sys.argv),
+        'cmd' : 'python' + ' '.join(sys.argv),
         'time': dtt.now()
     }
 
