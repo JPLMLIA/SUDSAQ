@@ -100,9 +100,9 @@ v1-noplot:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
     plots: False
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v1/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v1/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v1/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v1/jul/run.log
 v2-noplot:
   not_ti: True
   input:
@@ -118,9 +118,9 @@ v2-noplot:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v2/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v2/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/run.log
 v3-noplot:
   not_ti: True
   input:
@@ -130,9 +130,9 @@ v3-noplot:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
     plots: False
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v3/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v3/jul/run.log
 
 v1-ls:
   split_predict: 100
