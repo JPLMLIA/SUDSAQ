@@ -91,7 +91,7 @@ v3:
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/run.log
 
-v1-noplot:
+v1_noplot:
   not_ti: True
   input:
     sel:
@@ -103,7 +103,7 @@ v1-noplot:
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v1/jul/
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v1/jul/run.log
-v2-noplot:
+v2_noplot:
   not_ti: True
   input:
     replace_vals:
@@ -121,7 +121,7 @@ v2-noplot:
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/run.log
-v3-noplot:
+v3_noplot:
   not_ti: True
   input:
     sel:
@@ -247,6 +247,32 @@ mda8_v1:
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v1/jul/
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v1/jul/run.log
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/
+mda8_v1_noplot:
+  not_ti: True
+  target: momo.mda8
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.mda8, momo.ch2o, toar.o3.dma8epa.mean]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      toar:
+        vars: [toar.o3.dma8epa.mean]
+        time: 0
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  output:
+    plots: False
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/plotless/v1/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/plotless/v1/jul/run.log
     config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/
 mda8_v1_limited:
   target: momo.mda8
