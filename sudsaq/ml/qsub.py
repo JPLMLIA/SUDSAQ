@@ -175,7 +175,7 @@ if __name__ == '__main__':
         history = load_pkl(hfile)
 
     run = history[len(history)] = {
-        'cmd' : 'python' + ' '.join(sys.argv),
+        'cmd' : 'python ' + ' '.join(sys.argv),
         'time': dtt.now()
     }
 
