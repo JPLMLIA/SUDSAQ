@@ -122,17 +122,17 @@ def create_job(file, sections, logs, preview=False, history={}):
         with open(f'{logs}/job.pbs', 'w') as output:
             output.write(job)
 
+        print('Creating utility scripts for this job')
+        qstat(logs, user)
+        ls(logs, file, sections)
+        tail1(logs, file, sections)
+
         print(f'Launching job {logs}/job.pbs')
         history['job_id']   = os.popen(f'qsub {logs}/job.pbs').read().replace('\n', '')
         history['launched'] = True
         history['run_id']   = id,
         history['logs']     = logs
         print(f"PBS ID is {history['job_id']}")
-
-        print('Creating utility scripts for this job')
-        qstat(logs, user)
-        ls(logs, file, sections)
-        tail1(logs, file, sections)
 
 
 if __name__ == '__main__':
