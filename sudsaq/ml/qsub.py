@@ -91,7 +91,7 @@ tail -n 1 {files}
 
     if files:
         with open(f'{logs}/tail1.sh', 'w') as output:
-            output.write(TAIL1.format(files=' '.join(files)))
+            output.write(template.format(files=' '.join(files)))
         os.chmod(f'{logs}/tail1.sh', 0o775)
 
 def create_job(file, sections, logs, preview=False, history={}):
