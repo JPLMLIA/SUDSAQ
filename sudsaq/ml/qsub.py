@@ -135,7 +135,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         print(f"PBS ID is {history['job_id']}")
 
         with open(f'{logs}/info.txt', 'w') as output:
-            align_print(history, print=output.write)
+            align_print(history, prepend='\n', print=output.write)
 
 
 if __name__ == '__main__':
