@@ -111,13 +111,13 @@ v2_noplot:
         bounds: [-0.1, .1]
         value: 1e32
     calc:
-      plots: False
       ch2o_no2: momo.ch2o / momo.no2
     sel:
       vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
   output:
+    plots: False
     path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/plotless/v2/jul/run.log

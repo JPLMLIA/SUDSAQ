@@ -134,6 +134,9 @@ def create_job(file, sections, logs, preview=False, history={}):
         history['logs']     = logs
         print(f"PBS ID is {history['job_id']}")
 
+        with open(f'{logs}/info.txt', 'w') as output:
+            align_print(history, print=output.write)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
