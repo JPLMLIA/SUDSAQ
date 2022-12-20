@@ -67,6 +67,7 @@ def ls(logs, file, sections):
     for section in sections:
         dir = Config(file, section).output.path
         cmd = f'ls {dir}/**'
+        ls.append('echo')
         ls.append(f'echo "Section {section}: {cmd}')
         ls.append(cmd)
 

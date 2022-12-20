@@ -91,6 +91,49 @@ v3:
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/run.log
 
+v1-noplot:
+  not_ti: True
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.ch2o, momo.o3]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    plots: False
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v1/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v1/jul/run.log
+v2-noplot:
+  not_ti: True
+  input:
+    replace_vals:
+      momo.no2:
+        bounds: [-0.1, .1]
+        value: 1e32
+    calc:
+      plots: False
+      ch2o_no2: momo.ch2o / momo.no2
+    sel:
+      vars: [ch2o_no2, momo.ps, momo.t, momo.o3]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v2/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v2/jul/run.log
+v3-noplot:
+  not_ti: True
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+  output:
+    plots: False
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/v3/jul/run.log
+
 v1-ls:
   split_predict: 100
   input:
