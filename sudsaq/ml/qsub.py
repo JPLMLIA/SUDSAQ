@@ -147,7 +147,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-s', '--sections', type     = str,
                                             nargs    = '+',
-                                            metavar  = '[sections, ...]',
+                                            metavar  = 'section',
                                             help     = 'Sections of the config to use for independent runs'
     )
     parser.add_argument('-l', '--logs',     type     = str,

@@ -193,7 +193,7 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
         shrunk from dropna
     """
     if not isinstance(data, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-        Logger.error('Wrong dtype for object {name!r}, cannot save netcdf. Got: {type(data)}')
+        Logger.error(f'Wrong dtype for object {name!r}, cannot save netcdf. Got: {type(data)}')
         return
 
     if 'loc' in data.dims:

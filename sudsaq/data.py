@@ -110,10 +110,10 @@ def split_and_stack(ds, config, lazy=True):
     data = flatten(ds[config.train]).transpose('loc', 'variable')
 
     # Use the locations valid by this variable only, but this variable may be excluded otherwise
-    if config.use_locs_of:
-        Logger.debug(f'Using locations from variable: {config.use_locs_of}')
+    if config.input.use_locs_of:
+        Logger.debug(f'Using locations from variable: {config.input.use_locs_of}')
         # mean('time') removes the time dimension so it is ignored
-        merged = flatten(xr.merge([target, ds[config.use_locs_of].mean('time')]))
+        merged = flatten(xr.merge([target, ds[config.input.use_locs_of].mean('time')]))
         # Replace locs in the target with NaNs if the use_locs_of had a NaN
         merged = merged.where(~merged.isel(variable=1).isnull())
         # Extract the target, garbage collect the other

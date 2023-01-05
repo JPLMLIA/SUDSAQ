@@ -181,8 +181,8 @@ v3-ls:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/full/lat_sliced/v3/jul/run.log
 
 v1_limited:
-  use_locs_of: toar.o3.dma8epa.mean
   input:
+    use_locs_of: toar.o3.dma8epa.mean
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.o3, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
@@ -193,8 +193,8 @@ v1_limited:
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/limited/v1/jul/run.log
 v2_limited:
-  use_locs_of: toar.o3.dma8epa.mean
   input:
+    use_locs_of: toar.o3.dma8epa.mean
     replace_vals:
       momo.no2:
         bounds: [-0.1, .1]
@@ -211,8 +211,8 @@ v2_limited:
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/o3/smalls/limited/v2/jul/run.log
 v3_limited:
-  use_locs_of: toar.o3.dma8epa.mean
   input:
+    use_locs_of: toar.o3.dma8epa.mean
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.o3, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
@@ -276,8 +276,8 @@ mda8_v1_noplot:
     config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/
 mda8_v1_limited:
   target: momo.mda8
-  use_locs_of: toar.o3.dma8epa.mean
   input:
+    use_locs_of: toar.o3.dma8epa.mean
     sel:
       vars: [momo.no, momo.no2, momo.ps, momo.t, momo.mda8, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
@@ -299,3 +299,95 @@ mda8_v1_limited:
   log:
     file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v1/jul/run.log
     config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/
+
+mda8_v3:
+  target: momo.mda8
+  input:
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v3/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v3/jul/run.log
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v3/
+mda8_v3_limited:
+  target: momo.mda8
+  input:
+    use_locs_of: toar.o3.dma8epa.mean
+    sel:
+      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, toar.o3.dma8epa.mean]
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      toar:
+        vars: [toar.o3.dma8epa.mean]
+        time: 0
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v3/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v3/jul/run.log
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v3/
+
+mda8_v4:
+  target: momo.mda8
+  input:
+    sel:
+      vars: (momo|toar).(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr).*
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/jul/run.log
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/
+mda8_v4_limited:
+  target: momo.mda8
+  input:
+    use_locs_of: toar.o3.dma8epa.mean
+    sel:
+      vars: (momo|toar).(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr).*
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      toar:
+        vars: [toar.o3.dma8epa.mean]
+        time: 0
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v4/jul/
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v4/jul/run.log
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/limited/v4/
