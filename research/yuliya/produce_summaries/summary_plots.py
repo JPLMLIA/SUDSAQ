@@ -99,7 +99,7 @@ def imp_bubble(labels, var1, key, var2 = None, var3 = None, mask_top = None, plo
         scale = 50
         w = 0.2
 
-    mi_monthly_trunc = metrics.mean(axis = 0).T[:, mask_top]
+    mi_monthly_trunc = np.nanmean(metrics, axis = 0).T[:, mask_top]
     n = mi_monthly_trunc.shape[1]
     plt.figure(figsize = (a*w, 5))
     for z in range(len(mi_monthly_trunc)):
@@ -187,19 +187,34 @@ def cont_map(month, select_vars, summaries_dir, plots_dir = None):
             plt.close()
     
 
+def make_unique_locs(dat, lons, lats, years, days):
+    un_lons, un_lats = np.unique([lons, lats], axis = 1)
+    res = np.zeros_like(un_lons)
+    for s in range(len(un_lons)):
+        mask1 = np.in1d(lons, un_lons[s])
+        mask2 = np.in1d(lats, un_lats[s])
+        mask3 = mask1 & mask2
+        
+        time = years[mask3] * 100 + days[mask3]
+        sidx = np.argsort(time)
+        dat_select = dat[mask3][sidx]
+        res[s] = np.mean(dat_select)
+
+    return res
 
 
 #------- residual bubble plot
-def residual_scatter(un_lons, un_lats, res, key, zlim = None, plots_dir = None):
+def residual_scatter(un_lons, un_lats, res, key, zlim = None, 
+                     cmap = 'bwr', plots_dir = None):
     #var = 'momo.t'
     #data = xr.open_dataset(models[m])
-    
-    
-    
+    if zlim[1] > 20:
+        scale = 0.05
+    else:
+        scale = 0.5
+        
     fig, ax = plt.subplots(figsize=(14, 10), subplot_kw={'projection': ccrs.PlateCarree()})
-    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*0.5, c = res, cmap = 'bwr')
-    if zlim is not None: 
-        plt.clim(zlim)
+    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*scale, c = res, cmap = cmap)
     ax.coastlines()
     #ax.stock_img()
     ax.set_extent(bbox_dict['globe'], crs=ccrs.PlateCarree())  # NA region
@@ -208,6 +223,7 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None, plots_dir = None):
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     #im_ratio = len(lat) / len(lon)
+    plt.clim(zlim)
     cb = plt.colorbar(fraction = 0.025, pad = 0.05)
     plt.tight_layout()
     plt.title(f'mean {key} per location')
@@ -217,11 +233,54 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None, plots_dir = None):
         plt.close()
 
 
+import statsmodels.api as sm
+def time_series_loc(lons, lats, y, yhat, years, days, idx = None, plots_dir = None):
+    
+    lowess = sm.nonparametric.lowess
+    un_lons, un_lats = np.unique([lons, lats], axis = 1)
+    if idx is None:
+        idx = range(len(un_lons))
+    for s in idx:
+        mask1 = np.in1d(lons, un_lons[s])
+        mask2 = np.in1d(lats, un_lats[s])
+        mask3 = mask1 & mask2
+        
+        time = years[mask3] * 100 + days[mask3]
+        sidx = np.argsort(time)
+        ys = y[mask3][sidx]
+        ys_hat = yhat[mask3][sidx]
+        
+        #count = mask3.sum()
+        t = np.arange(0, len(ys))
+        z = lowess(ys, t, frac = 0.1)
+        zhat = lowess(ys_hat, t, frac = 0.1)
+        
+        error_trend = np.sqrt(mean_squared_error(z[:,1], zhat[:,1]))
+        error = np.sqrt(mean_squared_error(ys, ys_hat))
+        #std_y[s] = np.sqrt(np.mean((ys - z[:,1])**2))
+        
+        # mask_gap = np.diff(np.hstack([time[sidx], time[sidx].max()+1])) > 1
+        # ys[mask_gap] = np.nan
+        # ys_hat[mask_gap] = np.nan
+        # z[mask_gap,1] = np.nan
+        # zhat[mask_gap,1] = np.nan
+        plt.figure()
+        plt.plot(ys, '.-', color = '0.5', alpha = 0.3, label = 'true')
+        plt.plot(ys_hat, '.-', color = 'C0', alpha = 0.3, label = 'pred')
+        plt.plot(z[:,1], '--', color = '0.3', lw = 2)
+        plt.plot(zhat[:,1], '--', color = 'C0', lw =2)
+        plt.grid(ls = ':', alpha = 0.5)
+        plt.legend()
+        if plots_dir is not None:
+            plt.savefig(f'{plots_dir}/ts_{un_lons[s]}_{un_lats[s]}.png',
+                        bbox_inches='tight', dpi = 200)
+            plt.close()
+
 
 
 
 #------- residual bubble plot
-def predicted_kde(output, plots_dir = None):
+def predicted_kde(output, lims = (-80, 80), plots_dir = None):
 
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
     for m in range(len(MONTHS)):
@@ -241,14 +300,14 @@ def predicted_kde(output, plots_dir = None):
             plt.axvline(x=0, color = '0.5', alpha = 0.5, ls = '--')
             plt.axhline(y=0, color = '0.5', alpha = 0.5, ls = '--')
             plt.plot()
-            plt.ylim((-80, 80))
-            plt.xlim((-80, 80))
+            plt.ylim(lims)
+            plt.xlim(lims)
             plt.grid(ls = ':')
             plt.xlabel(f'predicted ppb')
             plt.ylabel(f'true ppb')
             #plt.colorbar()
             #plt.contour(H, levels = 5, cmap = 'coolwarm')
-            plt.plot([-80,80], [-80,80], color = 'r', alpha = 0.2, ls = '--')
+            plt.plot(lims, lims, color = 'r', alpha = 0.2, ls = '--')
             plt.text(0.1, 0.9, f'{MONTHS[m]}({np.round(rmse_m, 1)})', 
                      bbox=dict(facecolor='none', edgecolor='k'),
                      transform=plt.gca().transAxes)
@@ -262,7 +321,7 @@ def predicted_kde(output, plots_dir = None):
 
 
 #------- histrograms of predicted vs true
-def predicted_hist(output, plots_dir = None):
+def predicted_hist(output, lims = (-50, 50), plots_dir = None):
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
     for m in range(len(MONTHS)):
         #plt.figure()
@@ -279,7 +338,7 @@ def predicted_hist(output, plots_dir = None):
                      histtype = 'step', label = f'true');
             plt.axvline(x = np.hstack(output['truth'][m]).mean(), color = 'orange',
                         alpha = 0.5)
-            plt.xlim((-50, 50))
+            plt.xlim(lims)
             plt.legend(fontsize = 6)
             plt.grid(ls = ':')
             plt.xlabel(f'ppb')
@@ -312,7 +371,7 @@ def predicted_hist(output, plots_dir = None):
              histtype = 'step', label = f'true');
     plt.axvline(x = np.hstack(output['truth']).mean(), color = 'orange',
                 alpha = 0.5)
-    plt.xlim((-50, 50))
+    plt.xlim(lims)
     plt.legend()
     plt.grid(ls = ':')
     plt.xlabel(f'ppb')
@@ -359,7 +418,7 @@ def predicted_hist_single(output, plots_dir = None):
 
 
 #------- clustered correlation matrix
-def plot_correlations(corr_mat, var_names, mc = 0.9, plot_name = None):
+def plot_correlations(corr_mat, var_names, key, mc = 0.9, plot_name = None):
     
     X0 = corr_mat.copy()
     X0[np.isnan(X0)] = 0.
@@ -383,7 +442,7 @@ def plot_correlations(corr_mat, var_names, mc = 0.9, plot_name = None):
     plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
     plt.colorbar()
     plt.tight_layout()
-    plt.title(f'momo variable correlations, truncated for {mc} max corr')
+    plt.title(f'momo variables {key} metric, truncated for {mc} max')
     if plot_name is not None:
         plt.savefig(f'{plot_name}', dpi = 150, bbox_inches = 'tight')
         plt.close()

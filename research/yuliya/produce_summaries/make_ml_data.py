@@ -40,9 +40,7 @@ import summary_plots as plots
 
 def main(sub_dir, months = 'all'):
     
-    if months == 'all':
-        months = plots.MONTHS
-    
+
     #-----------------read in data
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -50,6 +48,12 @@ def main(sub_dir, months = 'all'):
         
     #sub_dir = '/bias/local/8hr_median/v1/'
     models_dir = f'{root_dir}/models/{sub_dir}'
+    if months == 'all':
+        months = glob.glob(f'{models_dir}/*/')
+        if len(months) < 1:
+            months = np.atleast_1d(months)
+        months = [x.split('/')[-2] for x in months]
+        #months = plots.MONTHS
 
     #set output directory
     summaries_dir = f'{root_dir}/summaries/{sub_dir}/combined_data/'
@@ -59,10 +63,16 @@ def main(sub_dir, months = 'all'):
     
     for month in months:
         print(f'-----> making X and y for {month}')
-        data_x = np.hstack(glob.glob(f'{models_dir}/{month}/*/test.data.nc'))
-        data_y = glob.glob(f'{models_dir}/{month}/*/test.target.nc')
+        #data_x = np.hstack(glob.glob(f'{models_dir}/{month}/*/test.data.nc'))
+        #data_y = glob.glob(f'{models_dir}/{month}/*/test.target.nc')
         data_y0 = glob.glob(f'{models_dir}/{month}/*/test.predict.nc')
         
+        match_dirs = ['/'.join(x.split('/')[:-1]) for x in data_y0]
+        data_y = [x + '/test.target.nc' for x in match_dirs]
+        data_x = [x + '/test.data.nc' for x in match_dirs]
+        
+        #data_y = glob.glob(f'{summaries_dir}/{month}/test.target.nc')
+        #data_y0 = glob.glob(f'{summaries_dir}/{month}/test.predict.nc')
         
         #train data
         ds_y = xr.open_mfdataset(data_y)
@@ -109,6 +119,7 @@ def main(sub_dir, months = 'all'):
                      f['days'] = days
                      f['mask'] = mask
                      f['var_names'] = var_names
+    
     
         #return X, y, y0, years, days, lons, lats, mask, var_names
 
