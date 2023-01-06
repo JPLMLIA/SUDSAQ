@@ -260,17 +260,27 @@ def load_contributions(summaries_dir, reference_labels):
 #--------- load predictions and truth
 def load_predictions(summaries_dir):
     ml_files = glob.glob(f'{summaries_dir}/*/data.h5')
+    months_list = np.hstack([x.split('/')[-2] for x in ml_files])
+    idx = [np.where(np.hstack(months_list) == x)[0] for x in plots.MONTHS]
+    ml_files = [ml_files[x[0]] if len(x) > 0 else [] for x in idx]
     
     output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
-    for m in range(len(ml_files)):
-        with closing(h5py.File(ml_files[m], 'r')) as f:
-            output['truth'].append(f['y'][:])
-            output['pred'].append(f['y0'][:])
-            output['lon'].append(f['lons'][:])
-            output['lat'].append(f['lats'][:])
-            output['years'].append(f['years'][:])
-            output['days'].append(f['days'][:])
     
+    for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading predicts/truth'):
+    #for m in range(len(ml_files)):
+        is_month = (np.hstack(months_list) == plots.MONTHS[m]).sum()
+        if is_month > 0:
+            with closing(h5py.File(ml_files[m], 'r')) as f:
+                output['truth'].append(f['y'][:])
+                output['pred'].append(f['y0'][:])
+                output['lon'].append(f['lons'][:])
+                output['lat'].append(f['lats'][:])
+                output['years'].append(f['years'][:])
+                output['days'].append(f['days'][:])
+            #output['month'] =  months_list[m]       
+        else:
+            for k in output.keys():
+                output[k].append([])
     return output
 
     

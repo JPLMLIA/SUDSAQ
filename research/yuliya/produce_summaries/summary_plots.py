@@ -322,18 +322,23 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
 
 #------- histrograms of predicted vs true
 def predicted_hist(output, lims = (-50, 50), plots_dir = None):
+    
+    
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
     for m in range(len(MONTHS)):
         #plt.figure()
         
         if len(output['pred'][m]) > 0:
-            rmse_m = np.sqrt(mean_squared_error(output['truth'][m], output['pred'][m]))
-            r2_m = r2_score(output['truth'][m], output['pred'][m])
+            
+            mask_nan = ~np.isnan(np.hstack(output['pred'][m]))
+            rmse_m = np.sqrt(mean_squared_error(output['truth'][m][mask_nan], 
+                                                output['pred'][m][mask_nan]))
+            r2_m = r2_score(output['truth'][m][mask_nan], output['pred'][m][mask_nan])
             
             plt.subplot(2, 6,m+1)
-            plt.hist(np.hstack(output['pred'][m]), bins = 300, density = True, 
+            plt.hist(np.hstack(output['pred'][m])[mask_nan], bins = 300, density = True, 
                      histtype = 'step', label = f'predicted');
-            plt.axvline(x = np.hstack(output['pred'][m]).mean(), alpha = 0.5)
+            plt.axvline(x = np.nanmean(np.hstack(output['pred'][m])), alpha = 0.5)
             plt.hist(np.hstack(output['truth'][m]), bins = 300, density = True, 
                      histtype = 'step', label = f'true');
             plt.axvline(x = np.hstack(output['truth'][m]).mean(), color = 'orange',
@@ -346,11 +351,14 @@ def predicted_hist(output, lims = (-50, 50), plots_dir = None):
             plt.text(0.1, 0.8, f'mean true {np.round(true_mean, 2)}', 
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
-            plt.text(0.1, 0.9, f'{MONTHS[m]}({np.round(rmse_m, 1)})', 
+            plt.text(0.1, 0.9, f'{MONTHS[m]}', 
                      bbox=dict(facecolor='none', edgecolor='k'),
                      transform=plt.gca().transAxes)
-            plt.text(0.1, 0.7, f'{MONTHS[m]}({np.round(r2_m, 1)})', 
-                     bbox=dict(facecolor='none', edgecolor='k'),
+            plt.text(0.1, 0.75, f'rmse ({np.round(rmse_m, 1)})', 
+                     bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
+                     transform=plt.gca().transAxes)
+            plt.text(0.1, 0.7, f'pve ({np.round(r2_m, 1)})', 
+                     bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
     
     plt.suptitle(f'true vs predicted bias histograms, per month')
@@ -361,10 +369,14 @@ def predicted_hist(output, lims = (-50, 50), plots_dir = None):
     
 
     ### ------ histograms ALL
-    rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth']), 
-                                            np.hstack(output['pred'])))   
+    mask_nan = ~np.isnan(np.hstack(output['pred']))
+    rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth'])[mask_nan], 
+                                            np.hstack(output['pred'])[mask_nan]))   
+    pve_total = r2_score(np.hstack(output['truth'])[mask_nan], 
+                                            np.hstack(output['pred'])[mask_nan])
+    
     plt.figure()
-    plt.hist(np.hstack(output['pred']), bins = 300, density = True, 
+    plt.hist(np.hstack(output['pred'])[mask_nan], bins = 300, density = True, 
              histtype = 'step', label = f'predicted');
     plt.axvline(x = np.hstack(output['pred']).mean(), alpha = 0.5)
     plt.hist(np.hstack(output['truth']), bins = 300, density = True, 
@@ -379,6 +391,13 @@ def predicted_hist(output, lims = (-50, 50), plots_dir = None):
     plt.text(0.1, 0.9, f'mean true {np.round(true_mean, 2)}', 
              bbox=dict(facecolor='none', edgecolor='none'), fontsize = 8,
              transform=plt.gca().transAxes)
+    plt.text(0.1, 0.85, f'rmse ({np.round(rmse_total, 1)})', 
+             bbox=dict(facecolor='none', edgecolor='none'), fontsize = 8,
+             transform=plt.gca().transAxes)
+    plt.text(0.1, 0.8, f'pve ({np.round(pve_total, 1)})', 
+             bbox=dict(facecolor='none', edgecolor='none'), fontsize = 8,
+             transform=plt.gca().transAxes)
+    
     plt.title(f'predicted vs true bias, all months, rmse total = {np.round(rmse_total, 2)}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/hist_predicted_all.png',
@@ -392,10 +411,13 @@ def predicted_hist_single(output, plots_dir = None):
     ### ------ histograms ALL
     rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth']), 
                                             np.hstack(output['pred'])))   
+    
+    mask_nan = ~np.isnan(np.hstack(output['pred']))
+    
     plt.figure()
-    plt.hist(np.hstack(output['pred']), bins = 300, density = True, 
+    plt.hist(np.hstack(output['pred'])[mask_nan], bins = 300, density = True, 
              histtype = 'step', label = f'predicted');
-    plt.axvline(x = np.hstack(output['pred']).mean(), alpha = 0.5)
+    plt.axvline(x = np.nanmean(np.hstack(output['pred'])), alpha = 0.5)
     plt.hist(np.hstack(output['truth']), bins = 300, density = True, 
              histtype = 'step', label = f'true');
     plt.axvline(x = np.hstack(output['truth']).mean(), color = 'orange',
