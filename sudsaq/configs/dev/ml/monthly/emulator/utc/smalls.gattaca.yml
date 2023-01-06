@@ -304,7 +304,7 @@ mda8_v3:
   target: momo.mda8
   input:
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
+      vars: [momo.mda8, momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, momo.o3]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
     daily:
@@ -325,7 +325,7 @@ mda8_v3_limited:
   input:
     use_locs_of: toar.o3.dma8epa.mean
     sel:
-      vars: [momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, toar.o3.dma8epa.mean]
+      vars: [momo.mda8, momo.no, momo.no2, momo.ps, momo.t, momo.co, momo.so2, momo.ch2o, toar.o3.dma8epa.mean]
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc
