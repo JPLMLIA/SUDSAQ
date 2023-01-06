@@ -85,7 +85,7 @@ def main(sub_dir, a = 20):
 
     
     ### ---------------- the simplest barplot and bubble plots for top X
-    importances = read.load_importances(models_dir)
+    importances = read.load_importances(summaries_dir)
     contributions = read.load_contributions(summaries_dir, importances['reference'])
     
     

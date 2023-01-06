@@ -36,15 +36,14 @@ if not os.path.exists(root_dir):
 #years = [2011, 2012, 2013, 2014, 2015]
 
 #set the directory for th60at month
-sub_dir = '/bias/local/8hr_median/v4/'
+sub_dir = '/bias/local/8hr_median/v4.1/'
 models_dir = f'{root_dir}/models/{sub_dir}'
 #set plot directory
 summaries_dir = f'{root_dir}/summaries/{sub_dir}/combined_data/'
-research_dir = f'{root_dir}/summaries/research/{sub_dir}/combined_data/'
-
-
 #month = 'jul'
 version = 'geo_reg_east_europe'
+research_dir = f'{root_dir}/summaries/research/{sub_dir}/{version}/combined_data/'
+
 
 exclude = ['momo.dtdad', 'momo.cumf', 'momo.ccoverh', 'momo.prcpc', 'momo.2dsfc.BrCl',
               'momo.2dsfc.Br2', 'momo.dtcum', 'momo.2dsfc.mc.sulf', 'momo.2dsfc.HOBr', 
@@ -55,7 +54,7 @@ exclude = ['momo.dtdad', 'momo.cumf', 'momo.ccoverh', 'momo.prcpc', 'momo.2dsfc.
 for month in plots.MONTHS:
     #month = 'jul'
     print(f'making {month}')
-    testing_dir = f'{research_dir}/{version}/{month}/'
+    testing_dir = f'{research_dir}/{month}/'
     if not os.path.exists(testing_dir):
         os.makedirs(testing_dir)
         
@@ -161,12 +160,13 @@ for month in plots.MONTHS:
                  
     #save importances
     var_names_stacked = var_names[mask_vars]
+    var_names_list = [var_names_stacked.astype(np.string_)] * len(importances['fi'])
     with closing(h5py.File(f'{testing_dir}/test.importances.h5', 'w')) as f:
         #f['ci'] = importances['ci']
         f['model/values'] = np.column_stack(importances['fi'])
-        f['model/names'] = [var_names_stacked.astype(np.string_)] * len(importances['fi'])
+        f['model/names'] = np.column_stack(var_names_list)
         f['permutation/values'] = np.column_stack(importances['pi'])
-        f['permutation/names'] = [var_names_stacked.astype(np.string_)] * len(importances['pi'])
+        f['permutation/names'] = np.column_stack(var_names_list)
     
     
     #save contributions

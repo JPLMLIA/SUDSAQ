@@ -13,12 +13,6 @@ import h5py
 from scipy.io import netcdf
 from tqdm import tqdm
 from contextlib import closing
-from datetime import datetime, timedelta, date
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import matplotlib.pyplot as plt
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import scipy as sp
 from joblib import load
 #from config_all import REQUIRED_VARS
 import pickle

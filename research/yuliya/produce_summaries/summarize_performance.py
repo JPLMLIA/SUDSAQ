@@ -123,8 +123,6 @@ def main(sub_dir):
         plt.errorbar(pos, metric_mean, yerr= metric_err, color = '0.5', ls = '--')
         plt.plot(pos, metric_mean, 'o', label = '')
         plt.xticks(np.arange(1, len(plots.MONTHS)+1), plabels, color = 'k');
-        if mk == 'rmse':
-            plt.ylim((4, 11))
         if mk == 'pve':
             plt.ylim((0, 1))    
         plt.grid(ls = ':', alpha = 0.5)
@@ -177,8 +175,6 @@ def main(sub_dir):
         plt.grid(ls = ':', alpha = 0.5) 
         plt.legend()
         plt.xticks(pos, plots.MONTHS, color = 'k'); 
-        if mk == 'rmse':
-            plt.ylim((4, 11))
         if mk == 'pve':
             plt.ylim((0, 1))   
         plt.title(f'{mk} per region'); 
@@ -186,8 +182,8 @@ def main(sub_dir):
         plt.close()
     
 
-    #bins = [-20, -10, -5, -1, 0, 1, 5, 10, 20]
-    bins = np.histogram(np.hstack(output['truth']))[1]
+    bins = [-20, -10, -5, -1, 0, 1, 5, 10, 20]
+    #bins = np.histogram(np.hstack(output['truth']), 12)[1]
     rmse = {k: [] for k in range(len(plots.MONTHS))}
     for m in range(len(output['pred'])):
         idx = np.digitize(output['truth'][m], bins = bins, right= True)
@@ -199,10 +195,10 @@ def main(sub_dir):
             
                 rmse[m].append(error)
         else:
-              rmse[m].append(np.repeat(np.nan, len(bins)))
+            rmse[m].append(np.repeat(np.nan, len(bins)+1))
     
     c = plt.cm.rainbow(np.linspace(0,1, len(plots.MONTHS)))
-    pos = (np.arange(len(bins)))
+    pos = np.arange(len(bins)+1)
     plt.figure()
     for m in range(len(plots.MONTHS)):
         plt.plot(pos, np.hstack(rmse[m]), ls = '--', color = c[m])
@@ -210,7 +206,7 @@ def main(sub_dir):
     plt.grid(ls = ':', alpha = 0.5) 
     plt.legend()
     xt = np.hstack(np.round(bins, 0))
-    plt.xticks(pos, xt.astype(str), color = 'k'); 
+    plt.xticks(pos, np.hstack([xt.astype(str), None]), color = 'k'); 
     plt.xlabel(f'ppb true value limits')
     plt.ylabel(f'rmse')
     plt.title(f'rmse per region'); 
@@ -316,7 +312,7 @@ def main(sub_dir):
 
     #------histrograms and kde
     print(f'plotting KDE and hist')
-    hlims = np.percentile(y, [0, 100])
+    hlims = np.percentile(y, [10, 90])
     plots.predicted_hist(output, lims = hlims, plots_dir = plots_dir)
     plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
