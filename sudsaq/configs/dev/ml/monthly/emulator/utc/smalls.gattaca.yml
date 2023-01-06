@@ -409,7 +409,7 @@ mda8_v4_noplot:
         local: True
   output:
     plots: False
-    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/jul/
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/plotless/v4/jul/
   log:
-    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/plotless/v4/jul/run.log
     config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/smalls/full/v4/
