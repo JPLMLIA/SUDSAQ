@@ -5,7 +5,7 @@ Created on Thu Oct  6 12:23:48 2022
 
 @author: marchett
 """
-import os, glob
+import os, glob, sys
 import numpy as np
 import h5py
 from tqdm import tqdm
@@ -18,9 +18,9 @@ import xarray as xr
 from scipy import stats
 from treeinterpreter import treeinterpreter as ti
 import statsmodels.api as sm
-from produce_summaries import summary_plots as plots
-from produce_summaries import summarize_explanations as se
-#import make_X as make
+sys.path.append('/home/marchett/code/suds-air-quality/research/yuliya/produce_summaries')
+import summary_plots as plots
+import summarize_explanations as se
 from sklearn.inspection import permutation_importance
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
@@ -51,7 +51,10 @@ exclude = ['momo.dtdad', 'momo.cumf', 'momo.ccoverh', 'momo.prcpc', 'momo.2dsfc.
               'momo.2dsfc.ONMV', 'momo.2dsfc.MACROOH', 'momo.2dsfc.MACR',
               'momo.2dsfc.HBr']
 
-for month in plots.MONTHS:
+months = ['jul']
+months = plots.MONTHS
+
+for month in months:
     #month = 'jul'
     print(f'making {month}')
     testing_dir = f'{research_dir}/{month}/'
@@ -224,7 +227,7 @@ for month in plots.MONTHS:
     plt.savefig(f'{testing_dir}/imps_{version}_top.png', dpi = 150, bbox = 'tight')
     plt.close()
 
-    res = make_unique_locs(y - yhat, lons[mask_reg], lats[mask_reg], years, 
+    res = plots.make_unique_locs(y - yhat, lons[mask_reg], lats[mask_reg], years, 
                      days[mask_reg])
     
     # un_lons, un_lats = np.unique([lons[mask_reg], lats[mask_reg]], axis = 1)
@@ -242,7 +245,7 @@ for month in plots.MONTHS:
     #     #t = np.arange(0, len(y[mask3]))
     #     res[s] = np.mean(ys - ys_hat)
         
-    plots.residual_scatter(un_lons, un_lats, res, 'y', zlim = (-5,20), 
+    plots.residual_scatter(un_lons, un_lats, res, 'residual', zlim = (-10,10), 
                           cmap = 'bwr', 
                           plots_dir = f'{testing_dir}')
 

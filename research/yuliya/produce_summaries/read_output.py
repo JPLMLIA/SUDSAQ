@@ -276,45 +276,45 @@ def load_predictions(summaries_dir):
     
 
 #--------- load predictions and truth
-def load_predictions(summaries_dir):
-    pred_files = glob.glob(f'{summaries_dir}/*/test.predict.nc')
-    true_files = glob.glob(f'{summaries_dir}/*/test.target.nc')
+# def load_predictions(summaries_dir):
+#     pred_files = glob.glob(f'{summaries_dir}/*/test.predict.nc')
+#     true_files = glob.glob(f'{summaries_dir}/*/test.target.nc')
     
-    months_pred = [x.split('/')[-2] for x in pred_files]
-    idx = [np.where(np.hstack(months_pred) == x)[0] for x in plots.MONTHS]
-    pred_files = [pred_files[x[0]] if len(x) > 0 else [] for x in idx]
-    true_files = [true_files[x[0]] if len(x) > 0 else [] for x in idx]
+#     months_pred = [x.split('/')[-2] for x in pred_files]
+#     idx = [np.where(np.hstack(months_pred) == x)[0] for x in plots.MONTHS]
+#     pred_files = [pred_files[x[0]] if len(x) > 0 else [] for x in idx]
+#     true_files = [true_files[x[0]] if len(x) > 0 else [] for x in idx]
     
-    output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
-    for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading predicts/truth'):
-        is_month = (np.hstack(months_pred) == plots.MONTHS[m]).sum()
-        if is_month > 0:
-            data_pred = xr.open_dataset(pred_files[m])
-            dsp = data_pred.to_array().stack({'loc': ["lon", "lat", 'time']})
-            data_truth = xr.open_dataset(true_files[m])
-            dst = data_truth.to_array().stack({'loc': ["lon", "lat", 'time']})
+#     output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
+#     for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading predicts/truth'):
+#         is_month = (np.hstack(months_pred) == plots.MONTHS[m]).sum()
+#         if is_month > 0:
+#             data_pred = xr.open_dataset(pred_files[m])
+#             dsp = data_pred.to_array().stack({'loc': ["lon", "lat", 'time']})
+#             data_truth = xr.open_dataset(true_files[m])
+#             dst = data_truth.to_array().stack({'loc': ["lon", "lat", 'time']})
             
-            pred = dsp.values[0]
-            truth = dst.values[0]
-            mask_truth = np.isnan(truth)
-            mask_pred = np.isnan(pred)
-            mask = mask_truth | mask_pred
+#             pred = dsp.values[0]
+#             truth = dst.values[0]
+#             mask_truth = np.isnan(truth)
+#             mask_pred = np.isnan(pred)
+#             mask = mask_truth | mask_pred
         
-            output['pred'].append(pred[~mask])
-            output['truth'].append(truth[~mask])
+#             output['pred'].append(pred[~mask])
+#             output['truth'].append(truth[~mask])
             
-            output['years'].append(dst['time.year'][~mask])
-            output['days'].append(dst['time.day'].values[~mask])
-            output['lon'].append(dst['lon'].values[~mask])
-            output['lat'].append(dst['lat'].values[~mask])
+#             output['years'].append(dst['time.year'][~mask])
+#             output['days'].append(dst['time.day'].values[~mask])
+#             output['lon'].append(dst['lon'].values[~mask])
+#             output['lat'].append(dst['lat'].values[~mask])
                   
-        else:
-            for k in output.keys():
-                output[k].append([])
+#         else:
+#             for k in output.keys():
+#                 output[k].append([])
                 
    
             
-    return output
+#     return output
 
 
 

@@ -143,7 +143,7 @@ def main(sub_dir):
             #n[k][m] = []
             u_years = np.unique(output['years'][m])
             for j in range(len(u_years)):
-                mask_years = output['years'][m].values == u_years[j]
+                mask_years = output['years'][m] == u_years[j]
                 lats = output['lat'][m][mask_years]
                 lons = output['lon'][m][mask_years]
                 lons = (lons + 180) % 360 - 180
@@ -312,7 +312,7 @@ def main(sub_dir):
 
     #------histrograms and kde
     print(f'plotting KDE and hist')
-    hlims = np.percentile(y, [10, 90])
+    hlims = np.percentile(y, [1, 99])
     plots.predicted_hist(output, lims = hlims, plots_dir = plots_dir)
     plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
