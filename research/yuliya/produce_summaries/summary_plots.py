@@ -286,12 +286,15 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
     for m in range(len(MONTHS)):
         
         if len(output['pred'][m]) > 0:
-            kernel  = stats.gaussian_kde([np.hstack(output['truth'][m]), 
-                                          np.hstack(output['pred'][m])])
-            density = kernel([np.hstack(output['truth'][m]), 
-                              np.hstack(output['pred'][m])])
+            mask_nan = ~np.isnan(np.hstack(output['pred'][m]))
             
-            rmse_m = np.sqrt(mean_squared_error(output['truth'][m], output['pred'][m]))
+            kernel  = stats.gaussian_kde([np.hstack(output['truth'][m])[mask_nan], 
+                                          np.hstack(output['pred'][m])[mask_nan]])
+            density = kernel([np.hstack(output['truth'][m])[mask_nan], 
+                              np.hstack(output['pred'][m])[mask_nan]])
+            
+            rmse_m = np.sqrt(mean_squared_error(output['truth'][m][mask_nan], 
+                                                output['pred'][m][mask_nan]))
             #plt.figure()
             plt.subplot(2, 6,m+1)
             plt.scatter(output['pred'][m], output['truth'][m], s = 3, c=density, 
