@@ -135,8 +135,14 @@ def load_importances(summaries_dir):
     
     #sort everything to the first model importance order
     reference_labels = mi_names[0][:, 0]
-    tick_labels = np.hstack(['.'.join(x.split('.')[1:]) for x in reference_labels])
-    tick_labels = np.hstack([x.split('2dsfc')[-1].split('.')[-1] for x in tick_labels])
+    tick_labels = np.zeros_like(reference_labels)
+    for l, label in enumerate(reference_labels):
+        label_split = np.hstack(label.split('.'))
+        label_mask = ~np.in1d(label_split, ['momo', '2dsfc'])
+        tick_labels[l] = '.'.join(label_split[label_mask])
+        
+    # tick_labels = np.hstack(['.'.join(x.split('.')[1:]) for x in reference_labels])
+    # tick_labels = np.hstack([x.split('2dsfc')[-1].split('.')[-1] for x in tick_labels])
     
     mi = np.column_stack(mi)
     pi = np.column_stack(pi)
