@@ -297,7 +297,8 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
                                                 output['pred'][m][mask_nan]))
             #plt.figure()
             plt.subplot(2, 6,m+1)
-            plt.scatter(output['pred'][m], output['truth'][m], s = 3, c=density, 
+            plt.scatter(output['pred'][m][mask_nan], output['truth'][m][mask_nan], 
+                        s = 3, c=density, 
                         alpha = 0.5, cmap = 'coolwarm')
             #plt.pcolor(xedges, yedges, H, cmap = 'coolwarm')
             plt.axvline(x=0, color = '0.5', alpha = 0.5, ls = '--')
@@ -311,9 +312,13 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
             #plt.colorbar()
             #plt.contour(H, levels = 5, cmap = 'coolwarm')
             plt.plot(lims, lims, color = 'r', alpha = 0.2, ls = '--')
-            plt.text(0.1, 0.9, f'{MONTHS[m]}({np.round(rmse_m, 1)})', 
+            plt.text(0.1, 0.9, f'{MONTHS[m]}', 
                      bbox=dict(facecolor='none', edgecolor='k'),
                      transform=plt.gca().transAxes)
+            plt.text(0.1, 0.8, f'rmse {np.round(rmse_m, 2)}', 
+                     bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
+                     transform=plt.gca().transAxes)
+    
     plt.suptitle(f'true vs predicted bias, per month')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/residuals_monthly.png',
