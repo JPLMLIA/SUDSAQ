@@ -76,6 +76,8 @@ region = args.region
 #bbox = bbox_dict[region]
 
 modis_lc = {
+    0: {'class': 'filler',
+        'pct_cov': 0},
     1: {'class': 'evg_conif',
         'pct_cov': 0},
     2: {'class': 'evg_broad',
@@ -288,9 +290,20 @@ def get_perc_cov(img, lc_type):
     total_pixels = rows * cols
     values, counts = np.unique(img, return_counts=True)
 
+    values = values.tolist()
+    counts = counts.tolist()
+
+    # Removing data that is not categorized, this I think is due to bilinear interpolation
+    new_vals = []
+    new_counts = []
+    for i in range(len(values)):
+        if feature_dict.get(values[i]):
+            new_vals.append(values[i])
+            new_counts.append(counts[i])
+
     count_dict = {}
-    for j in range(len(values)):
-        count_dict[values[j]] = counts[j]
+    for j in range(len(new_vals)):
+        count_dict[new_vals[j]] = new_counts[j]
 
     for k, v in count_dict.items():
         pct_cov = (count_dict[k] / total_pixels)
@@ -329,8 +342,9 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
         pct_cov_13, pct_cov_14, pct_cov_15, pct_cov_16 = [], [], [], []
         pct_cov_17 = []
         punburnt_dat = []
+        pct_cov_filler = []
     if dataset_name == 'modis':
-        lc_pct_cov = [pct_cov_1, pct_cov_2, pct_cov_3, pct_cov_4, pct_cov_5, pct_cov_6,
+        lc_pct_cov = [pct_cov_filler, pct_cov_1, pct_cov_2, pct_cov_3, pct_cov_4, pct_cov_5, pct_cov_6,
                    pct_cov_7, pct_cov_8, pct_cov_9, pct_cov_10, pct_cov_11, pct_cov_12,
                    pct_cov_13, pct_cov_14, pct_cov_15, pct_cov_16, pct_cov_17]
 
@@ -356,19 +370,19 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
             p1_arr, p2_arr, p3_arr, p4_arr, p5_arr = [], [], [], [], []
             p6_arr, p7_arr, p8_arr, p9_arr, p10_arr = [], [], [], [], []
             p11_arr, p12_arr, p13_arr, p14_arr, p15_arr = [], [], [], [], []
-            p16_arr, p17_arr, punburnt_arr = [], [], []
-            lc_arrs = [p1_arr, p2_arr, p3_arr, p4_arr, p5_arr, p6_arr, p7_arr,
+            p16_arr, p17_arr, punburnt_arr, pfiller = [], [], [], []
+            lc_arrs = [pfiller, p1_arr, p2_arr, p3_arr, p4_arr, p5_arr, p6_arr, p7_arr,
                        p8_arr, p9_arr, p10_arr, p11_arr, p12_arr, p13_arr, p14_arr,
                        p15_arr, p16_arr, p17_arr]
 
         for m in range(len(lon)):
+            print('Processing lon {}...'.format(lon[m]))
             point = ee.Geometry.Point(lon[m], lat[k])
             # Create 55km buffer will approx match the 1x1deg momo grid
             roi = point.buffer(55500)
-
             # Sample img over roi
             if dataset_name == 'modis':
-                sq_extent = img.sampleRectangle(region=roi)
+                sq_extent = img.sampleRectangle(region=roi, defaultValue=0)
             if dataset_name == 'fire':
                 sq_extent = img.sampleRectangle(region=roi, defaultValue=160)
             if dataset_name == 'nightlight' or 'pop':
@@ -376,73 +390,39 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
 
             # Get band of interest
             band_arr = sq_extent.get(c_band)
-            try:
-                check = 'no'
-                np_arr = np.array(band_arr.getInfo())
-                check = 'yes'
+            np_arr = np.array(band_arr.getInfo())
 
-                # Get basic stats
-                mode_arr.append(get_mode(np_arr))
-                var_arr.append(np.var(np_arr))
-                mean_arr.append(np.mean(np_arr))
-                max_arr.append(np.max(np_arr))
-                min_arr.append(np.min(np_arr))
+            # Get basic stats
+            mode_arr.append(get_mode(np_arr))
+            var_arr.append(np.var(np_arr))
+            mean_arr.append(np.mean(np_arr))
+            max_arr.append(np.max(np_arr))
+            min_arr.append(np.min(np_arr))
 
-                if dataset_name == 'modis' or 'fire':
-                    pct_cov_all = get_perc_cov(np_arr, dataset_name)
-                if dataset_name == 'modis':
-                    for i in range(1, len(lc_arrs)+1):
-                        lc_arrs[i-1].append(pct_cov_all[i]['pct_cov'])
-                if dataset_name == 'fire':
-                    p1_arr.append(pct_cov_all[0]['pct_cov'])
-                    p2_arr.append(pct_cov_all[20]['pct_cov'])
-                    p3_arr.append(pct_cov_all[30]['pct_cov'])
-                    p4_arr.append(pct_cov_all[40]['pct_cov'])
-                    p5_arr.append(pct_cov_all[50]['pct_cov'])
-                    p6_arr.append(pct_cov_all[60]['pct_cov'])
-                    p7_arr.append(pct_cov_all[70]['pct_cov'])
-                    p8_arr.append(pct_cov_all[80]['pct_cov'])
-                    p9_arr.append(pct_cov_all[90]['pct_cov'])
-                    p10_arr.append(pct_cov_all[100]['pct_cov'])
-                    p11_arr.append(pct_cov_all[110]['pct_cov'])
-                    p12_arr.append(pct_cov_all[120]['pct_cov'])
-                    p13_arr.append(pct_cov_all[130]['pct_cov'])
-                    p14_arr.append(pct_cov_all[140]['pct_cov'])
-                    p15_arr.append(pct_cov_all[150]['pct_cov'])
-                    p16_arr.append(pct_cov_all[170]['pct_cov'])
-                    p17_arr.append(pct_cov_all[180]['pct_cov'])
-                    punburnt_arr.append(pct_cov_all[160]['pct_cov'])
-                continue
-            except:
-                if check == 'no':
-                    mode_arr.append(np.nan)
-                    var_arr.append(np.nan)
-                    mean_arr.append(np.nan)
-                    max_arr.append(np.nan)
-                    min_arr.append(np.nan)
-
-                    if dataset_name == 'modis':
-                        for i in range(1, len(lc_arrs)+1):
-                            lc_arrs[i-1].append(np.nan)
-                    if dataset_name == 'fire':
-                        p1_arr.append(np.nan)
-                        p2_arr.append(np.nan)
-                        p3_arr.append(np.nan)
-                        p4_arr.append(np.nan)
-                        p5_arr.append(np.nan)
-                        p6_arr.append(np.nan)
-                        p7_arr.append(np.nan)
-                        p8_arr.append(np.nan)
-                        p9_arr.append(np.nan)
-                        p10_arr.append(np.nan)
-                        p11_arr.append(np.nan)
-                        p12_arr.append(np.nan)
-                        p13_arr.append(np.nan)
-                        p14_arr.append(np.nan)
-                        p15_arr.append(np.nan)
-                        p16_arr.append(np.nan)
-                        p17_arr.append(np.nan)
-                        punburnt_arr.append(np.nan)
+            if dataset_name == 'modis' or 'fire':
+                pct_cov_all = get_perc_cov(np_arr, dataset_name)
+            if dataset_name == 'modis':
+                for i in range(len(lc_arrs)):
+                    lc_arrs[i].append(pct_cov_all[i]['pct_cov'])
+            if dataset_name == 'fire':
+                p1_arr.append(pct_cov_all[0]['pct_cov'])
+                p2_arr.append(pct_cov_all[20]['pct_cov'])
+                p3_arr.append(pct_cov_all[30]['pct_cov'])
+                p4_arr.append(pct_cov_all[40]['pct_cov'])
+                p5_arr.append(pct_cov_all[50]['pct_cov'])
+                p6_arr.append(pct_cov_all[60]['pct_cov'])
+                p7_arr.append(pct_cov_all[70]['pct_cov'])
+                p8_arr.append(pct_cov_all[80]['pct_cov'])
+                p9_arr.append(pct_cov_all[90]['pct_cov'])
+                p10_arr.append(pct_cov_all[100]['pct_cov'])
+                p11_arr.append(pct_cov_all[110]['pct_cov'])
+                p12_arr.append(pct_cov_all[120]['pct_cov'])
+                p13_arr.append(pct_cov_all[130]['pct_cov'])
+                p14_arr.append(pct_cov_all[140]['pct_cov'])
+                p15_arr.append(pct_cov_all[150]['pct_cov'])
+                p16_arr.append(pct_cov_all[170]['pct_cov'])
+                p17_arr.append(pct_cov_all[180]['pct_cov'])
+                punburnt_arr.append(pct_cov_all[160]['pct_cov'])
 
         mode_dat.append(mode_arr)
         var_dat.append(var_arr)
@@ -529,13 +509,12 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
         for i in range(len(lc_pct_cov)):
             pct_all.append(np.array(lc_pct_cov[i]))
             pct_all_xr.append(make_dataset(pct_all[i], lc + '.' + modis_lc[i+1]['class'], lat, lon))
-        combined_xr = combo_xr.merge(pct_all_xr[0]).merge(pct_all_xr[1]).merge(pct_all_xr[2]).\
+            combined_xr = combo_xr.merge(pct_all_xr[0]).merge(pct_all_xr[1]).merge(pct_all_xr[2]).\
             merge(pct_all_xr[3]).merge(pct_all_xr[4]).merge(pct_all_xr[5]).merge(pct_all_xr[6]).\
             merge(pct_all_xr[7]).merge(pct_all_xr[8]).merge(pct_all_xr[9]).merge(pct_all_xr[10]).\
             merge(pct_all_xr[11]).merge(pct_all_xr[12]).merge(pct_all_xr[13]).merge(pct_all_xr[14]).\
             merge(pct_all_xr[15]).merge(pct_all_xr[16])
 
-    '''
     if dataset_name == 'pop' or 'nightlight':
         mean_all = np.array(mean_dat)
         min_all = np.array(min_dat)
@@ -547,7 +526,6 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
         max_xr = make_dataset(max_all, '{}.max'.format(dataset_name), lat, lon)
         min_xr = make_dataset(min_all, '{}.min'.format(dataset_name), lat, lon)
         combined_xr = var_xr.merge(mode_xr).merge(mean_xr).merge(max_xr).merge(min_xr)
-    '''
 
     return combined_xr
 
