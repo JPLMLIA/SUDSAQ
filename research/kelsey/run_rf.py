@@ -1,7 +1,7 @@
 """
 @author: kdoerksen
-Runs simple RF model without having to run full
-ML pipeline. Good for quick experiments.
+Runs simple RF model for TOAR locations.
+Good for quick experiments.
 """
 
 import numpy as np
@@ -257,12 +257,12 @@ add_gee = args.add_gee
 param_tuning = args.parameter_tuning
 
 if not add_gee:
-    results_dir = '/Users/kelseydoerksen/exp_runs/rf/{}/all_gee_added/{}/results_no_gee/{}/test'.\
+    results_dir = '/Users/kelseydoerksen/exp_runs/rf/{}/all_gee_added/{}/results_no_gee/{}/est_100_maxf_30'.\
         format(month, analysis_year, aoi)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 else:
-    results_dir = '/Users/kelseydoerksen/exp_runs/rf/{}/all_gee_added/{}/results/{}/test'.\
+    results_dir = '/Users/kelseydoerksen/exp_runs/rf/{}/all_gee_added/{}/results/{}/est_100_maxf_30'.\
         format(month, analysis_year, aoi)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)

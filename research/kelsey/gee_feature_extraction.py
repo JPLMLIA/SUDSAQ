@@ -1,6 +1,8 @@
 '''
 Take GEE hdf files and extract features from them,
 then match to TOAR station xarray
+This really only works for TOAR locations,
+any bigger of a dataset and python can't handle with df
 @author: kdoerksen
 '''
 
@@ -300,10 +302,8 @@ elif dataset == "fire":
 ds_var = xr.Dataset(data_vars=dict(lc_var=(['lat', 'lon'], df_var.values)), coords=dict(lon=momo_lon, lat=momo_lat))
 ds_mode = xr.Dataset(data_vars=dict(lc_mode=(['lat', 'lon'], df_mode.values)), coords=dict(lon=momo_lon, lat=momo_lat))
 ds = ds_var.merge(ds_mode)
-for xr in range(len(ds_list)):
-    ds = ds.merge(ds_list[xr])
+for xr_data in range(len(ds_list)):
+    ds = ds.merge(ds_list[xr_data])
 
-import ipdb
-ipdb.set_trace()
 ds.to_netcdf('/Users/kelseydoerksen/exp_runs/rf/{}/all_gee_added/{}/{}_{}_lc_no_time.nc'.format(month, yr, yr,
                                                                                                 dataset))
