@@ -353,8 +353,8 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
     data = collection.select(c_band)
     # Get img from collection based on temporal cadence
     img = get_img_from_collect(data, c_cadence, mon, analysis_year)
-    if dataset_name == 'fire':
-        # resampling to 500m/pixel so array can be made otherwise too many pixels
+    if dataset_name == 'fire' or 'nightlight':
+        # resampling so array can be made otherwise too many pixels
         crs = 'EPSG:4326'
         img = img.resample('bilinear').reproject(crs=crs, scale=2000)
 
@@ -399,6 +399,8 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
             max_arr.append(np.max(np_arr))
             min_arr.append(np.min(np_arr))
 
+            if dataset_name == 'night_light' or 'pop':
+                continue
             if dataset_name == 'modis' or 'fire':
                 pct_cov_all = get_perc_cov(np_arr, dataset_name)
             if dataset_name == 'modis':
@@ -517,7 +519,6 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
         merge(pct_all_xr[11]).merge(pct_all_xr[12]).merge(pct_all_xr[13]).merge(pct_all_xr[14]).\
         merge(pct_all_xr[15]).merge(pct_all_xr[16]).merge(pct_all_xr[17])
 
-
     if dataset_name == 'pop' or 'nightlight':
         mean_all = np.array(mean_dat)
         min_all = np.array(min_dat)
@@ -532,7 +533,8 @@ def process_collection(collection, c_band, c_cadence, lat, lon, c_month, analysi
 
     return combined_xr
 
-def process_collection_for_img(collection, img_band, img_cadence, lats, lons, save_dir, analysis_month, analysis_year):
+def process_collection_for_img(collection, img_band, img_cadence, lats, lons, save_dir, analysis_month, analysis_year,
+                               data_name):
     '''
     Processes image collection and saves images per lat, lon
     '''
@@ -541,20 +543,27 @@ def process_collection_for_img(collection, img_band, img_cadence, lats, lons, sa
     mon = analysis_month
     # Get img from collection based on temporal cadence
     img = get_img_from_collect(data, img_cadence, mon, analysis_year)
+    if data_name == 'fire' or 'nightlight':
+        # resampling so array can be made otherwise too many pixels
+        crs = 'EPSG:4326'
+        img = img.resample('bilinear').reproject(crs=crs, scale=2000)
+
     for k in range(len(lats)):
         for m in range(len(lons)):
             point = ee.Geometry.Point(lons[m], lats[k])
             # Create 55km buffer will match the 1x1deg momo grid
             roi = point.buffer(55500)
             # Sample img over roi
-            sq_extent = img.sampleRectangle(region=roi)
+            if data_name == 'modis':
+                sq_extent = img.sampleRectangle(region=roi, defaultValue=0)
+            if data_name == 'fire':
+                sq_extent = img.sampleRectangle(region=roi, defaultValue=160)
+            if data_name == 'nightlight' or 'pop':
+                sq_extent = img.sampleRectangle(region=roi, defaultValue=0)
+
             # Get band of interest
             band_arr = sq_extent.get(band)
-            try:
-                np_arr = np.array(band_arr.getInfo())
-            except:
-                np_arr = np.nan
-                continue
+            np_arr = np.array(band_arr.getInfo())
 
             # Read to hdf file
             with h5py.File('{}/{}_{}_data.hdf'.format(save_dir, lats[k], lons[m]), 'w') as outfile:
@@ -606,13 +615,13 @@ if toar_analysis:
 if analysis_type == 'images':
     # direct can be updated to whatever save directory you want
     direct = '/Users/kelseydoerksen/gee/{}/{}/{}'.format(name, year, month)
-    process_collection_for_img(dataset, band, cadence, momo_lat, momo_lon, direct, month, year)
+    process_collection_for_img(dataset, band, cadence, momo_lat, momo_lon, direct, month, year, name)
 
 if analysis_type == 'collection':
     # Process data and save entire collection as nc
     processed_data = process_collection(dataset, band, cadence, momo_lat, momo_lon, month, year, name)
 
-    # Save to Desktop for now
+    # Save to whichever directory you would like (defaults to Kelsey desktop)
     processed_data.to_netcdf('/Users/kelseydoerksen/Desktop/{}_{}_{}.nc'.format(month, year, name))
 
     # Save file
