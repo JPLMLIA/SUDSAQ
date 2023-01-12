@@ -2,7 +2,6 @@
 """
 import logging
 import datetime as dt
-import h5py
 import numpy    as np
 import os
 import re
@@ -13,8 +12,6 @@ from sklearn.preprocessing import StandardScaler
 from tqdm                  import tqdm
 
 from sudsaq.config import Config
-
-h5py._errors.silence_errors()
 
 # List of UTC+Offset, (West Lon, East Lon) to apply in daily()
 Timezones = [
@@ -70,23 +67,10 @@ def calc(ds, string):
     Performs simple calculations to create new features at runtime.
     """
     for key in list(ds):
-        # Find this key not followed by a digit or word character (eg. prevents momo.no matching to momo.no2)
-        string = re.sub(fr'({key})(?!\d|\w)', f"ds['{key}']", string)
+        if key in string:
+            string = f"ds['{key}']".join(string.split(key))
 
-    Logger.debug(f'Attempting to evaluate: {string!r}')
     return eval(string)
-
-def flatten(data):
-    """
-    """
-    if isinstance(data, xr.core.dataarray.Dataset):
-        data = data.to_array()
-
-    dims = ['lat', 'lon']
-    if 'time' in data.dims:
-        dims.append('time')
-    return data.stack({'loc': dims})
-
 
 def split_and_stack(ds, config, lazy=True):
     """
@@ -107,19 +91,9 @@ def split_and_stack(ds, config, lazy=True):
     config._reindex = ds[['lat', 'lon']]
 
     # Create the stacked objects
-    data = flatten(ds[config.train]).transpose('loc', 'variable')
-
-    # Use the locations valid by this variable only, but this variable may be excluded otherwise
-    if config.use_locs_of:
-        Logger.debug(f'Using locations from variable: {config.use_locs_of}')
-        # mean('time') removes the time dimension so it is ignored
-        merged = flatten(xr.merge([target, ds[config.use_locs_of].mean('time')]))
-        # Replace locs in the target with NaNs if the use_locs_of had a NaN
-        merged = merged.where(~merged.isel(variable=1).isnull())
-        # Extract the target, garbage collect the other
-        target = merged.isel(variable=0)
-    else:
-        target = flatten(target)
+    data   = ds[config.train].to_array().stack({'loc': ['lat', 'lon', 'time']})
+    data   = data.transpose('loc', 'variable')
+    target = target.stack({'loc': ['lat', 'lon', 'time']})
 
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
@@ -128,9 +102,6 @@ def split_and_stack(ds, config, lazy=True):
         Logger.info('Loading data into memory')
         data.load()
         target.load()
-        Logger.debug(f'Memory footprint in GB:')
-        Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
-        Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
 
     if config.input.scale:
         Logger.info('Scaling data (X)')
@@ -214,20 +185,10 @@ def load(config, split=False, lazy=True):
         files += match
 
     Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files, engine='netcdf4', lock=False, parallel=config.input.get('parallel', True))
+    ds = xr.open_mfdataset(files, parallel=True, engine='netcdf4', lock=False)
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
-
-    for key, args in config.input.replace_vals.items():
-        left, right = args.bounds
-        value       = float(args.value) or np.nan
-        Logger.debug(f'Replacing values between ({left}, {right}) with {value} for key {key}')
-
-        ds[key] = ds[key].where(
-            (ds[key] < left) | (right < ds[key]),
-            value
-        )
 
     if config.input.calc:
         Logger.info('Calculating variables')
@@ -269,8 +230,8 @@ def load(config, split=False, lazy=True):
 
 class Dataset(xr.Dataset):
     """
-    Small override of xarray.Dataset that enables regex matching names in the variables
-    list
+    Small override of xarray.Dataset that enables regex matching
+    names in the variables list
     """
     # TODO: Bad keys failing to report which keys are bad: KeyError: 'momo'
     __slots__ = () # Required for subclassing

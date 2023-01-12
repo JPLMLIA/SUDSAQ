@@ -13,17 +13,13 @@ from sklearn.metrics    import (
     mean_squared_error,
     r2_score
 )
-from tqdm import tqdm
 
 from sudsaq.config import (
     Config,
     Section,
     Null
 )
-from sudsaq.data  import (
-    flatten,
-    load
-)
+from sudsaq.data  import load
 from sudsaq.ml    import plots
 from sudsaq.ml    import treeinterpreter as ti
 from sudsaq.utils import (
@@ -35,6 +31,14 @@ from sudsaq.utils import (
 
 Logger = logging.getLogger('sudsaq/ml/analyze.py')
 
+RAY = False
+# try:
+#     from ray.util.joblib import register_ray
+#     register_ray()
+#     # with parallel_backend("ray"):
+#     RAY = True
+# except:
+#     pass
 
 def perm_importance(model, data, target, output=None):
     """
@@ -92,62 +96,6 @@ def model_importance(model, variables, output=None):
 
     return df
 
-def pbc(model, data):
-    """
-    Predict, Bias, Contributions calculations
-    """
-    config = Config()
-
-    # Only predict specified regions
-    regions = []
-    if config.predict_regions:
-        unstacked = data.unstack()
-        for region, bounds in config.predict_regions.items():
-            Logger.debug(f'Selecting region {region} using bounds: lat={bounds.lat}, lon={bounds.lon}')
-            regions.append(
-                unstacked.sel(
-                    lat = slice(*bounds.lat),
-                    lon = slice(*bounds.lon)
-                ).to_dataset('variable')
-            )
-
-        data = flatten(xr.merge(regions)).dropna('loc').transpose('loc', 'variable')
-
-    Logger.info('Predicting using TreeInterpreter')
-    if config.split_predict:
-        Logger.debug(f'Using {config.split_predict} splits for prediction')
-        predicts = []
-        biases   = []
-        contribs = []
-
-        for split in tqdm(np.split(data, config.split_predict), desc='Processed Splits'):
-            predict       = xr.zeros_like(split.isel(variable=0).drop_vars('variable'))
-            bias          = xr.zeros_like(predict)
-            contributions = xr.zeros_like(split)
-
-            _predict, bias[:], contributions[:] = ti.predict(model, split, **config.treeinterpreter)
-
-            predict[:] = _predict.flatten()
-
-            predicts.append(predict)
-            biases.append(bias)
-            contribs.append(contributions)
-
-        Logger.debug('Combining splits')
-        predict       = xr.concat(predicts, 'loc')
-        bias          = xr.concat(biases, 'loc')
-        contributions = xr.concat(contribs, 'loc')
-    else:
-        predict       = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
-        bias          = xr.zeros_like(predict)
-        contributions = xr.zeros_like(data)
-
-        _predict, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
-
-        predict[:] = _predict.flatten()
-
-    return predict, bias, contributions
-
 def analyze(model=None, data=None, target=None, kind='input', output=None):
     """
     Analyzes a model using different metrics and plots
@@ -194,8 +142,16 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Prepare the storage variables
     bias, contributions = None, None
+    predict = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+
     if not config.not_ti and 'Forest' in str(model):
-        predict, bias, contributions = pbc(model, data)
+        Logger.info('Predicting using TreeInterpreter')
+        bias          = xr.zeros_like(predict)
+        contributions = xr.zeros_like(data)
+
+        predicts, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+
+        predict[:] = predicts.flatten()
     else:
         Logger.info('Predicting')
         predict[:] = model.predict(data.values)
@@ -263,6 +219,8 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     save_objects(
         output  = output,
         kind    = kind,
+        data    = data,
+        target  = target,
         predict = predict,
         bias    = bias,
         contributions = contributions,

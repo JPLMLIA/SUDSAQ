@@ -1,4 +1,4 @@
-sdefault:
+default:
   target: momo.o3
   train: momo.(?!mda8).*
   train_performance: False

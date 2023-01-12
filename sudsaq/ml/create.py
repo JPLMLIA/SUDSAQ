@@ -60,10 +60,6 @@ def fit(model, data, target, i=None, test=True):
     data.train   = data.train.load()
     target.train = target.train.load()
 
-    # Replace inf values if they exist
-    data.train   = data.train.where(np.isfinite(data.train), np.nan)
-    target.train = target.train.where(np.isfinite(target.train), np.nan)
-
     # Always remove NaNs on the training set
     Logger.debug('Dropping NaNs from training data')
     data.train   = data.train.dropna('loc')
@@ -71,13 +67,6 @@ def fit(model, data, target, i=None, test=True):
 
     Logger.debug('Aligning training data')
     data.train, target.train = xr.align(data.train, target.train, copy=False)
-
-    Logger.debug('Train set:')
-    Logger.debug(f'- Target shape: {list(zip(target.train.dims, target.train.shape))}')
-    Logger.debug(f'- Data   shape: {list(zip(data.train.dims, data.train.shape))}')
-    Logger.debug(f'Memory footprint for train in GB:')
-    Logger.debug(f'- Data   = {data.train.nbytes / 2**30:.3f}')
-    Logger.debug(f'- Target = {target.train.nbytes / 2**30:.3f}')
 
     if target.train.size == 0:
         Logger.error('Train target detected to be empty, skipping this fold')
@@ -105,7 +94,6 @@ def fit(model, data, target, i=None, test=True):
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
     else:
-        Logger.debug('Saving train objects')
         save_objects(
             output = output,
             kind   = 'train',
@@ -118,10 +106,6 @@ def fit(model, data, target, i=None, test=True):
         target.test = target.test.load()
         data.test   = data.test.load()
 
-        # Replace inf values if they exist
-        data.test   = data.test.where(np.isfinite(data.test), np.nan)
-        target.test = target.test.where(np.isfinite(target.test), np.nan)
-
         Logger.debug('Dropping NaNs in test data')
         # Target and data drop NaNs separately for prediction, will be aligned afterwards
         data.test   = data.test.dropna('loc')
@@ -130,21 +114,6 @@ def fit(model, data, target, i=None, test=True):
         if config.align_test:
             Logger.debug('Aligning test data')
             data.test, target.test = xr.align(data.test, target.test, copy=False)
-
-        Logger.debug('Test set:')
-        Logger.debug(f'- Target shape: {list(zip(target.test.dims, target.test.shape))}')
-        Logger.debug(f'- Data   shape: {list(zip(data.test.dims, data.test.shape))}')
-        Logger.debug(f'Memory footprint for train in GB:')
-        Logger.debug(f'- Data   = {data.test.nbytes / 2**30:.3f}')
-        Logger.debug(f'- Target = {target.test.nbytes / 2**30:.3f}')
-
-        Logger.debug('Saving test objects')
-        save_objects(
-            output  = output,
-            kind    = 'test',
-            data    = data.test,
-            target  = target.test
-        )
 
         if target.test.size == 0:
             Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
@@ -155,16 +124,13 @@ def fit(model, data, target, i=None, test=True):
             return
 
         Logger.info(f'Creating test set performance analysis')
-        try:
-            analyze(
-                model  = model,
-                data   = data.test,
-                target = target.test,
-                kind   = 'test',
-                output = output
-            )
-        except:
-            Logger.exception('Test analysis raised an exception')
+        analyze(
+            model  = model,
+            data   = data.test,
+            target = target.test,
+            kind   = 'test',
+            output = output
+        )
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
@@ -318,7 +284,6 @@ if __name__ == '__main__':
             Logger.error(f'Restarting, attempt {loop}')
         elif loop > 10:
             Logger.error('10 attempts have failed, exiting')
-            break
         try:
             state = create()
         except Exception:
