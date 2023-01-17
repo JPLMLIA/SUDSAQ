@@ -1,7 +1,7 @@
 #--------------
 #this run is exactly the same as v4 but includes GEE data (modis + population)
 default:
-  target: momo.mda8 - toar.o3.dma8epa.median
+  target: toar.o3.dma8epa.mean
   train: momo.(?!o3|mda8).*
   train_performance: False
   model:
@@ -43,7 +43,7 @@ default:
         vars: [momo.mda8]
         time: 1
       toar:
-        vars: [toar.o3.dma8epa.median]
+        vars: [toar.o3.dma8epa.mean]
         time: 0
       momo:
         vars: momo.(?!mda8).*
@@ -55,11 +55,11 @@ default:
   log:
     level: debug
     reset: True
-    config: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/
+    config: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/
 
 jan:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jan/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jan/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
@@ -67,11 +67,11 @@ jan:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jan/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jan/run.log
 
 feb:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/feb/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/feb/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/02.nc         # MOMO
@@ -79,11 +79,11 @@ feb:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/feb/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/feb/run.log
 
 mar:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/mar/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/mar/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/03.nc         # MOMO
@@ -91,11 +91,11 @@ mar:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/mar/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/mar/run.log
 
 apr:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/apr/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/apr/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/04.nc         # MOMO
@@ -103,11 +103,11 @@ apr:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/apr/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/apr/run.log
 
 may:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/may/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/may/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/05.nc         # MOMO
@@ -115,11 +115,11 @@ may:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/may/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/may/run.log
 
 jun:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jun/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jun/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/06.nc         # MOMO
@@ -127,11 +127,11 @@ jun:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jun/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jun/run.log
 
 jul:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jul/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jul/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
@@ -139,11 +139,11 @@ jul:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jul/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jul/run.log
 
 aug:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/aug/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/aug/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/08.nc         # MOMO
@@ -151,11 +151,11 @@ aug:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/aug/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/aug/run.log
 
 sep:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/sep/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/sep/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/09.nc         # MOMO
@@ -163,11 +163,11 @@ sep:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/sep/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/sep/run.log
 
 oct:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/oct/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/oct/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/10.nc         # MOMO
@@ -175,11 +175,11 @@ oct:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/oct/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/oct/run.log
 
 nov:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/nov/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/nov/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/11.nc         # MOMO
@@ -187,11 +187,11 @@ nov:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/nov/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/nov/run.log
 
 dec:
   output:
-    path: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/dec/
+    path: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/dec/
   input:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/12.nc         # MOMO
@@ -199,4 +199,4 @@ dec:
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
-    file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/dec/run.log
+    file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/dec/run.log
