@@ -2,7 +2,7 @@
 #this run is exactly the same as v4 but includes GEE data (modis + population)
 default:
   target: toar.o3.dma8epa.mean
-  train: momo.(?!o3|mda8).*
+  train: .+\.(?!o3|mda8).*
   train_performance: False
   model:
     kind: RandomForestRegressor
