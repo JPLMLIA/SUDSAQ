@@ -17,6 +17,7 @@ from contextlib import closing
 from datetime import datetime, timedelta, date
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import matplotlib as mp
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import pickle
@@ -75,68 +76,173 @@ def main(sub_dir):
     output = read.load_predictions(summaries_dir)
     
     boxes = []
-    rmse = []
-    nrmse = []
-    mape = []
-    mae = []
-    r2 = []
+    mkeys = ['rmse', 'pve']
+    metrics = {k: [None] * len(output['pred']) for k in mkeys}
     for m in range(len(output['pred'])):
         
+        u_years = np.unique(output['years'][m])
+        metrics['pve'][m] = []     
+        metrics['rmse'][m] = [] 
         if len(output['pred'][m]) > 1:
-            diff = output['truth'][m] - output['pred'][m]
-            boxes.append(diff)
-            
-            error = np.sqrt(mean_squared_error(output['truth'][m], output['pred'][m]))
-            #q = np.percentile(truth_list[m], [25, 75])
-            nrmse.append(error / np.std(output['truth'][m]))
-            mae.append(mean_absolute_error(output['truth'][m], output['pred'][m]))
-            #pve.append(explained_variance_score(output['truth'][m], output['pred'][m]))
-            r2.append(r2_score(output['truth'][m], output['pred'][m]))
-            rmse.append(error)
+            for j in range(len(u_years)):
+                mask_years = output['years'][m] == u_years[j]
+                diff = output['truth'][m] - output['pred'][m]
+                boxes.append(diff)
+                ys = output['truth'][m][mask_years]
+                ys_hat = output['pred'][m][mask_years]
+                mask_nan = ~np.isnan(ys_hat)
+                
+                error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
+                #q = np.percentile(truth_list[m], [25, 75])
+                #nrmse.append(error / np.std(output['truth'][m][mask_years]))
+                #mae.append(mean_absolute_error(output['truth'][m][mask_years], 
+                                               #output['pred'][m][mask_years]))
+                #pve.append(explained_variance_score(output['truth'][m], output['pred'][m]))
+                metrics['pve'][m].append(r2_score(ys[mask_nan], ys_hat[mask_nan]))
+                metrics['rmse'][m].append(error)
         else:
-            rmse.append(np.nan)
-            mae.append(np.nan)
-            pve.append(np.nan)
+            metrics['pve'][m].append(np.nan)
+            metrics['rmse'][m].append(np.nan)
     
-    rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth']), 
-                                            np.hstack(output['pred'])))    
-    r2_total =   r2_score(np.hstack(output['truth']), 
-                                            np.hstack(output['pred']))  
+    mask_nan = ~np.isnan(np.hstack(output['pred']))
+    rmse_total = np.round(np.sqrt(mean_squared_error(np.hstack(output['truth'])[mask_nan], 
+                                            np.hstack(output['pred'])[mask_nan])), 2)    
+    r2_total =   np.round(r2_score(np.hstack(output['truth'])[mask_nan], 
+                                            np.hstack(output['pred'])[mask_nan]) , 2) 
     
     #------rmse vs mae
+    for mk in mkeys:
+        metric = metrics[mk]
+        metric_mean = np.hstack([np.mean(x) for x in metric])
+        metric_err = np.hstack([np.std(x) for x in metric])
+        
+        pos = np.arange(1, len(metric)+1)
+        plabels = [f'{y}\n{np.round(np.mean(x), 2)}' for y, x in zip(plots.MONTHS, metric)]
+        
+        plt.figure()
+        plt.errorbar(pos, metric_mean, yerr= metric_err, color = '0.5', ls = '--')
+        plt.plot(pos, metric_mean, 'o', label = '')
+        plt.xticks(np.arange(1, len(plots.MONTHS)+1), plabels, color = 'k');
+        if mk == 'pve':
+            plt.ylim((0, 1))    
+        plt.grid(ls = ':', alpha = 0.5)
+        plt.title(f'{mk}');
+        plt.savefig(f'{plots_dir}/{mk}_box_all.png', bbox_inches='tight')
+        plt.close()
+    
+    
+    
+    gkeys = ['north_america', 'europe', 'asia', 'australia', 'east_europe']
+    gmetrics = {m: {k: [None] * len(output['pred']) for k in gkeys} for m in mkeys}
+    #rmse = {k: [None] * len(output['pred']) for k in gkeys}
+    #n = {k: [None] * len(output['pred']) for k in gkeys}
+    for k in gkeys:
+        for m in range(len(output['pred'])):
+            gmetrics['rmse'][k][m] = [] 
+            gmetrics['pve'][k][m] = [] 
+            #n[k][m] = []
+            u_years = np.unique(output['years'][m])
+            for j in range(len(u_years)):
+                mask_years = output['years'][m] == u_years[j]
+                lats = output['lat'][m][mask_years]
+                lons = output['lon'][m][mask_years]
+                lons = (lons + 180) % 360 - 180
+                bbox = plots.bbox_dict[k]
+                mask_lons = (lons > bbox[0]) & (lons < bbox[1])
+                mask_lats = (lats > bbox[2]) & (lats < bbox[3])
+                mask = mask_lons & mask_lats
+                
+                mask_nan = ~np.isnan(output['pred'][m][mask_years][mask])
+                
+                if (mask.sum() > 0) & (mask_nan.sum() > 0):
+                    ys = output['truth'][m][mask_years][mask]
+                    ys_hat = output['pred'][m][mask_years][mask]
+                    mask_nan = ~np.isnan(output['pred'][m][mask_years][mask])
+                    error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
+                    gmetrics['rmse'][k][m].append(error)
+                    gmetrics['pve'][k][m].append(r2_score(ys[mask_nan], 
+                                                          ys_hat[mask_nan]))
+                else:
+                    gmetrics['rmse'][k][m].append(np.nan)
+                    gmetrics['pve'][k][m].append(np.nan)
+                #n[k][m].append(mask.sum())
+    
+    c = plt.cm.rainbow(np.linspace(0,1, len(gkeys)))
+    for mk in mkeys:
+        plt.figure()
+        for i, k in enumerate(gkeys):
+            pos = np.arange(len(gmetrics[mk][k]) * len(gkeys))[::len(gkeys)]
+            y_mean = [np.mean(x) for x in gmetrics[mk][k]]
+            y_err = [np.std(x) for x in gmetrics[mk][k]]
+            plt.errorbar(pos, y_mean, yerr= y_err, ls = '--', color = c[i])
+            plt.plot(pos, y_mean, 'o', color = c[i], label = k)
+        plt.grid(ls = ':', alpha = 0.5) 
+        plt.legend()
+        plt.xticks(pos, plots.MONTHS, color = 'k'); 
+        if mk == 'pve':
+            plt.ylim((0, 1))   
+        plt.title(f'{mk} per region'); 
+        plt.savefig(f'{plots_dir}/{mk}_regional_all.png', bbox_inches='tight')
+        plt.close()
+    
+
+    model_type = summaries_dir.split('/')[7]
+    if model_type == 'bias':
+        bins = [-20, -10, -5, -1, 0, 1, 5, 10, 20]
+    else:
+        if model_type == 'emulator':
+            bins = np.histogram(np.hstack(output['truth']), 12)[1][1:-1]
+        else:
+            print('not a valid model type')
+    
+    rmse = {k: [] for k in range(len(plots.MONTHS))}
+    for m in range(len(output['pred'])):
+        idx = np.digitize(output['truth'][m], bins = bins, right= True)
+        if len(idx) > 0:
+            for i in np.unique(idx):
+                bin_mask = idx == i
+                mask_nan = ~np.isnan(output['pred'][m][bin_mask])
+                error = np.sqrt(mean_squared_error(output['truth'][m][bin_mask][mask_nan], 
+                                                    output['pred'][m][bin_mask][mask_nan]))
+            
+                rmse[m].append(error)
+        else:
+            rmse[m].append(np.repeat(np.nan, len(bins)+1))
+    
+    c = plt.cm.rainbow(np.linspace(0,1, len(plots.MONTHS)))
+    pos = np.arange(len(bins)+1)
     plt.figure()
-    plt.plot(np.arange(1, len(rmse)+1), rmse, 'x', color = 'blue', label = 'rmse');
-    plt.plot(np.arange(1, len(rmse)+1), rmse, ':', alpha = 0.5, color = 'blue');
-    plt.plot(np.arange(1, len(mae)+1), mae, 'x', color = 'green', label = 'mae');
-    plt.plot(np.arange(1, len(mae)+1), mae, ':', alpha = 0.5, color = 'green');
-    plt.ylabel('ppb')
-    plt.legend(frameon = True, loc = 'upper left')
-    plt.twinx()
-    plt.plot(np.arange(1, len(mae)+1), r2, ':', alpha = 0.5, color = 'red');
-    plt.plot(np.arange(1, len(mae)+1), r2, 'x', alpha = 0.5, color = 'red', label = 'pve');
-    plt.xticks(np.arange(1, len(plots.MONTHS)+1), plots.MONTHS)
-    plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'model rmse/mae')
-    plt.legend(frameon = True, loc = 'upper right')
-    plt.savefig(f'{plots_dir}/rmse_mae_all.png', bbox_inches='tight')
+    for m in range(len(plots.MONTHS)):
+        plt.plot(pos, np.hstack(rmse[m]), ls = '--', color = c[m])
+        plt.plot(pos, np.hstack(rmse[m]), 'o', color = c[m], label = f'{plots.MONTHS[m]}')
+    plt.grid(ls = ':', alpha = 0.5) 
+    plt.legend()
+    xt = np.hstack(np.round(bins, 0)).astype(int)
+    plt.xticks(pos, np.hstack([xt.astype(str), None]), color = 'k', fontsize = 10); 
+    plt.xlabel(f'ppb true value')
+    plt.ylabel(f'rmse')
+    plt.title(f'rmse per region'); 
+    plt.savefig(f'{plots_dir}/rmse_binned_all.png', bbox_inches='tight')
     plt.close()
     
     
-    #------histrograms and kde
-    print(f'plotting KDE and hist')
-    plots.predicted_kde(output, plots_dir = plots_dir)
-    plots.predicted_hist(output, plots_dir = plots_dir)
-
 
     #-------- large residuals
     print(f'plotting residual maps')
     lon = np.hstack(output['lon'])
     lat = np.hstack(output['lat'])
+    lon = (lon + 180) % 360 - 180
     un_lons, un_lats = np.unique([lon, lat], axis = 1)
+    
+    import statsmodels.api as sm
+    lowess = sm.nonparametric.lowess
     
     y = np.hstack(output['truth'])
     yhat = np.hstack(output['pred'])
-    keys = ['y', 'yhat', 'res', 'res_std']
+    years = np.hstack(output['years'])
+    days = np.hstack(output['days'])
+    
+    keys = ['y', 'yhat', 'res', 'res_std', 'rmse', 'rmse_trend', 'std_y']
     res = {}
     for k in keys:
         res[k] = np.zeros_like(un_lons)
@@ -144,23 +250,56 @@ def main(sub_dir):
         mask1 = np.in1d(lon, un_lons[s])
         mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
-        #t = np.arange(0, len(y[mask3]))
-        res['y'][s] = np.mean(y[mask3])
-        res['yhat'][s] = np.mean(yhat[mask3])
-        res['res'][s] = np.mean(y[mask3] - yhat[mask3])
-        res['res_std'][s] = np.std(y[mask3] - yhat[mask3])
+        
+        time = years[mask3] * 100 + days[mask3]
+        sidx = np.argsort(time)
+        ys = y[mask3][sidx]
+        ys_hat = yhat[mask3][sidx]
+        
+        mask_nan = ~np.isnan(ys_hat)
+        
+        if mask_nan.sum() > 0:
+            #t = np.arange(0, len(y[mask3]))
+            res['y'][s] = np.mean(ys)
+            res['yhat'][s] = np.mean(ys_hat)
+            res['res'][s] = np.mean(ys - ys_hat)
+            res['rmse'][s] = np.sqrt(mean_squared_error(ys, ys_hat))
+            res['res_std'][s] = np.std(ys - ys_hat)
+            
+            #true variance per location
+            t = np.arange(0, len(ys))
+            z = lowess(ys, t, frac = 0.1)
+            zhat = lowess(ys_hat, t, frac = 0.1)
+            
+            res['rmse_trend'][s] = np.sqrt(mean_squared_error(z[:,1], zhat[:,1]))
+            res['std_y'][s] = np.sqrt(np.mean((ys - z[:,1])**2))
+        else:
+             for k in res.keys():
+                 res[k][s] = np.nan 
+
+
+    zlim_a = np.nanpercentile(res['y'], [10, 90])
+    min_b = np.nanpercentile(res['res'], 0)
+    zlim_b = (min_b, -min_b)
 
     #---------- residuals on maps
-    plots.residual_scatter(un_lons, un_lats, res['y'], zlim = (-5, 20), 
+    plots.residual_scatter(un_lons, un_lats, res['y'], zlim = zlim_a, 
                            key = keys[0], plots_dir = plots_dir)
-    plots.residual_scatter(un_lons, un_lats, res['yhat'], zlim = (-5, 20), 
+    plots.residual_scatter(un_lons, un_lats, res['yhat'], zlim = zlim_a, 
                            key = keys[1], plots_dir = plots_dir)
-    plots.residual_scatter(un_lons, un_lats, res['res'], zlim = (-10, 10), 
+    plots.residual_scatter(un_lons, un_lats, res['res'], zlim = zlim_b, 
                            key = keys[2], plots_dir = plots_dir)   
-    plots.residual_scatter(un_lons, un_lats, res['res_std'], zlim = (-30, 30), 
-                           key = keys[3], plots_dir = plots_dir)
-
-    idx_res = np.where(res['res'] > 7.5)[0] 
+    # plots.residual_scatter(un_lons, un_lats, res['res_std'], zlim = (-30, 30), 
+    #                        key = keys[3], plots_dir = plots_dir)
+    plots.residual_scatter(un_lons, un_lats, res['rmse'], zlim = (5, 20), 
+                           key = keys[4], cmap = 'YlOrRd', plots_dir = plots_dir)
+    plots.residual_scatter(un_lons, un_lats, res['rmse_trend'], zlim = (5, 20), 
+                           key = keys[5], cmap = 'YlOrRd', plots_dir = plots_dir)
+    plots.residual_scatter(un_lons, un_lats, res['std_y'], zlim = (5, 20), 
+                           key = keys[6], cmap = 'YlOrRd', plots_dir = plots_dir)
+    
+    a = np.percentile(res['res'], [95])
+    idx_res = np.where(np.abs(res['res']) > a)[0] 
     #s = idx_res[1]
     
     if not os.path.exists(f'{plots_dir}/large_residuals/'):
@@ -169,17 +308,31 @@ def main(sub_dir):
         mask1 = np.in1d(lon, un_lons[s])
         mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
-        mr = res['res'][s]
         
-        plt.figure()
-        plt.plot(yhat[mask3], label = 'pred') 
-        plt.plot(y[mask3], color = '0.5', alpha = 0.5, label = 'true') 
+        time = years[mask3] * 100 + days[mask3]
+        sidx = np.argsort(time)
+        ys = y[mask3][sidx]
+        ys_hat = yhat[mask3][sidx]
+        mr = np.mean(ys - ys_hat)
+        
+        plt.figure(figsize = (10, 5))
+        plt.plot(ys_hat, label = 'pred') 
+        plt.plot(ys, color = '0.5', alpha = 0.5, label = 'true') 
         plt.legend()
+        plt.xlabel(f'time (w/ gaps)')
         plt.grid(ls=':', alpha = 0.5)    
         plt.title(f'location: {un_lons[s]}, {un_lats[s]}, mean res: {np.round(mr,2)}')
+        plt.tight_layout()
         plt.savefig(f'{plots_dir}/large_residuals/signal_{un_lons[s]}_.{un_lats[s]}.png',
                     bbox_inches='tight')
         plt.close()
+
+    #------histrograms and kde
+    print(f'plotting KDE and hist')
+    hlims = np.percentile(y, [0.1, 99.9])
+    plots.predicted_hist(output, lims = hlims, plots_dir = plots_dir)
+    plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
+
 
 
           
@@ -188,7 +341,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr-median/v1/')
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr_median/v3/')
     parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     #parser.add_argument('--parameter', type=str, default=None)
 

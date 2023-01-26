@@ -60,7 +60,7 @@ def get_top_mask(a, var1, var2 = None, var3 = None):
     
     metrics_mean = np.stack([v for v in list([var1, var2, var3]) if v is not None])
     #metrics_mean = np.column_stack([var1, var2, var3])
-    mean_metrics = metrics_mean.mean(axis = 0)
+    mean_metrics = np.nanmean(metrics_mean, axis = 0)
     mean_metrics[np.isnan(mean_metrics)] = 0. 
     idx_sort = np.argsort(mean_metrics)[::-1]
     mask_top = idx_sort[:a]
@@ -85,7 +85,7 @@ def main(sub_dir, a = 20):
 
     
     ### ---------------- the simplest barplot and bubble plots for top X
-    importances = read.load_importances(models_dir)
+    importances = read.load_importances(summaries_dir)
     contributions = read.load_contributions(summaries_dir, importances['reference'])
     
     
