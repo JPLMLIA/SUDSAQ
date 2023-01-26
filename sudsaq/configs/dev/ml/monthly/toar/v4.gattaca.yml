@@ -61,8 +61,6 @@ jan:
     glob:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
-      - /scratch_lg_edge/sudsaq/gee/modis/201[1-5]_modis_corrected.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v4/jan/run.log
 
