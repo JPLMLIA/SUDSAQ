@@ -2,7 +2,6 @@ default:
   target: momo.mda8
   train: momo.(?!o3|mda8).*
   train_performance: False
-  not_ti: True
   model:
     kind: RandomForestRegressor
     params:
