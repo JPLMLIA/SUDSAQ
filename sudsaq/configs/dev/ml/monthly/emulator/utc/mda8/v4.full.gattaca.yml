@@ -1,0 +1,171 @@
+default:
+  target: momo.mda8
+  train: momo.(?!o3|mda8).*
+  train_performance: False
+  not_ti: True
+  model:
+    kind: RandomForestRegressor
+    params:
+      random_state: 0
+      n_jobs: -1
+  GroupKFold: True
+  permutation_importance:
+    random_state: 1
+    n_jobs: -1
+  treeinterpreter:
+    n_jobs: -1
+  explain: False
+  output:
+    model        : True
+    data         : True
+    target       : True
+    predict      : True
+    bias         : True
+    contributions: True
+    scores       : True
+    importance   : True
+    plots        : True
+    explanation  : True
+  plots:
+    importances:
+      count: 20
+      labelrotation: 90
+  input:
+    sel:
+      # Drop these variables
+      vars: .+\.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr).*
+    lazy: False
+    scale: True
+    parallel: False
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+  log:
+    level: debug
+    reset: True
+    config: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/
+
+jan:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jan/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jan/run.log
+
+feb:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/feb/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/02.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/02.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/feb/run.log
+
+mar:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/mar/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/03.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/03.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/mar/run.log
+
+apr:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/apr/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/04.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/04.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/apr/run.log
+
+may:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/may/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/05.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/05.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/may/run.log
+
+jun:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jun/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/06.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/06.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jun/run.log
+
+jul:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jul/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/jul/run.log
+
+aug:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/aug/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/08.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/08.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/aug/run.log
+
+sep:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/sep/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/09.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/09.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/sep/run.log
+
+oct:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/oct/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/10.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/10.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/oct/run.log
+
+nov:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/nov/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/11.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/11.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/nov/run.log
+
+dec:
+  output:
+    path: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/dec/
+  input:
+    glob:
+      - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/12.nc         # MOMO
+      - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/12.nc # TOAR
+  log:
+    file: /scratch_lg_edge/sudsaq/models/emulator/utc/mda8/full/v4/dec/run.log
