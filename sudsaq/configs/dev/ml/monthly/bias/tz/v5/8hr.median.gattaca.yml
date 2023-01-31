@@ -65,7 +65,7 @@ jan:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/01.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jan/run.log
 
@@ -77,7 +77,7 @@ feb:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/02.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/02.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/feb/run.log
 
@@ -89,7 +89,7 @@ mar:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/03.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/03.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/mar/run.log
 
@@ -101,7 +101,7 @@ apr:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/04.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/04.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/apr/run.log
 
@@ -113,7 +113,7 @@ may:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/05.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/05.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/may/run.log
 
@@ -125,7 +125,7 @@ jun:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/06.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/06.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jun/run.log
 
@@ -137,7 +137,7 @@ jul:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/07.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/jul/run.log
 
@@ -149,7 +149,7 @@ aug:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/08.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/08.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/aug/run.log
 
@@ -161,7 +161,7 @@ sep:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/09.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/09.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/sep/run.log
 
@@ -173,7 +173,7 @@ oct:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/10.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/10.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/oct/run.log
 
@@ -185,7 +185,7 @@ nov:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/11.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/11.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/nov/run.log
 
@@ -197,6 +197,6 @@ dec:
       - /projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/12.nc         # MOMO
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/12.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
-      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_matched.nc
+      - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
   log:
     file: /scratch_lg_edge/sudsaq/models/bias/local/8hr_median/v5/dec/run.log
