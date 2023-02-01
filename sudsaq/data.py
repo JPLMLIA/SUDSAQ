@@ -87,7 +87,6 @@ def flatten(data):
         dims.append('time')
     return data.stack({'loc': dims})
 
-
 def split_and_stack(ds, config, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
@@ -243,6 +242,9 @@ def load(config, split=False, lazy=True):
             if dim == 'vars':
                 Logger.debug(f'Selecting variables: {sel}')
                 ds = ds[sel]
+            elif dim == 'month':
+                Logger.debug(f'Selecting month=={sel}')
+                ds = ds.sel[time=ds['time.month']==sel]
             else:
                 if isinstance(sel, list):
                     sel = slice(*sel)

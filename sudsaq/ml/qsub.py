@@ -10,21 +10,44 @@ from datetime import datetime as dtt
 
 import sudsaq
 
-from sudsaq.config import Config
+from sudsaq.config import (
+    Config,
+    Section
+)
 from sudsaq.utils  import (
     align_print,
     load_pkl,
     save_pkl
 )
 
+Resources = Section('Resources', {
+    'user': {
+        'cpu': 384,
+        'mem': 3000, # GB
+        'walltime': 240 # Hours
+    },
+    'node': {
+        'cpu': 48,
+        'mem': 366 # GB
+    }
+})
+#%%
+
+n = 1
+Resources.user.cpu / n
+
+
+
+
+#%%
 PBS = """\
 #!/bin/bash
 #PBS -N {user}{id}-sudsaq
 #PBS -q array-sn
-#PBS -l select=1:ncpus=48:mem=366gb
+#PBS -l select=1:ncpus={cpu}:mem={mem}gb
 #PBS -l walltime=240:00:00
-#PBS -e {logs}/
-#PBS -o {logs}/
+#PBS -e {logs}/job_{id}/
+#PBS -o {logs}/job_{id}/
 #PBS -v summary=true
 #PBS -J {range}
 #PBS -W group_list=mlia-active-data
@@ -35,6 +58,8 @@ conda activate {env}
 
 export JOBLIB_TEMP_FOLDER=$TMPDIR
 export HDF5_USE_FILE_LOCKING=FALSE
+
+ln -s {logs}/job_{id} {logs}/current/job_{id}
 
 SECTIONS=(\
 {sections}
@@ -94,15 +119,17 @@ tail -n 1 {files}
             output.write(template.format(files=' '.join(files)))
         os.chmod(f'{logs}/tail1.sh', 0o775)
 
-def create_job(file, sections, logs, preview=False, history={}):
+def create_job(file, sections, logs, n=1, preview=False, history={}):
     """
     """
     id   = len(list(logs.glob('job_*')))
     user = os.getlogin()
-    logs = f'{logs}/job_{id}'
+
     job  = PBS.format(
         user     = user[0], # Only take the first character for privacy
         id       = id,
+        cpu      = min(Resources.node.cpu, int(Resources.user.cpu / n)),
+        mem      = min(Resources.node.mem, int(Resources.user.mem / n)),
         logs     = logs,
         range    = f'0-{len(sections)-1}',
         env      = os.environ['CONDA_DEFAULT_ENV'],
@@ -111,6 +138,7 @@ def create_job(file, sections, logs, preview=False, history={}):
         config   = file,
         _sects   = '{SECTIONS[$PBS_ARRAY_INDEX]}'
     )
+    logs = f'{logs}/job_{id}'
 
     if preview:
         history['launched'] = False
@@ -155,6 +183,11 @@ if __name__ == '__main__':
                                             default  = './logs',
                                             help     = 'Path to write PBS logs to; creates a subfolder for this job'
     )
+    parser.add_argument('-n', '--n_jobs',   type     = int,
+                                            metavar  = 'int',
+                                            default  = 1,
+                                            help     = 'Minimum number of jobs to run concurrently. This will divide the user resource limits to determine max resources per node'
+    )
     parser.add_argument('-p', '--preview',  action   = 'store_true',
                                             help     = 'Sets up the job and prints a preview without launching'
     )
@@ -171,6 +204,9 @@ if __name__ == '__main__':
     elif not logs.is_dir():
         print(f'Error: The logs directory must be a directory: {logs}')
         sys.exit(4)
+
+    if not os.exists(f'{logs}/current'):
+        os.mkdir(f'{logs}/current')
 
     hfile   = f'{logs}/history.pkl'
     history = {}

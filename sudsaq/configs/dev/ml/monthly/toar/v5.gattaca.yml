@@ -66,6 +66,8 @@ jan:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/01.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 1
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jan/run.log
 
@@ -78,6 +80,8 @@ feb:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/02.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 2
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/feb/run.log
 
@@ -90,6 +94,8 @@ mar:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/03.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 3
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/mar/run.log
 
@@ -102,6 +108,8 @@ apr:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/04.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 4
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/apr/run.log
 
@@ -114,6 +122,8 @@ may:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/05.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 5
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/may/run.log
 
@@ -126,6 +136,8 @@ jun:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/06.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 6
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jun/run.log
 
@@ -138,6 +150,8 @@ jul:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/07.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 7
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/jul/run.log
 
@@ -150,6 +164,8 @@ aug:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/08.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 8
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/aug/run.log
 
@@ -162,6 +178,8 @@ sep:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/09.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 9
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/sep/run.log
 
@@ -174,6 +192,8 @@ oct:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/10.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 10
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/oct/run.log
 
@@ -186,6 +206,8 @@ nov:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/11.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 11
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/nov/run.log
 
@@ -198,5 +220,7 @@ dec:
       - /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/201[1-5]/12.nc # TOAR
       - /scratch_lg_edge/sudsaq/gee/modis/201[1-5].expanded.nc
       - /scratch_lg_edge/sudsaq/gee/pop/2010_population_density_globe.nc
+    sel:
+      month: 12
   log:
     file: /scratch_lg_edge/sudsaq/models/toar/local/mean/v5/dec/run.log
