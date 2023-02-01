@@ -31,15 +31,7 @@ Resources = Section('Resources', {
         'mem': 366 # GB
     }
 })
-#%%
 
-n = 1
-Resources.user.cpu / n
-
-
-
-
-#%%
 PBS = """\
 #!/bin/bash
 #PBS -N {user}{id}-sudsaq
@@ -66,6 +58,8 @@ SECTIONS=(\
 )
 
 python {repo}/ml/create.py -c {config} -s ${_sects} --restart
+
+rm {logs}/current/job_{id}
 """
 
 def qstat(logs, user):
