@@ -234,7 +234,7 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
 
 
 import statsmodels.api as sm
-def time_series_loc(lons, lats, y, yhat, years, days, idx = None, plots_dir = None):
+def time_series_loc(lons, lats, y, yhat, years, months, days, idx = None, plots_dir = None):
     
     lowess = sm.nonparametric.lowess
     un_lons, un_lats = np.unique([lons, lats], axis = 1)
@@ -245,7 +245,8 @@ def time_series_loc(lons, lats, y, yhat, years, days, idx = None, plots_dir = No
         mask2 = np.in1d(lats, un_lats[s])
         mask3 = mask1 & mask2
         
-        time = years[mask3] * 100 + days[mask3]
+        time = years[mask3] * 10000 + months[mask3] * 100 + days[mask3]
+        #time = years[mask3] * 100 + days[mask3]
         sidx = np.argsort(time)
         ys = y[mask3][sidx]
         ys_hat = yhat[mask3][sidx]
@@ -448,7 +449,7 @@ def predicted_hist_single(output, plots_dir = None):
 
 
 #------- clustered correlation matrix
-def plot_correlations(corr_mat, var_names, key, mc = 0.9, plot_name = None):
+def plot_correlations(corr_mat, var_names, key, max_corr = 0.9, plot_name = None):
     
     X0 = corr_mat.copy()
     X0[np.isnan(X0)] = 0.
@@ -461,18 +462,27 @@ def plot_correlations(corr_mat, var_names, key, mc = 0.9, plot_name = None):
     
     X2 = X - np.eye(X.shape[0])
     X2_max = np.abs(X2).max(axis = 0)
-    mask_corr = X2_max > mc
+    mask_corr = X2_max > max_corr
     labels_mask = np.hstack(var_names_X)[mask_corr]
+    
+    scale = 150
+    
+    tick_labels = np.zeros_like(labels_mask)
+    for l, label in enumerate(labels_mask):
+        label_split = np.hstack(label.split('.'))
+        label_mask = ~np.in1d(label_split, ['momo', '2dsfc'])
+        tick_labels[l] = '.'.join(label_split[label_mask])
     
     X2 = X[mask_corr, :][:, mask_corr]
     x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
     plt.figure(figsize = (12, 10))
-    plt.scatter(x, y, s = np.abs(X2)*10, c = X2, cmap = 'bwr')
-    plt.xticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 90);
-    plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
+    plt.scatter(x, y, s = np.abs(X2)*scale, c = X2, marker = 's', edgecolors = '0.8', 
+                vmin = -0.85, vmax = 0.85, cmap = 'bwr')
+    plt.xticks(np.arange(len(tick_labels)), tick_labels, fontsize = 9, rotation = 90);
+    plt.yticks(np.arange(len(tick_labels)), tick_labels, fontsize = 9, rotation = 0);
     plt.colorbar()
+    plt.title(f'momo {key} metric, truncated for {max_corr} max')
     plt.tight_layout()
-    plt.title(f'momo variables {key} metric, truncated for {mc} max')
     if plot_name is not None:
         plt.savefig(f'{plot_name}', dpi = 150, bbox_inches = 'tight')
         plt.close()

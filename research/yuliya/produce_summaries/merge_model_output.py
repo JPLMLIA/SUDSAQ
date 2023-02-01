@@ -36,15 +36,18 @@ def main(months, sub_dir):
         months = [f'{models_dir}/{x}/' for x in months]
     
     #save inputs
-    for m, dirs in enumerate(months):
+    for dirs in months:
         m = dirs.split('/')[-2]
         print(f'merging -----> {dirs}, month {m}')
+        files_y0 = glob.glob(f'{dirs}/*/test.predict.nc')
+        if len(files_y0) < 1:
+            print(f'no predictions found')
+            continue
 
         out_dir = f'{summ_dir}/combined_data/{m}/'
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        
-        
+
         #save predicts
         print(f'merging -----> yhat/test.predict')
         files_y0 = glob.glob(f'{dirs}/*/test.predict.nc')
@@ -84,10 +87,10 @@ def main(months, sub_dir):
         #files_y = glob.glob(f'{dirs}/*/test.target.nc')
         files_y = [x + '/test.target.nc' for x in match_dirs]
         data_y = xr.open_mfdataset(files_y, parallel=True)
-        # dat_momo = []
-        # for f in files_y:
-        #     dat_momo.append(xr.open_dataset(f))    
-        # data = xr.merge(dat_momo)
+        # f = f'{models_dir}/feb/2012/test.target.nc'
+        # dat_year = xr.open_dataset(f)
+        # dat = dat_year.drop_sel(time = ('2012-02-29'))
+        # xr.save_mfdataset([dat], [f])
         xr.save_mfdataset([data_y], [f'{out_dir}/test.target.nc'], engine = 'netcdf4')
         
         
