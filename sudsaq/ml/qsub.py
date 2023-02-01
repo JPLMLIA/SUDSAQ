@@ -205,7 +205,7 @@ if __name__ == '__main__':
         print(f'Error: The logs directory must be a directory: {logs}')
         sys.exit(4)
 
-    if not os.exists(f'{logs}/current'):
+    if not os.path.exists(f'{logs}/current'):
         os.mkdir(f'{logs}/current')
 
     hfile   = f'{logs}/history.pkl'
