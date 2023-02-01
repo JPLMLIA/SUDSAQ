@@ -244,7 +244,7 @@ def load(config, split=False, lazy=True):
                 ds = ds[sel]
             elif dim == 'month':
                 Logger.debug(f'Selecting month=={sel}')
-                ds = ds.sel[time=ds['time.month']==sel]
+                ds = ds.sel(time=ds['time.month']==sel)
             else:
                 if isinstance(sel, list):
                     sel = slice(*sel)
