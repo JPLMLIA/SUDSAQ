@@ -82,16 +82,21 @@ def main(months, sub_dir):
         xr.save_mfdataset([data_mean], [filename], engine = 'netcdf4')
         
     
-        #save truth
+        #save truth, sometimes times are not sorted
         print(f'merging -----> y/test.target')
         #files_y = glob.glob(f'{dirs}/*/test.target.nc')
         files_y = [x + '/test.target.nc' for x in match_dirs]
-        data_y = xr.open_mfdataset(files_y, parallel=True)
+        #data_y = xr.open_mfdataset(files_y, parallel=True)
+        data_y = []
+        for f in files_y:
+            data_y.append(xr.open_dataset(f))
+        data_y = xr.merge(data_y)
+        
         # f = f'{models_dir}/feb/2012/test.target.nc'
         # dat_year = xr.open_dataset(f)
         # dat = dat_year.drop_sel(time = ('2012-02-29'))
         # xr.save_mfdataset([dat], [f])
-        xr.save_mfdataset([data_y], [f'{out_dir}/test.target.nc'], engine = 'netcdf4')
+        xr.save_mfdataset([data_y], [f'{out_dir}/test.target.nc'])
         
         
         

@@ -187,13 +187,21 @@ def main(sub_dir):
     
     
     model_type = np.hstack(summaries_dir.split('/'))
-    if np.in1d(model_type, 'bias').sum() > 0:
+    mtype_bias = np.in1d(model_type, 'bias').sum()
+    mtype_toar = np.in1d(model_type, 'toar').sum()
+    mtype_emu = np.in1d(model_type, 'emulator').sum()
+    if mtype_bias > 0:
         bins = [-20, -10, -5, -1, 0, 1, 5, 10, 20]
-        pos = np.arange(len(bins)+1)
+        pos = np.arange(len(bins))
+        key = 'bias'
     else:
-        if np.in1d(model_type, ['emulator', 'toar']).sum() > 0:
-            bins = np.histogram(np.hstack(output['truth']), 12)[1][1:-1]
+        if mtype_toar + mtype_emu > 0:
+            bins = np.histogram(np.hstack(output['truth']), 12)[1][1:-2]
             pos = np.arange(len(bins))
+            if mtype_toar > 0:
+                key = 'toar'
+            if mtype_emu > 0:
+                key = 'emulator'
         else:
             print('not a valid model type')
     
@@ -205,10 +213,13 @@ def main(sub_dir):
         if len(idx) > 0:
             for i in range(len(bins)):
                 bin_mask = idx == i
-                if bin_mask.sum() > 0:
+                if bin_mask.sum() > 1:
                     mask_nan = ~np.isnan(output['pred'][m][bin_mask])
-                    error = np.sqrt(mean_squared_error(output['truth'][m][bin_mask][mask_nan], 
+                    if mask_nan.sum() > 0:
+                        error = np.sqrt(mean_squared_error(output['truth'][m][bin_mask][mask_nan], 
                                                         output['pred'][m][bin_mask][mask_nan]))
+                    else:
+                        error = np.nan
                     rmse[-1].append(error)
                 else:
                     rmse[-1].append(np.nan)   
@@ -306,18 +317,18 @@ def main(sub_dir):
     plots.residual_scatter(un_lons, un_lats, res['std_y'], zlim = (5, 20), 
                            key = keys[6], cmap = 'YlOrRd', plots_dir = plots_dir)
     
-    a = np.percentile(res['res'], [95])
+    a = np.nanpercentile(res['res'], [98])
     idx_res = np.where(np.abs(res['res']) > a)[0] 
     #s = idx_res[1]
     
-    toar = glob.glob(f'{root_dir}/data/toar/matched/201[1-5]/01.nc')
-    dat = xr.open_mfdataset(toar)
-    dat.coords['lon'] = (dat.coords['lon'] + 180) % 360 - 180
+    # toar = glob.glob(f'{root_dir}/data/toar/matched/201[1-5]/01.nc')
+    # dat = xr.open_mfdataset(toar)
+    # dat.coords['lon'] = (dat.coords['lon'] + 180) % 360 - 180
     
-    toar_lons = dat.coords['lon'].values
-    toar_lats = dat.coords['lat'].values
-    ilon = int(np.where(np.in1d(toar_lons, un_lons[s]))[0])
-    ilat = int(np.where(np.in1d(toar_lats, un_lats[s]))[0])
+    # toar_lons = dat.coords['lon'].values
+    # toar_lats = dat.coords['lat'].values
+    # ilon = int(np.where(np.in1d(toar_lons, un_lons[s]))[0])
+    # ilat = int(np.where(np.in1d(toar_lats, un_lats[s]))[0])
     
     # toar_dat = dat['toar.o3.dma8epa.median'].values
     # toar_dat[:, ilat, ilon]
@@ -357,7 +368,7 @@ def main(sub_dir):
     #------histrograms and kde
     print(f'plotting KDE and hist')
     hlims = np.percentile(y, [0.1, 99.9])
-    plots.predicted_hist(output, lims = hlims, plots_dir = plots_dir)
+    plots.predicted_hist(output, lims = hlims, key = key, plots_dir = plots_dir)
     plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
 

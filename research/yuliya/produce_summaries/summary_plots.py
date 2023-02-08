@@ -281,7 +281,7 @@ def time_series_loc(lons, lats, y, yhat, years, months, days, idx = None, plots_
 
 
 #------- residual bubble plot
-def predicted_kde(output, lims = (-80, 80), plots_dir = None):
+def predicted_kde(output, lims = (-80, 80), key = 'bias', plots_dir = None):
 
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
     for m in range(len(MONTHS)):
@@ -320,7 +320,7 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
     
-    plt.suptitle(f'true vs predicted bias, per month')
+    plt.suptitle(f'true vs predicted {key}, per month')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/residuals_monthly.png',
                      bbox_inches='tight')
@@ -330,7 +330,7 @@ def predicted_kde(output, lims = (-80, 80), plots_dir = None):
 
 
 #------- histrograms of predicted vs true
-def predicted_hist(output, lims = (-50, 50), plots_dir = None):
+def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
     
     
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
@@ -370,7 +370,7 @@ def predicted_hist(output, lims = (-50, 50), plots_dir = None):
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
     
-    plt.suptitle(f'true vs predicted bias histograms, per month')
+    plt.suptitle(f'true vs predicted {key} histograms, per month')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/hist_predicted_monthly.png',
                      bbox_inches='tight')
