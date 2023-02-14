@@ -7,7 +7,7 @@ default:
     params:
       random_state: 0
       n_jobs: -1
-      max_depth: 30
+      max_depth: 5
   GroupKFold: True
   permutation_importance:
     random_state: 1
@@ -30,6 +30,7 @@ default:
     importances:
       count: 20
       labelrotation: 90
+    truth_vs_predicted: False
   input:
     sel:
       # Drop these variables

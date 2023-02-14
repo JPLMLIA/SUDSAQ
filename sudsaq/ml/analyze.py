@@ -239,26 +239,30 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Create plots if enabled
     if config.output.plots:
-        if stats.imports is not Null:
-            plots.importance(
-                df   = stats.mimportance,
-                pdf  = stats.pimportance,
-                save = f'{output}/{kind}.importances.png'
+        if config.plots.importance is not False:
+            if stats.imports is not Null:
+                plots.importance(
+                    df   = stats.mimportance,
+                    pdf  = stats.pimportance,
+                    save = f'{output}/{kind}.importances.png'
+                )
+
+        if config.plots.compare_target_predict is not False:
+            plots.compare_target_predict(
+                target.unstack().mean('time').sortby('lon'),
+                predict.unstack().mean('time').sortby('lon'),
+                reindex = config._reindex,
+                title   = f'{kind.capitalize()} Set Performance',
+                save    = f'{output}/{kind}.compare_target_predict.png'
             )
 
-        plots.compare_target_predict(
-            target.unstack().mean('time').sortby('lon'),
-            predict.unstack().mean('time').sortby('lon'),
-            reindex = config._reindex,
-            title   = f'{kind.capitalize()} Set Performance',
-            save    = f'{output}/{kind}.compare_target_predict.png'
-        )
-        plots.truth_vs_predicted(
-            target.dropna('loc'),
-            aligned.dropna('loc'),
-            label = '\n'.join([score.lstrip()[:15] for score in scores]),
-            save  =  f'{output}/{kind}.truth_vs_predicted.png'
-        )
+        if config.plots.truth_vs_predicted is not False:
+            plots.truth_vs_predicted(
+                target.dropna('loc'),
+                aligned.dropna('loc'),
+                label = '\n'.join([score.lstrip()[:15] for score in scores]),
+                save  =  f'{output}/{kind}.truth_vs_predicted.png'
+            )
 
     # Save objects as requested
     save_objects(
