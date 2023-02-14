@@ -185,32 +185,49 @@ def main(sub_dir):
         plt.savefig(f'{plots_dir}/{mk}_regional_all.png', bbox_inches='tight')
         plt.close()
     
-
-    model_type = summaries_dir.split('/')[7]
-    if model_type == 'bias':
+    
+    model_type = np.hstack(summaries_dir.split('/'))
+    mtype_bias = np.in1d(model_type, 'bias').sum()
+    mtype_toar = np.in1d(model_type, 'toar').sum()
+    mtype_emu = np.in1d(model_type, 'emulator').sum()
+    if mtype_bias > 0:
         bins = [-20, -10, -5, -1, 0, 1, 5, 10, 20]
+        pos = np.arange(len(bins))
+        key = 'bias'
     else:
-        if model_type == 'emulator':
-            bins = np.histogram(np.hstack(output['truth']), 12)[1][1:-1]
+        if mtype_toar + mtype_emu > 0:
+            bins = np.histogram(np.hstack(output['truth']), 12)[1][1:-2]
+            pos = np.arange(len(bins))
+            if mtype_toar > 0:
+                key = 'toar'
+            if mtype_emu > 0:
+                key = 'emulator'
         else:
             print('not a valid model type')
     
-    rmse = {k: [] for k in range(len(plots.MONTHS))}
+    #rmse = {k: [] for k in range(len(plots.MONTHS))}
+    rmse = []
     for m in range(len(output['pred'])):
+        rmse.append([])
         idx = np.digitize(output['truth'][m], bins = bins, right= True)
         if len(idx) > 0:
-            for i in np.unique(idx):
+            for i in range(len(bins)):
                 bin_mask = idx == i
-                mask_nan = ~np.isnan(output['pred'][m][bin_mask])
-                error = np.sqrt(mean_squared_error(output['truth'][m][bin_mask][mask_nan], 
-                                                    output['pred'][m][bin_mask][mask_nan]))
-            
-                rmse[m].append(error)
+                if bin_mask.sum() > 1:
+                    mask_nan = ~np.isnan(output['pred'][m][bin_mask])
+                    if mask_nan.sum() > 0:
+                        error = np.sqrt(mean_squared_error(output['truth'][m][bin_mask][mask_nan], 
+                                                        output['pred'][m][bin_mask][mask_nan]))
+                    else:
+                        error = np.nan
+                    rmse[-1].append(error)
+                else:
+                    rmse[-1].append(np.nan)   
         else:
-            rmse[m].append(np.repeat(np.nan, len(bins)+1))
+            rmse[-1].append(np.repeat(np.nan, len(pos)))
     
-    c = plt.cm.rainbow(np.linspace(0,1, len(plots.MONTHS)))
-    pos = np.arange(len(bins)+1)
+    
+    c = plt.cm.rainbow(np.linspace(0, 1, len(plots.MONTHS)))
     plt.figure()
     for m in range(len(plots.MONTHS)):
         plt.plot(pos, np.hstack(rmse[m]), ls = '--', color = c[m])
@@ -218,7 +235,7 @@ def main(sub_dir):
     plt.grid(ls = ':', alpha = 0.5) 
     plt.legend()
     xt = np.hstack(np.round(bins, 0)).astype(int)
-    plt.xticks(pos, np.hstack([xt.astype(str), None]), color = 'k', fontsize = 10); 
+    plt.xticks(pos, np.hstack([xt.astype(str)]), color = 'k', fontsize = 10); 
     plt.xlabel(f'ppb true value')
     plt.ylabel(f'rmse')
     plt.title(f'rmse per region'); 
@@ -239,8 +256,9 @@ def main(sub_dir):
     
     y = np.hstack(output['truth'])
     yhat = np.hstack(output['pred'])
-    years = np.hstack(output['years'])
-    days = np.hstack(output['days'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
     
     keys = ['y', 'yhat', 'res', 'res_std', 'rmse', 'rmse_trend', 'std_y']
     res = {}
@@ -251,7 +269,8 @@ def main(sub_dir):
         mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
         
-        time = years[mask3] * 100 + days[mask3]
+        time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+        #time = years_y[mask3] * 100 + days_y[mask3]
         sidx = np.argsort(time)
         ys = y[mask3][sidx]
         ys_hat = yhat[mask3][sidx]
@@ -298,9 +317,21 @@ def main(sub_dir):
     plots.residual_scatter(un_lons, un_lats, res['std_y'], zlim = (5, 20), 
                            key = keys[6], cmap = 'YlOrRd', plots_dir = plots_dir)
     
-    a = np.percentile(res['res'], [95])
+    a = np.nanpercentile(res['res'], [98])
     idx_res = np.where(np.abs(res['res']) > a)[0] 
     #s = idx_res[1]
+    
+    # toar = glob.glob(f'{root_dir}/data/toar/matched/201[1-5]/01.nc')
+    # dat = xr.open_mfdataset(toar)
+    # dat.coords['lon'] = (dat.coords['lon'] + 180) % 360 - 180
+    
+    # toar_lons = dat.coords['lon'].values
+    # toar_lats = dat.coords['lat'].values
+    # ilon = int(np.where(np.in1d(toar_lons, un_lons[s]))[0])
+    # ilat = int(np.where(np.in1d(toar_lats, un_lats[s]))[0])
+    
+    # toar_dat = dat['toar.o3.dma8epa.median'].values
+    # toar_dat[:, ilat, ilon]
     
     if not os.path.exists(f'{plots_dir}/large_residuals/'):
         os.makedirs(f'{plots_dir}/large_residuals/')
@@ -309,15 +340,22 @@ def main(sub_dir):
         mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
         
-        time = years[mask3] * 100 + days[mask3]
+        time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+        #time = years_y[mask3] * 100 + days_y[mask3]
         sidx = np.argsort(time)
         ys = y[mask3][sidx]
         ys_hat = yhat[mask3][sidx]
         mr = np.mean(ys - ys_hat)
         
+        t = np.arange(0, len(ys))
+        z = lowess(ys, t, frac = 0.1)[:,1]
+        zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+        
         plt.figure(figsize = (10, 5))
-        plt.plot(ys_hat, label = 'pred') 
-        plt.plot(ys, color = '0.5', alpha = 0.5, label = 'true') 
+        plt.plot(ys_hat, '-', alpha = 0.8, label = 'pred') 
+        plt.plot(zhat, ls = '-', alpha = 0.5, color = 'darkblue')
+        plt.plot(ys, '-', color = '0.5', alpha = 0.5, label = 'true') 
+        plt.plot(z, ls = '-', color = '0.5')
         plt.legend()
         plt.xlabel(f'time (w/ gaps)')
         plt.grid(ls=':', alpha = 0.5)    
@@ -330,7 +368,7 @@ def main(sub_dir):
     #------histrograms and kde
     print(f'plotting KDE and hist')
     hlims = np.percentile(y, [0.1, 99.9])
-    plots.predicted_hist(output, lims = hlims, plots_dir = plots_dir)
+    plots.predicted_hist(output, lims = hlims, key = key, plots_dir = plots_dir)
     plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
 

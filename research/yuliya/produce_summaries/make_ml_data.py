@@ -66,6 +66,8 @@ def main(sub_dir, months = 'all'):
         #data_x = np.hstack(glob.glob(f'{models_dir}/{month}/*/test.data.nc'))
         #data_y = glob.glob(f'{models_dir}/{month}/*/test.target.nc')
         data_y0 = glob.glob(f'{models_dir}/{month}/*/test.predict.nc')
+        if len(data_y0) < 1:
+            continue
         
         match_dirs = ['/'.join(x.split('/')[:-1]) for x in data_y0]
         data_y = [x + '/test.target.nc' for x in match_dirs]
@@ -75,7 +77,11 @@ def main(sub_dir, months = 'all'):
         #data_y0 = glob.glob(f'{summaries_dir}/{month}/test.predict.nc')
         
         #train data
-        ds_y = xr.open_mfdataset(data_y)
+        #ds_y = xr.open_mfdataset(data_y)
+        dat_list = []
+        for f in data_y:
+            dat_list.append(xr.open_dataset(f))    
+        ds_y = xr.merge(dat_list)
         # ds_y_flat = ds_y.stack(coord=("lon", "lat", 'time'))
         # ds_y_drop = ds_y_flat.dropna(dim='coord')
         ds_y_ = ds_y.to_array().stack({'loc': ["lon", "lat", 'time']})
@@ -85,6 +91,7 @@ def main(sub_dir, months = 'all'):
         y_full = ds_y_.values[0]
         years = ds_y_['time.year'].values[mask]
         days = ds_y_['time.day'].values[mask]
+        months_s = ds_y_['time.month'].values[mask]
         lons = ds_y_['lon'].values[mask]
         lats = ds_y_['lat'].values[mask]
         
@@ -116,6 +123,7 @@ def main(sub_dir, months = 'all'):
                      f['lons'] = lons
                      f['lats'] = lats
                      f['years'] = years
+                     f['months'] = months_s
                      f['days'] = days
                      f['mask'] = mask
                      f['var_names'] = var_names

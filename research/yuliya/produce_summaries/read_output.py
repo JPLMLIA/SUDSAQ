@@ -270,7 +270,8 @@ def load_predictions(summaries_dir):
     idx = [np.where(np.hstack(months_list) == x)[0] for x in plots.MONTHS]
     ml_files = [ml_files[x[0]] if len(x) > 0 else [] for x in idx]
     
-    output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 'days': []}
+    output = {'pred': [], 'truth': [], 'lon': [], 'lat': [], 'years': [], 
+              'months': [], 'days': []}
     
     for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading predicts/truth'):
     #for m in range(len(ml_files)):
@@ -282,8 +283,8 @@ def load_predictions(summaries_dir):
                 output['lon'].append(f['lons'][:])
                 output['lat'].append(f['lats'][:])
                 output['years'].append(f['years'][:])
-                output['days'].append(f['days'][:])
-            #output['month'] =  months_list[m]       
+                output['months'].append(f['months'][:])
+                output['days'].append(f['days'][:])    
         else:
             for k in output.keys():
                 output[k].append([])

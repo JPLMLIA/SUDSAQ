@@ -41,7 +41,7 @@ models_dir = f'{root_dir}/models/{sub_dir}'
 #set plot directory
 summaries_dir = f'{root_dir}/summaries/{sub_dir}/combined_data/'
 #month = 'jul'
-version = 'geo_reg_east_europe'
+version = 'geo_reg_north_america'
 research_dir = f'{root_dir}/summaries/research/{sub_dir}/{version}/combined_data/'
 
 
@@ -88,7 +88,7 @@ for month in months:
     scaler = StandardScaler()
     XX = scaler.fit(XX).transform(XX)
 
-    bbox = plots.bbox_dict['east_europe']
+    bbox = plots.bbox_dict['north_america']
     lons = (lons + 180) % 360 - 180
     mask_lons = (lons > bbox[0]) & (lons < bbox[1])
     mask_lats = (lats > bbox[2]) & (lats < bbox[3])
