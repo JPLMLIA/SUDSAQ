@@ -16,7 +16,7 @@ from tqdm      import tqdm
 from sudsaq.config import Config
 from sudsaq.utils  import (
     init,
-    load_pkl,
+    load_from_run,
     save_objects
 )
 
@@ -137,27 +137,14 @@ def explain(model=None, data=None, output=None, kind=None):
     # Use config provided `kind` if available
     kind = config.get('kind', 'input')
 
-    # Load the model from a pickle if provided
+    # If the model is None, assume loading from run
     if model is None:
-        try:
-            model = load_pkl(config.input.model)
-        except:
-            Logger.exception(f'Failed to load model')
-            return 1
-
-    # # Load data if not provided
-    # if data is None:
-    #     data, target = load(config, split=True, lazy=False)
-
-    if data is None:
-        Logger.info(f'Loading data from {config.input.data}')
-        data = xr.open_dataset(config.input.data)
-        data = data.stack({'loc': ['lat', 'lon', 'time']})
-        data = data.load()
+        model, data = load_from_run(kind, ['model', 'data'])
+        data = data.stack({'loc': ['lat', 'lon', 'time']}).load()
 
     Logger.info('Generating SHAP explanation, this may take awhile')
-    X = data.to_dataframe()
-    explanation = shap_values(model, X, n_jobs=config.n_jobs)
+    X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
+    explanation = shap_values(model, X, n_jobs=config.get('n_job', -1))
 
     save_objects(
         output      = output,
@@ -165,10 +152,10 @@ def explain(model=None, data=None, output=None, kind=None):
         explanation = to_dataset(explanation, data)
     )
 
-    # Plots
-    Logger.info('Generating SHAP plots')
-    summary(explanation, X, save=f'{output}/shap.summary.png')
-    # heatmap(explanation,    save=f'{output}/shap.heatmap.png')
+    if config.output.plots:
+        Logger.info('Generating SHAP plots')
+        summary(explanation, X, save=f'{output}/shap.summary.png')
+        # heatmap(explanation,    save=f'{output}/shap.heatmap.png')
 
     return explanation
 
@@ -184,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--section',  type     = str,
                                             default  = 'explain',
                                             metavar  = '[section]',
-                                            help     = 'Section of the config to use'
+                                            help     = 'Section of the config to use. This is likely the same section as given to create.py.'
     )
 
     init(parser.parse_args())

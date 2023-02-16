@@ -240,6 +240,35 @@ def save_objects(output, kind, **others):
         else:
             Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
+def load_from_run(path, kind, files=['model', 'data', 'target', 'predict']):
+    """
+    Loads objects from a given run
+    """
+    files = {
+        'model'  : f'{path}/model.pkl',
+        'data'   : f'{path}/{kind}.data.nc',
+        'target' : f'{path}/{kind}.target.nc',
+        'predict': f'{path}/{kind}.predict.nc'
+    }
+    ret = []
+
+    for obj, file in files.items():
+        if os.path.exists(file):
+            if file.endswith('.pkl'):
+                ret.append(
+                    load_pkl(file)
+                )
+            elif file.endswith('.nc'):
+                ret.append(
+                    xr.open_dataset(file)
+                )
+            else:
+                Logger.error(f'Invalid option: {obj}')
+        else:
+            Logger.error(f'File not found: {file}')
+
+    return ret
+
 def catch(func):
     """
     Decorator that protects the caller from an exception raised by the called function.
