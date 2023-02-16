@@ -168,19 +168,18 @@ if __name__ == '__main__':
     folds = glob(f'{config.output.path}/[0-9]*')
     Logger.info(f'Running SHAP calculations for {len(folds)} folds')
 
-    state = False
-    try:
-        for fold in folds:
+    states = 0
+    for fold in folds:
+        try:
             model, data = load_from_run(fold, args.kind, ['model', 'data'])
             data = data.stack({'loc': ['lat', 'lon', 'time']}).load()
             try:
-                state = explain(model, data, args.kind, fold)
+                ret = explain(model, data, args.kind, fold)
+                if isinstance(ret, shap._explanation.Explanation):
+                    states += 1
             except Exception:
                 Logger.exception('Caught an exception during runtime')
-    except Exception:
-        Logger.exception('Caught an exception during runtime')
+        except Exception:
+            Logger.exception(f'Caught an exception during runtime for fold {fold}')
     finally:
-        if isinstance(state, shap._explanation.Explanation):
-            Logger.info('Finished successfully')
-        else:
-            Logger.info(f'Failed to complete with status code: {state}')
+        Logger.info('Finished {states}/{len(folds)} folds successfully')

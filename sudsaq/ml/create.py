@@ -165,6 +165,7 @@ def fit(model, data, target, i=None, test=True):
             )
         except:
             Logger.exception('Test analysis raised an exception')
+            Critical.append(f'Test analysis failed for fold {fold}')
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
@@ -311,8 +312,9 @@ if __name__ == '__main__':
 
     init(args)
 
-    state = False
-    loop  = 1
+    Critical = []
+    state    = False
+    loop     = 1
     while args.restart or loop == 1:
         try:
             state = create()
@@ -320,7 +322,13 @@ if __name__ == '__main__':
             Logger.exception('Caught an exception during runtime')
         finally:
             if state is True:
-                Logger.info('Finished successfully')
+                if Critical:
+                    Logger.info('Critical errors:')
+                    for msg in Critical:
+                        Logger.error(f'- {msg}')
+                    Logger.info('Finished gracefully but with critical errors, see above')
+                else:
+                    Logger.info('Finished successfully')
                 break
             else:
                 Logger.error(f'Failed to complete with status code: {state}')
