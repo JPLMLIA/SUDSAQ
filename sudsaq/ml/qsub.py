@@ -57,7 +57,7 @@ SECTIONS=(\
 {sections}
 )
 
-python {repo}/ml/create.py -c {config} -s ${_sects} --restart
+python {repo}/ml/{script}.py -c {config} -s ${_sects} {extra}
 
 rm {logs}/running/job_{id}
 """
@@ -113,11 +113,16 @@ tail -n 1 {files}
             output.write(template.format(files=' '.join(files)))
         os.chmod(f'{logs}/tail1.sh', 0o775)
 
-def create_job(file, sections, logs, n=1, preview=False, history={}):
+def create_job(file, sections, script, logs, n=1, preview=False, history={}):
     """
     """
     id   = len(list(logs.glob('job_*')))
     user = os.getlogin()
+
+    if script == 'create':
+        extra = '--restart'
+    elif script == 'explain':
+        extra = '--kind test'
 
     job  = PBS.format(
         user     = user[0], # Only take the first character for privacy
@@ -129,6 +134,8 @@ def create_job(file, sections, logs, n=1, preview=False, history={}):
         env      = os.environ['CONDA_DEFAULT_ENV'],
         sections = ''.join([f'\n  "{sect}"' for sect in sections]),
         repo     = sudsaq.__path__[0],
+        script   = script,
+        extra    = extra,
         config   = file,
         _sects   = '{SECTIONS[$PBS_ARRAY_INDEX]}'
     )
@@ -171,6 +178,11 @@ if __name__ == '__main__':
                                             nargs    = '+',
                                             metavar  = 'section',
                                             help     = 'Sections of the config to use for independent runs'
+    )
+    parser.add_argument('-x', '--script',   choices  = ['create', 'explain'],
+                                            default  = 'create',
+                                            metavar  = 'script',
+                                            help     = 'Which script to run'
     )
     parser.add_argument('-l', '--logs',     type     = str,
                                             metavar  = '/path/to/logs/directory/',
@@ -229,7 +241,7 @@ if __name__ == '__main__':
                 print(f'Section {section!r} encountered errors')
                 sys.exit(3)
 
-        create_job(file, args.sections, logs, preview=args.preview, history=run)
+        create_job(file, args.sections, args.script, logs, preview=args.preview, history=run)
 
         print('Saving history')
         save_pkl(history, hfile)
