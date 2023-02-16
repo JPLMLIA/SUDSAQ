@@ -181,5 +181,5 @@ if __name__ == '__main__':
                 Logger.exception('Caught an exception during runtime')
         except Exception:
             Logger.exception(f'Caught an exception during runtime for fold {fold}')
-    finally:
-        Logger.info('Finished {states}/{len(folds)} folds successfully')
+
+    Logger.info('Finished {states}/{len(folds)} folds successfully')
