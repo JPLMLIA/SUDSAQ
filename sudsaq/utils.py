@@ -80,6 +80,8 @@ def init(args):
     else:
         Logger.debug('ray is disabled for this run')
 
+    return args, config
+
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
     Pretty prints an iterable in the form {key} = {value} such that the delimiter (=)

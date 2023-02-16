@@ -120,27 +120,10 @@ def shap_values(model, data, n_jobs=-1):
 
     return explanation
 
-def explain(model=None, data=None, output=None, kind=None):
+def explain(model, data, kind='test', output=None):
     """
     """
     config = Config()
-
-    # Verify there is an output directory, otherwise disable outputting
-    if not output:
-        if config.output.path:
-            output = config.output.path
-        else:
-            Logger.warning(f'No output provided, disabling saving objects')
-            for key in config.output:
-                config.output[key] = False
-
-    # Use config provided `kind` if available
-    kind = config.get('kind', 'input')
-
-    # If the model is None, assume loading from run
-    if model is None:
-        model, data = load_from_run(kind, ['model', 'data'])
-        data = data.stack({'loc': ['lat', 'lon', 'time']}).load()
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
@@ -173,12 +156,26 @@ if __name__ == '__main__':
                                             metavar  = '[section]',
                                             help     = 'Section of the config to use. This is likely the same section as given to create.py.'
     )
+    parser.add_argument('-k', '--kind',     type     = str,
+                                            default  = 'test',
+                                            metavar  = '[kind]',
+                                            help     = 'Which kind of data to process on, eg. `train`, `test`'
+    )
 
-    init(parser.parse_args())
+    args, config = init(parser.parse_args())
+
+    folds = glob(f'{config.output.path}/[0-9]*')
+    Logger.info(f'Running SHAP calculations for {len(folds)} folds')
 
     state = False
     try:
-        state = explain()
+        for fold in folds:
+            model, data = load_from_run(fold, args.kind, ['model', 'data'])
+            data = data.stack({'loc': ['lat', 'lon', 'time']}).load()
+            try:
+                state = explain(model, data, args.kind, fold)
+            except Exception:
+                Logger.exception('Caught an exception during runtime')
     except Exception:
         Logger.exception('Caught an exception during runtime')
     finally:

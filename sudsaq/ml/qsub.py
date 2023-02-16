@@ -51,7 +51,7 @@ conda activate {env}
 export JOBLIB_TEMP_FOLDER=$TMPDIR
 export HDF5_USE_FILE_LOCKING=FALSE
 
-ln -s {logs}/job_{id} {logs}/current/job_{id}
+ln -s {logs}/job_{id} {logs}/running/job_{id}
 
 SECTIONS=(\
 {sections}
@@ -59,7 +59,7 @@ SECTIONS=(\
 
 python {repo}/ml/create.py -c {config} -s ${_sects} --restart
 
-rm {logs}/current/job_{id}
+rm {logs}/running/job_{id}
 """
 
 def qstat(logs, user):
@@ -199,8 +199,8 @@ if __name__ == '__main__':
         print(f'Error: The logs directory must be a directory: {logs}')
         sys.exit(4)
 
-    if not os.path.exists(f'{logs}/current'):
-        os.mkdir(f'{logs}/current')
+    if not os.path.exists(f'{logs}/running'):
+        os.mkdir(f'{logs}/running')
 
     hfile   = f'{logs}/history.pkl'
     history = {}
