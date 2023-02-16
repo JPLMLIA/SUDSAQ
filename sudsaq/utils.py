@@ -242,7 +242,7 @@ def save_objects(output, kind, **others):
         else:
             Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
-def load_from_run(path, kind, files=['model', 'data', 'target', 'predict']):
+def load_from_run(path, kind, objs=['model', 'data', 'target', 'predict']):
     """
     Loads objects from a given run
     """
@@ -255,19 +255,20 @@ def load_from_run(path, kind, files=['model', 'data', 'target', 'predict']):
     ret = []
 
     for obj, file in files.items():
-        if os.path.exists(file):
-            if file.endswith('.pkl'):
-                ret.append(
-                    load_pkl(file)
-                )
-            elif file.endswith('.nc'):
-                ret.append(
-                    xr.open_dataset(file)
-                )
+        if obj in objs:
+            if os.path.exists(file):
+                if file.endswith('.pkl'):
+                    ret.append(
+                        load_pkl(file)
+                    )
+                elif file.endswith('.nc'):
+                    ret.append(
+                        xr.open_dataset(file)
+                    )
+                else:
+                    Logger.error(f'Invalid option: {obj}')
             else:
-                Logger.error(f'Invalid option: {obj}')
-        else:
-            Logger.error(f'File not found: {file}')
+                Logger.error(f'File not found: {file}')
 
     return ret
 

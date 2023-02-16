@@ -51,7 +51,7 @@ conda activate {env}
 export JOBLIB_TEMP_FOLDER=$TMPDIR
 export HDF5_USE_FILE_LOCKING=FALSE
 
-ln -s {logs}/job_{id} {logs}/running/job_{id}
+ln -s {logs}/running {logs}/running/job_{id}
 
 SECTIONS=(\
 {sections}
@@ -59,6 +59,7 @@ SECTIONS=(\
 
 python {repo}/ml/{script}.py -c {config} -s ${_sects} {extra}
 
+rm {logs}/running
 rm {logs}/running/job_{id}
 """
 
