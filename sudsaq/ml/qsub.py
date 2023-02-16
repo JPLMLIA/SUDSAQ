@@ -241,8 +241,17 @@ if __name__ == '__main__':
                 print(f'Section {section!r} encountered errors')
                 sys.exit(3)
 
-        create_job(file, args.sections, args.script, logs, preview=args.preview, history=run)
+        create_job(
+            file     = file,
+            sections = args.sections,
+            script   = args.script,
+            logs     = logs,
+            n        = args.n_jobs,
+            preview  = args.preview,
+            history  = run
+        )
 
-        print('Saving history')
-        save_pkl(history, hfile)
-        print('Done')
+        if not args.preview:
+            print('Saving history')
+            save_pkl(history, hfile)
+            print('Done')
