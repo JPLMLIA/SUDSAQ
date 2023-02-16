@@ -12,6 +12,7 @@ import xarray            as xr
 
 from functools import partial
 from tqdm      import tqdm
+from glob      import glob
 
 from sudsaq.config import Config
 from sudsaq.utils  import (
