@@ -82,6 +82,14 @@ def main(months, sub_dir):
         xr.save_mfdataset([data_mean], [filename], engine = 'netcdf4')
         
     
+        #make to remove leap year day in feb
+        if m == 'feb': 
+            f = f'{models_dir}/feb/2012/test.target.nc'
+            dat_year = xr.open_dataset(f)
+            if dat_year.time.shape[0] == 29:
+                dat = dat_year.drop_sel(time = ('2012-02-29'))
+                xr.save_mfdataset([dat], [f])
+                
         #save truth, sometimes times are not sorted
         print(f'merging -----> y/test.target')
         #files_y = glob.glob(f'{dirs}/*/test.target.nc')
