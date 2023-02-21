@@ -79,12 +79,11 @@ def to_dataset(explanation, data):
     """
     Converts an shap.Explanation to a xarray.Dataset
     """
-    ds = xr.Dataset(coords=data.coords)
-
-    dims = list(ds.dims.values())
-    ds['values']      = (('loc', 'variable'), explanation.values     )
-    ds['data']        = (('loc', 'variable'), explanation.data       )
-    ds['base_values'] = (('loc',           ), explanation.base_values)
+    # Convert variables to a dimension then go back to an empty dataset
+    ds = data.to_array().to_dataset(name='').drop('')
+    ds['values']      = (('loc', 'variable'), explanation.values               )
+    ds['data']        = (('loc', 'variable'), explanation.data                 )
+    ds['base_values'] = (('loc',           ), explanation.base_values.flatten())
 
     return ds
 
@@ -116,7 +115,7 @@ def shap_values(model, data, n_jobs=-1):
         np.vstack([ret.values      for ret in rets]),
         np.vstack([ret.base_values for ret in rets]),
         np.vstack([ret.data        for ret in rets]),
-        feature_names = ret.feature_names
+        feature_names = data.columns
     )
 
     return explanation
