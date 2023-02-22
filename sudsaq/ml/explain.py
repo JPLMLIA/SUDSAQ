@@ -122,8 +122,24 @@ def shap_values(model, data, n_jobs=-1):
 
 def explain(model, data, kind='test', output=None):
     """
+    TODO: `data` only supports the kind returned by utils.load_from_run, but
+    this is different than if it were passed by the pipeline during runtime so
+    that needs support
     """
     config = Config()
+
+    # TODO: Support other resampling
+    if config.explain.resample:
+        Logger.info('Resampling data')
+        data = data.unstack()
+
+        # Remove the last timestamp if it was an incomplete group
+        data = data.resample(time='3D').mean()
+        if unst.time.size % 3:
+            data = data.where(data.time != data.time[-1], drop=True)
+
+        data = data.stack({'loc': ['lat', 'lon', 'time']})
+        Logger.debug(f'Resampled to 3D: {data.dims}')
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
