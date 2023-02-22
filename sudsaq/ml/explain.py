@@ -131,10 +131,10 @@ def explain(model, data, kind='test', output=None):
     # TODO: Support other resampling
     if config.explain.resample:
         Logger.info('Resampling data')
-        data = data.unstack()
+        unst = data.unstack()
 
         # Remove the last timestamp if it was an incomplete group
-        data = data.resample(time='3D').mean()
+        data = unst.resample(time='3D').mean()
         if unst.time.size % 3:
             data = data.where(data.time != data.time[-1], drop=True)
 
