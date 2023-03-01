@@ -255,7 +255,7 @@ if __name__ == '__main__':
 
         for section in args.sections:
             try:
-                Config(file, f'{args.inherit}<-{section}')
+                Config(str(file), f'{args.inherit}<-{section}')
             except:
                 Logger.exception(f'Failed to load {args.inherit}<-{section}')
                 sys.exit(3)
