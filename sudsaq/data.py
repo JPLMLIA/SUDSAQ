@@ -202,6 +202,43 @@ def daily(ds, config):
 
     return ds
 
+def config_sel(ds, sels):
+    """
+    Performs custom sel operations defined in the config
+
+    Parameters
+    ----------
+    sels: mlky.Section
+        Selections defined by the config
+    """
+    select = {}
+    for dim, sel in sels.items():
+        if dim == 'vars':
+            ds = ds[sel]
+
+        # Special integer month support
+        elif dim == 'month':
+            select['time'] = ds['time.month'] == sel
+            dim, sel = 'time', f'time.month == {sel}'
+
+        elif isinstance(sel, list):
+            # Allows crossing the 0 line
+            if dim in ['lat', 'lon'] and sel[1] < sel[0]:
+                select[dim] = (sel[0] < ds[dim]) | (ds[dim] < sel[1])
+                sel = f'{sel[0]} < {dim} < {sel[1]}'
+            else:
+                sel = slice(*sel)
+                select[dim] = sel
+
+        else:
+            select[dim] = sel
+        Logger.debug(f'Selecting on dimension `{dim}` using: {sel}')
+
+    if select:
+        ds = ds.sel(**select)
+
+    return ds
+
 def load(config, split=False, lazy=True):
     """
     """
@@ -235,32 +272,7 @@ def load(config, split=False, lazy=True):
             Logger.debug(f'- {key} = {string}')
             ds[key] = calc(ds, string)
 
-    if config.input.sel:
-        Logger.info('Subselecting data')
-
-        select = {}
-        for dim, sel in input.items():
-            if dim == 'vars':
-                ds = ds[sel]
-
-            elif dim == 'month':
-                select['time'] = ds['time.month'] == sel
-                dim, sel = 'time', f'time.month == {sel}'
-
-            elif dim in ['lat', 'lon']:
-                if isinstance(sel, list) and sel[1] < sel[0]:
-                    select[dim] = (sel[0] < ds[dim]) | (ds[dim] < sel[1])
-                    sel = f'{sel[0]} < {dim} < {sel[1]}'
-
-            elif isinstance(sel, list):
-                select[dim] = sel = slice(*sel)
-
-            else:
-                select[dim] = sel
-            Logger.debug(f'Selecting on dimension `{dim}` using: {sel}')
-
-        if select:
-            ds = ds.sel(**select)
+    ds = config_sel(ds, config.input.sel)
 
     if config.input.daily:
         Logger.info('Aligning to a daily average')
