@@ -1,6 +1,7 @@
 """
 """
 import argparse
+import logging
 import os
 import pathlib
 import pickle
@@ -19,6 +20,14 @@ from sudsaq.utils  import (
     load_pkl,
     save_pkl
 )
+
+logging.basicConfig(
+    level    = logging.DEBUG,
+    format   = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+    datefmt  = '%m-%d %H:%M'
+)
+
+Logger = logging.getLogger('qsub.py')
 
 Resources = Section('Resources', {
     'user': {
@@ -144,25 +153,25 @@ def create_job(file, inherit, sections, script, logs, n=1, preview=False, histor
 
     if preview:
         history['launched'] = False
-        print(f'Job to be submitted:\n"""\n{job}"""')
+        Logger.info(f'Job to be submitted:\n"""\n{job}"""')
     else:
-        print('Preparing job for launch')
+        Logger.info('Preparing job for launch')
         os.mkdir(logs)
 
         with open(f'{logs}/job.pbs', 'w') as output:
             output.write(job)
 
-        print('Creating utility scripts for this job')
+        Logger.info('Creating utility scripts for this job')
         qstat(logs, user)
         ls(logs, file, sections)
         tail1(logs, file, sections)
 
-        print(f'Launching job {logs}/job.pbs')
+        Logger.info(f'Launching job {logs}/job.pbs')
         history['job_id']   = os.popen(f'qsub {logs}/job.pbs').read().replace('\n', '')
         history['launched'] = True
         history['run_id']   = id,
         history['logs']     = logs
-        print(f"PBS ID is {history['job_id']}")
+        Logger.info(f"PBS ID is {history['job_id']}")
 
         with open(f'{logs}/info.txt', 'w') as output:
             align_print(history, prepend='\n', print=output.write)
@@ -210,10 +219,10 @@ if __name__ == '__main__':
 
     logs = pathlib.Path(args.logs).resolve()
     if not logs.exists():
-        print(f'Error: The logs directory must exist: {logs}')
+        Logger.error(f'The logs directory must exist: {logs}')
         sys.exit(1)
     elif not logs.is_dir():
-        print(f'Error: The logs directory must be a directory: {logs}')
+        Logger.error(f'The logs directory must be a directory: {logs}')
         sys.exit(4)
 
     if not os.path.exists(f'{logs}/running'):
@@ -231,12 +240,12 @@ if __name__ == '__main__':
 
     if args.history:
         for id, run in history.items():
-            print(f'History ID: {id}')
-            align_print(run, prepend='  ')
+            Logger.info(f'History ID: {id}')
+            align_print(run, prepend='  ', print=Logger.info)
     else:
         file = pathlib.Path(args.config).resolve()
         if not file.exists():
-            print(f'Error: Config file not found: {file}')
+            Logger.error(f'Config file not found: {file}')
             sys.exit(2)
 
         if len(args.inherit) == 1:
@@ -247,8 +256,8 @@ if __name__ == '__main__':
         for section in args.sections:
             try:
                 Config(file, f'{args.inherit}<-{section}')
-            except Exception as e:
-                print(f'Section {section!r} encountered errors:\n{e}')
+            except:
+                Logger.exception(f'Failed to load {args.inherit}<-{section}')
                 sys.exit(3)
 
         create_job(
@@ -263,6 +272,6 @@ if __name__ == '__main__':
         )
 
         if not args.preview:
-            print('Saving history')
+            Logger.info('Saving history')
             save_pkl(history, hfile)
-            print('Done')
+            Logger.info('Done')
