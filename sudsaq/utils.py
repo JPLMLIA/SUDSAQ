@@ -7,7 +7,8 @@ import shutil
 import sys
 import xarray as xr
 
-from sudsaq import  Config
+from sudsaq import Config
+
 
 Logger = logging.getLogger('sudsaq/utils.py')
 
@@ -67,7 +68,7 @@ def init(args):
         # force    = True
     )
 
-    logging.getLogger().debug(f'Logging initialized using Config({args.config}, {args.section})')
+    Logger.debug(f'Logging initialized using Config({args.config}, {args.inherit if args.inherit else args.section})')
 
     if config.log.config:
         shutil.copy(args.config, config.log.config)
