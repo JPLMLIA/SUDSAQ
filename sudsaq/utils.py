@@ -27,8 +27,8 @@ def init(args):
             format: str
             datefmt: str
     """
-    if args.inheritance:
-        config = Config(args.config, args.inheritance)
+    if args.inherit:
+        config = Config(args.config, args.inherit)
     else:
         config = Config(args.config, args.section)
 
