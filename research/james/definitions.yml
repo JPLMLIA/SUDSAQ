@@ -1,23 +1,22 @@
 #
-# v4<-bias<-Asia<-{month}
-# v4<-bias<-NorthAmerica<-{month}
-# v4<-bias<-Europe<-{month}
+# {system}<-v4<-bias<-Asia<-{month}
+# {system}<-v4<-bias<-NorthAmerica<-{month}
+# {system}<-v4<-bias<-Europe<-{month}
 #
-# v4<-toar<-Asia<-{month}
-# v4<-toar<-NorthAmerica<-{month}
-# v4<-toar<-Europe<-{month}
+# {system}<-v4<-toar<-Asia<-{month}
+# {system}<-v4<-toar<-NorthAmerica<-{month}
+# {system}<-v4<-toar<-Europe<-{month}
 #
-# v4<-mda8<-toar-limited<-Asia<-{month}
-# v4<-mda8<-toar-limited<-NorthAmerica<-{month}
-# v4<-mda8<-toar-limited<-Europe<-{month}
+# {system}<-v4<-mda8<-toar-limited<-Asia<-{month}
+# {system}<-v4<-mda8<-toar-limited<-NorthAmerica<-{month}
+# {system}<-v4<-mda8<-toar-limited<-Europe<-{month}
 #
-# v4<-bias<-extended<-{month}
-# v4<-toar<-extended<-{month}
-# v4<-mda8<-toar-limited<-extended<-{month}
+# {system}<-v4<-bias<-extended<-{month}
+# {system}<-v4<-toar<-extended<-{month}
+# {system}<-v4<-mda8<-toar-limited<-extended<-{month}
 #
 default:
   range: 201[1-5]
-  hash: ${!hash}
   train_performance: False
   GroupKFold: True
   model:
@@ -30,8 +29,8 @@ default:
     n_jobs: -1
   treeinterpreter:
     n_jobs: -1
-  explain:
-    resample: True
+  # explain:
+  #   resample: True
   output:
     path: ${.env.path}/models/${.env.type}/${!hash}/${.month}
     model        : True
@@ -152,27 +151,13 @@ NorthAmerica:
   input:
     sel:
       lat: [10, 80]
-      lon: [-140, -50]
+      lon: [220, 310]
 
 Europe:
   input:
     sel:
       lat: [25, 80]
-      lon: # Have to divide into two selections due to crossing 0
-        - [0, 40] # East
-        - [340, 360] # West
-
-WestEurope:
-  input:
-    sel:
-      lat: [25, 80]
-      lon: [340, 360]
-
-EastEurope:
-  input:
-    sel:
-      lat: [25, 80]
-      lon: [0, 40]
+      lon: [340, 40]
 
 Asia:
   input:

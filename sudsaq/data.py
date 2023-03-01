@@ -238,18 +238,29 @@ def load(config, split=False, lazy=True):
     if config.input.sel:
         Logger.info('Subselecting data')
 
-        for dim, sel in config.input.sel.items():
+        select = {}
+        for dim, sel in input.items():
             if dim == 'vars':
-                Logger.debug(f'Selecting variables: {sel}')
                 ds = ds[sel]
+
             elif dim == 'month':
-                Logger.debug(f'Selecting month=={sel}')
-                ds = ds.sel(time=ds['time.month']==sel)
+                select['time'] = ds['time.month'] == sel
+                dim, sel = 'time', f'time.month == {sel}'
+
+            elif dim in ['lat', 'lon']:
+                if isinstance(sel, list) and sel[1] < sel[0]:
+                    select[dim] = (sel[0] < ds[dim]) | (ds[dim] < sel[1])
+                    sel = f'{sel[0]} < {dim} < {sel[1]}'
+
+            elif isinstance(sel, list):
+                select[dim] = sel = slice(*sel)
+
             else:
-                if isinstance(sel, list):
-                    sel = slice(*sel)
-                Logger.debug(f'Selecting on dimension {dim} using {sel}')
-                ds = ds.sel(**{dim: sel})
+                select[dim] = sel
+            Logger.debug(f'Selecting on dimension `{dim}` using: {sel}')
+
+        if select:
+            ds = ds.sel(**select)
 
     if config.input.daily:
         Logger.info('Aligning to a daily average')
