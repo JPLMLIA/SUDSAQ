@@ -254,16 +254,18 @@ if __name__ == '__main__':
             Logger.error(f'Config file not found: {file}')
             sys.exit(2)
 
-        if len(args.inherit) == 1:
+        if isinstance(args.inherit, str):
+            inherit = args.inherit
+        elif len(args.inherit) == 1:
             inherit, = args.inherit
         else:
             inherit = '<-'.join(args.inherit)
 
         for section in args.sections:
             try:
-                Config(str(file), f'{args.inherit}<-{section}')
+                Config(str(file), f'{inherit}<-{section}')
             except:
-                Logger.exception(f'Failed to load {args.inherit}<-{section}')
+                Logger.exception(f'Failed to load {inherit}<-{section}')
                 sys.exit(3)
 
         Logger.info('Creating job')
