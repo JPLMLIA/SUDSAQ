@@ -98,7 +98,7 @@ def ls(logs, file, inherit, sections):
     ls = []
     for section in sections:
         dir = Config(file, f'{inherit}<-{section}').output.path
-        cmd = f'ls {dir}/**'
+        cmd = f'ls "{dir}/**"'
         ls.append('echo ""')
         ls.append(f'echo "Section {section}: {cmd}"')
         ls.append(cmd)
@@ -119,7 +119,7 @@ tail -n 1 {files}
     for section in sections:
         log = Config(file, f'{inherit}<-{section}').log.file
         if log:
-            files.append(log)
+            files.append(f'"{log}"')
 
     if files:
         with open(f'{logs}/tail1.sh', 'w') as output:
