@@ -68,6 +68,10 @@ def init(args):
         # force    = True
     )
 
+    # Reinitialize config now that logging is setup
+    if args.inherit:
+        config = Config(args.config, args.inherit)
+
     Logger.debug(f'Logging initialized using Config({args.config}, {args.inherit if args.inherit else args.section})')
 
     if config.log.config:
