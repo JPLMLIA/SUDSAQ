@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 import xarray as xr
 
-from sudsaq.config      import Config
+from sudsaq import Config
 from sudsaq.silos.match import match
 from sudsaq.utils       import init
 

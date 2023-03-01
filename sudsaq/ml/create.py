@@ -10,7 +10,7 @@ from sklearn.model_selection import (
     KFold
 )
 
-from sudsaq.config     import (
+from sudsaq import (
     Config,
     Section
 )
