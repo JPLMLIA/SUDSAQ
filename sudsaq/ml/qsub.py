@@ -87,7 +87,7 @@ qstat -as @gattaca-edge -u {user}
         output.write(template.format(user=user))
     os.chmod(f'{logs}/qstat.sh', 0o775)
 
-def ls(logs, file, sections):
+def ls(logs, file, inherit, sections):
     """
     """
     template = """\
@@ -97,7 +97,7 @@ def ls(logs, file, sections):
     """
     ls = []
     for section in sections:
-        dir = Config(file, section).output.path
+        dir = Config(file, f'{inherit}<-{section}').output.path
         cmd = f'ls {dir}/**'
         ls.append('echo ""')
         ls.append(f'echo "Section {section}: {cmd}"')
@@ -107,7 +107,7 @@ def ls(logs, file, sections):
         output.write(template.format(cmds='\n'.join(ls)))
     os.chmod(f'{logs}/ls_run.sh', 0o775)
 
-def tail1(logs, file, sections):
+def tail1(logs, file, inherit, sections):
     """
     """
     template = """\
@@ -117,7 +117,7 @@ tail -n 1 {files}
     """
     files = []
     for section in sections:
-        log = Config(file, section).log.file
+        log = Config(file, f'{inherit}<-{section}').log.file
         if log:
             files.append(log)
 
@@ -168,8 +168,8 @@ def create_job(file, inherit, sections, script, logs, n=1, preview=False, histor
 
         Logger.info('Creating utility scripts for this job')
         qstat(logs, user)
-        ls(logs, file, sections)
-        tail1(logs, file, sections)
+        ls(logs, file, inherit, sections)
+        tail1(logs, file, inherit, sections)
 
         Logger.info(f'Launching job {logs}/job.pbs')
         history['job_id']   = os.popen(f'qsub {logs}/job.pbs').read().replace('\n', '')
@@ -260,6 +260,8 @@ if __name__ == '__main__':
             inherit, = args.inherit
         else:
             inherit = '<-'.join(args.inherit)
+
+        os.environ['ID'] = inherit
 
         for section in args.sections:
             try:
