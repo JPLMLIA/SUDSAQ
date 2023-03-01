@@ -57,7 +57,7 @@ SECTIONS=(\
 {sections}
 )
 
-python {repo}/ml/{script}.py -c {config} -i {inherit}<-${_sects} {extra}
+python {repo}/ml/{script}.py -c {config} -i "{inherit}<-${_sects}" {extra}
 
 rm {logs}/running/job_{id}
 """
@@ -247,8 +247,8 @@ if __name__ == '__main__':
         for section in args.sections:
             try:
                 Config(file, '{args.inherit}<-{section}')
-            except:
-                print(f'Section {section!r} encountered errors')
+            except Exception as e:
+                print(f'Section {section!r} encountered errors:\n{e}')
                 sys.exit(3)
 
         create_job(
