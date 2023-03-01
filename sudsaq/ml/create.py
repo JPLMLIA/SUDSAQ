@@ -1,10 +1,3 @@
-parser.add_argument('-i', '--inherit',      nargs    = '?',
-                                                metavar  = 'sect1 sect2',
-                                                help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
-    )
-if len(args.inherit) == 1:
-        args.inherit, = args.inherit"""
-"""
 import argparse
 import logging
 import numpy  as np
