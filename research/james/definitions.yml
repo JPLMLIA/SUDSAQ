@@ -1,0 +1,231 @@
+#
+# v4<-bias<-Asia<-{month}
+# v4<-bias<-NorthAmerica<-{month}
+# v4<-bias<-Europe<-{month}
+#
+# v4<-toar<-Asia<-{month}
+# v4<-toar<-NorthAmerica<-{month}
+# v4<-toar<-Europe<-{month}
+#
+# v4<-mda8<-toar-limited<-Asia<-{month}
+# v4<-mda8<-toar-limited<-NorthAmerica<-{month}
+# v4<-mda8<-toar-limited<-Europe<-{month}
+#
+# v4<-bias<-extended<-{month}
+# v4<-toar<-extended<-{month}
+# v4<-mda8<-toar-limited<-extended<-{month}
+#
+default:
+  range: 201[1-5]
+  hash: ${!hash}
+  train_performance: False
+  GroupKFold: True
+  model:
+    kind: RandomForestRegressor
+    params:
+      random_state: 0
+      n_jobs: -1
+  permutation_importance:
+    random_state: 1
+    n_jobs: -1
+  treeinterpreter:
+    n_jobs: -1
+  explain:
+    resample: True
+  output:
+    path: ${.env.path}/models/${.env.type}/${!hash}/${.month}
+    model        : True
+    data         : True
+    target       : True
+    predict      : True
+    bias         : True
+    contributions: True
+    scores       : True
+    importance   : True
+    plots        : True
+    explanation  : True
+  plots:
+    importances:
+      count: 20
+      labelrotation: 90
+  input:
+    lazy: True
+    parallel: True
+  log:
+    file: ${.env.path}/models/${.env.type}/${!hash}/${.month}/run.log
+    level: debug
+    reset: True
+    config: ${.env.path}/models/${.env.type}/${!hash}/
+
+# System
+
+gattaca:
+  ^inherit: default
+  input:
+    parallel: False
+  env:
+    path: /scratch_lg_edge/sudsaq/models
+
+mlia:
+  ^inherit: default
+  env:
+    path: /data/MLIA_active_data/data_SUDSAQ/models
+
+mac:
+  ^inherit: default
+  env:
+    path: /Volumes/MLIA_active_data/data_SUDSAQ/
+
+# Versions
+
+v4:
+  input:
+    glob:
+      - ${.env.path}/data/momo/${.range}/${.mon_n}.nc         # MOMO
+      - ${.env.path}/data/toar/matched/${.range}/${.mon_n}.nc # TOAR
+    sel:
+      vars: .+\.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr).*
+    scale: True
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      toar:
+        vars: [toar.o3.dma8epa.mean]
+        time: 0
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+
+v5:
+  ^inherit: v4
+  input:
+    glob:
+      - ${.env.path}/data/momo/${.range}/${.mon_n}.nc         # MOMO
+      - ${.env.path}/data/toar/matched/${.range}/${.mon_n}.nc # TOAR
+      - ${.env.path}/gee/modis/201[1-5].expanded.nc           # MODIS
+      - ${.env.path}/gee/pop/2010_population_density_globe.nc # Population
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
+
+# Restrictions
+
+toar-limited:
+  input:
+    use_locs_of: toar.o3.dma8epa.mean
+
+extended:
+  range: 20[0-1][0-9]
+
+# Run Types
+
+bias:
+  target: momo.mda8 - toar.o3.dma8epa.median
+  train: (?!toar).+\.(?!o3|mda8).*
+  env:
+    type: bias
+
+toar:
+  target: toar.o3.dma8epa.mean
+  train: (?!toar).+\.(?!o3|mda8).*
+  env:
+    type: toar
+
+mda8:
+  target: momo.mda8
+  train: momo.(?!o3|mda8).*
+  env:
+    type: emulator/mda8
+
+o3:
+  target: momo.o3
+  train: momo.(?!o3|mda8).*
+  env:
+    type: emulator/o3
+
+# Regions
+
+NorthAmerica:
+  input:
+    sel:
+      lat: [10, 80]
+      lon: [-140, -50]
+
+Europe:
+  input:
+    sel:
+      lat: [25, 80]
+      lon: # Have to divide into two selections due to crossing 0
+        - [0, 40] # East
+        - [340, 360] # West
+
+WestEurope:
+  input:
+    sel:
+      lat: [25, 80]
+      lon: [340, 360]
+
+EastEurope:
+  input:
+    sel:
+      lat: [25, 80]
+      lon: [0, 40]
+
+Asia:
+  input:
+    sel:
+      lat: [10, 70]
+      lon: [110, 160]
+
+# Months
+
+jan:
+  month: jan
+  mon_n: '01'
+
+feb:
+  month: feb
+  mon_n: '02'
+
+mar:
+  month: mar
+  mon_n: '03'
+
+apr:
+  month: apr
+  mon_n: '04'
+
+may:
+  month: may
+  mon_n: '05'
+
+jun:
+  month: jun
+  mon_n: '06'
+
+jul:
+  month: jul
+  mon_n: '07'
+
+aug:
+  month: aug
+  mon_n: '08'
+
+sep:
+  month: sep
+  mon_n: '09'
+
+oct:
+  month: oct
+  mon_n: '10'
+
+nov:
+  month: nov
+  mon_n: '11'
+
+dec:
+  month: dec
+  mon_n: '12'

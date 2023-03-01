@@ -57,7 +57,7 @@ SECTIONS=(\
 {sections}
 )
 
-python {repo}/ml/{script}.py -c {config} -s ${_sects} {extra}
+python {repo}/ml/{script}.py -c {config} -i {inherit}<-${_sects} {extra}
 
 rm {logs}/running/job_{id}
 """
@@ -113,7 +113,7 @@ tail -n 1 {files}
             output.write(template.format(files=' '.join(files)))
         os.chmod(f'{logs}/tail1.sh', 0o775)
 
-def create_job(file, sections, script, logs, n=1, preview=False, history={}):
+def create_job(file, inherit, sections, script, logs, n=1, preview=False, history={}):
     """
     """
     id   = len(list(logs.glob('job_*')))
@@ -137,6 +137,7 @@ def create_job(file, sections, script, logs, n=1, preview=False, history={}):
         script   = script,
         extra    = extra,
         config   = file,
+        inherit  = inherit,
         _sects   = '{SECTIONS[$PBS_ARRAY_INDEX]}'
     )
     logs = f'{logs}/job_{id}'
@@ -173,6 +174,10 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config',   type     = str,
                                             metavar  = '/path/to/config.yaml',
                                             help     = 'Path to a config.yaml file'
+    )
+    parser.add_argument('-i', '--inherit',  nargs    = '?',
+                                            metavar  = 'sect1 sect2',
+                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
     )
     parser.add_argument('-s', '--sections', type     = str,
                                             nargs    = '+',
@@ -234,15 +239,21 @@ if __name__ == '__main__':
             print(f'Error: Config file not found: {file}')
             sys.exit(2)
 
+        if len(args.inherit) == 1:
+            inherit, = args.inherit
+        else:
+            inherit = '<-'.join(args.inherit)
+
         for section in args.sections:
             try:
-                Config(file, section)
+                Config(file, '{args.inherit}<-{section}')
             except:
                 print(f'Section {section!r} encountered errors')
                 sys.exit(3)
 
         create_job(
             file     = file,
+            inherit  = inherit,
             sections = args.sections,
             script   = args.script,
             logs     = logs,

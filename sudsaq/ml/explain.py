@@ -168,9 +168,13 @@ if __name__ == '__main__':
                                             help     = 'Path to a config.yaml file'
     )
     parser.add_argument('-s', '--section',  type     = str,
-                                            default  = 'explain',
+                                            default  = 'create',
                                             metavar  = '[section]',
-                                            help     = 'Section of the config to use. This is likely the same section as given to create.py.'
+                                            help     = 'Section of the config to use'
+    )
+    parser.add_argument('-i', '--inherit',  nargs    = '?',
+                                            metavar  = 'sect1 sect2',
+                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
     )
     parser.add_argument('-k', '--kind',     type     = str,
                                             default  = 'test',

@@ -1,4 +1,9 @@
-"""
+parser.add_argument('-i', '--inherit',      nargs    = '?',
+                                                metavar  = 'sect1 sect2',
+                                                help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
+    )
+if len(args.inherit) == 1:
+        args.inherit, = args.inherit"""
 """
 import argparse
 import logging
@@ -303,6 +308,10 @@ if __name__ == '__main__':
                                             default  = 'create',
                                             metavar  = '[section]',
                                             help     = 'Section of the config to use'
+    )
+    parser.add_argument('-i', '--inherit',  nargs    = '?',
+                                            metavar  = 'sect1 sect2',
+                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
     )
     parser.add_argument('--restart',        action   = 'store_true',
                                             help     = 'Will auto restart the run until the state returns True'

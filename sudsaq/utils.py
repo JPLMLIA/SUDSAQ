@@ -17,8 +17,7 @@ def init(args):
 
     Parameters
     ----------
-    config: timefed.config.Config
-        MilkyLib configuration object
+    args
 
     Notes
     -----
@@ -28,7 +27,10 @@ def init(args):
             format: str
             datefmt: str
     """
-    config = Config(args.config, args.section)
+    if args.inheritance:
+        config = Config(args.config, args.inheritance)
+    else:
+        config = Config(args.config, args.section)
 
     levels = {
         'critical': logging.CRITICAL,
