@@ -249,8 +249,8 @@ if __name__ == '__main__':
             align_print(run, prepend='  ', print=Logger.info)
     else:
         Logger.info('Verifying arguments')
-        file = pathlib.Path(args.config).resolve()
-        if not file.exists():
+        file = str(pathlib.Path(args.config).resolve())
+        if not os.path.exists(file):
             Logger.error(f'Config file not found: {file}')
             sys.exit(2)
 
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
         for section in args.sections:
             try:
-                Config(str(file), f'{inherit}<-{section}')
+                Config(file, f'{inherit}<-{section}')
             except:
                 Logger.exception(f'Failed to load {inherit}<-{section}')
                 sys.exit(3)
