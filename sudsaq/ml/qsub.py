@@ -9,12 +9,14 @@ import sys
 
 from datetime import datetime as dtt
 
+from mlky import (
+    Config,
+    Section,
+    replace
+)
+
 import sudsaq
 
-from sudsaq import  (
-    Config,
-    Section
-)
 from sudsaq.utils  import (
     align_print,
     load_pkl,
@@ -65,6 +67,8 @@ ln -s {logs}/job_{id} {logs}/running/job_{id}
 SECTIONS=(\
 {sections}
 )
+
+export ID="{inherit}"
 
 python {repo}/ml/{script}.py -c {config} -i "{inherit}<-${_sects}" {extra}
 
@@ -145,6 +149,7 @@ def create_job(file, inherit, sections, script, logs, n=1, preview=False, histor
         repo     = sudsaq.__path__[0],
         script   = script,
         extra    = extra,
+        hash     = replace('${!hash}'),
         config   = file,
         inherit  = inherit,
         _sects   = '{SECTIONS[$PBS_ARRAY_INDEX]}'
@@ -243,6 +248,7 @@ if __name__ == '__main__':
             Logger.info(f'History ID: {id}')
             align_print(run, prepend='  ', print=Logger.info)
     else:
+        Logger.info('Verifying arguments')
         file = pathlib.Path(args.config).resolve()
         if not file.exists():
             Logger.error(f'Config file not found: {file}')
@@ -260,6 +266,7 @@ if __name__ == '__main__':
                 Logger.exception(f'Failed to load {args.inherit}<-{section}')
                 sys.exit(3)
 
+        Logger.info('Creating job')
         create_job(
             file     = file,
             inherit  = inherit,

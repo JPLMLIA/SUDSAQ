@@ -32,7 +32,7 @@ default:
   # explain:
   #   resample: True
   output:
-    path: ${.env.path}/models/${.env.type}/${!hash}/${.month}
+    path: ${.env.path}/models/${.env.type}/${$ID}/${.month}
     model        : True
     data         : True
     target       : True
@@ -51,10 +51,10 @@ default:
     lazy: True
     parallel: True
   log:
-    file: ${.env.path}/models/${.env.type}/${!hash}/${.month}/run.log
+    file: ${.env.path}/models/${.env.type}/${$ID}/${.month}/run.log
     level: debug
     reset: True
-    config: ${.env.path}/models/${.env.type}/${!hash}/
+    config: ${.env.path}/models/${.env.type}/${$ID}/
 
 # System
 
