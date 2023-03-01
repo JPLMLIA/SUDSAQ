@@ -246,7 +246,7 @@ if __name__ == '__main__':
 
         for section in args.sections:
             try:
-                Config(file, '{args.inherit}<-{section}')
+                Config(file, f'{args.inherit}<-{section}')
             except Exception as e:
                 print(f'Section {section!r} encountered errors:\n{e}')
                 sys.exit(3)
