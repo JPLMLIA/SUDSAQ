@@ -20,7 +20,7 @@ from sklearn.metrics    import (
 from treeinterpreter import treeinterpreter as ti
 from sudsaq.ml       import treeinterpreter as aqti
 
-from sudsaq.config import (
+from sudsaq import  (
     Config,
     Section,
     Null
@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 import pandas            as pd
 import seaborn           as sns
 
-from sudsaq.config import Config
+from sudsaq import  Config
 
 # Set seaborn styles
 sns.set_style('darkgrid')

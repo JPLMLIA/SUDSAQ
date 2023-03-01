@@ -10,7 +10,7 @@ from datetime import datetime as dtt
 
 import sudsaq
 
-from sudsaq.config import (
+from sudsaq import  (
     Config,
     Section
 )
@@ -51,7 +51,7 @@ conda activate {env}
 export JOBLIB_TEMP_FOLDER=$TMPDIR
 export HDF5_USE_FILE_LOCKING=FALSE
 
-ln -s {logs}/running/job_{id} {logs}/running/job_{id}
+ln -s {logs}/job_{id} {logs}/running/job_{id}
 
 SECTIONS=(\
 {sections}

@@ -6,7 +6,7 @@ import pandas as pd
 from glob import glob
 from tqdm import tqdm
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.utils  import init
 
 Logger = logging.getLogger('sudsaq/silos/toar/process.py')

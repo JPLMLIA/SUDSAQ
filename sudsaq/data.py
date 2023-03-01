@@ -12,7 +12,7 @@ from glob                  import glob
 from sklearn.preprocessing import StandardScaler
 from tqdm                  import tqdm
 
-from sudsaq.config import Config
+from sudsaq import  Config
 
 h5py._errors.silence_errors()
 

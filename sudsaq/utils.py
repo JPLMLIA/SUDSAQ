@@ -7,7 +7,7 @@ import shutil
 import sys
 import xarray as xr
 
-from sudsaq.config import Config
+from sudsaq import  Config
 
 Logger = logging.getLogger('sudsaq/utils.py')
 

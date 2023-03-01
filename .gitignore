@@ -133,5 +133,6 @@ dmypy.json
 .idea/
 
 # Local data
+.local/
 local/
 logs/

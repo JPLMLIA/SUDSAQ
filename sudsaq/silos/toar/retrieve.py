@@ -11,7 +11,7 @@ from datetime import datetime
 from glob     import glob
 from tqdm     import tqdm
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.utils  import init
 
 

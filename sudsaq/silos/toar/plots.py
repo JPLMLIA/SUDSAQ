@@ -2,7 +2,7 @@ import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from sudsaq.config import Config
+from sudsaq import  Config
 
 # Set seaborn context and style for plot generation
 sns.set_context('talk')

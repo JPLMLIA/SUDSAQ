@@ -15,7 +15,7 @@ from sklearn.metrics    import (
 )
 from tqdm import tqdm
 
-from sudsaq.config import (
+from sudsaq import  (
     Config,
     Section,
     Null

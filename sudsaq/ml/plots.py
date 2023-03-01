@@ -10,7 +10,7 @@ import xarray            as xr
 
 from scipy import stats
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.utils  import catch
 
 # Set seaborn styles

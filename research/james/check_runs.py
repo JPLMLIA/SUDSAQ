@@ -1,7 +1,7 @@
 # cd /data/MLIA_active_data/data_SUDSAQ/models/2011-2015/
 
 import xarray as xr
-from sudsaq.config import Section
+from sudsaq import  Section
 from sudsaq.utils import load_pkl
 
 
@@ -74,7 +74,7 @@ p = xr.zeros_like(v2.test.X.isel(variable=0).drop_vars('variable'))
 
 #%%
 
-from sudsaq.config import Section
+from sudsaq import  Section
 from sudsaq.utils import load_pkl
 from sklearn.ensemble import RandomForestRegressor as rf
 from sudsaq.ml import treeinterpreter as ti

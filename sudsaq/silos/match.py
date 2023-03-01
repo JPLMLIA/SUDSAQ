@@ -8,7 +8,7 @@ import xarray as xr
 from scipy import stats
 from tqdm  import tqdm
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.data   import save_by_month
 
 Logger = logging.getLogger('sudsaq/silos/match.py')

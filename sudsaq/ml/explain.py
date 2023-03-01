@@ -14,7 +14,7 @@ from functools import partial
 from tqdm      import tqdm
 from glob      import glob
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.utils  import (
     init,
     load_from_run,
@@ -70,7 +70,7 @@ def to_explanation(ds):
 
     return shap.Explanation(
         ds['values'].values,
-        ds['base_values'].values,
+        ds['base_values'].values.reshape(1, len(ds['base_values'])),
         ds['data'].values,
         feature_names = ds['variable'].values
     )

@@ -1,4 +1,4 @@
-from sudsaq.config import Section
+from sudsaq import  Section
 from sudsaq.utils  import load_pkl
 from sudsaq.ml     import treeinterpreter as ti
 import xarray as xr

@@ -3,7 +3,7 @@
 
 #%%
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.data import load
 
 config = Config('research/james/create.bias.11-15.8hour_avg.yml', 'dec')

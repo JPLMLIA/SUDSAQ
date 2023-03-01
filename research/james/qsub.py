@@ -10,7 +10,7 @@ from datetime import datetime as dtt
 
 import sudsaq
 
-from sudsaq.config import Config
+from sudsaq import  Config
 from sudsaq.utils  import (
     align_print,
     load_pkl,
