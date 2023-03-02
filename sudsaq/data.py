@@ -12,7 +12,8 @@ from glob                  import glob
 from sklearn.preprocessing import StandardScaler
 from tqdm                  import tqdm
 
-from sudsaq import  Config
+from sudsaq import Config
+
 
 h5py._errors.silence_errors()
 
@@ -198,9 +199,7 @@ def daily(ds, config):
     ds = xr.merge(data)
 
     # Cast back to custom Dataset (xr.merge creates new)
-    ds = Dataset(ds)
-
-    return ds
+    return Dataset(ds)
 
 def config_sel(ds, sels):
     """
@@ -233,7 +232,7 @@ def config_sel(ds, sels):
             Logger.debug(f'Selecting: {dim}=={sel}')
             ds = ds.sel(**{dim: sel})
 
-    return ds
+    return Dataset(ds)
 
 def load(config, split=False, lazy=True):
     """

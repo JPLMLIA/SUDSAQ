@@ -80,15 +80,25 @@ for dim, sel in input.items():
 
     elif isinstance(sel, list):
         Logger.debug(f'Selecting: {dim}[{sel[0]}:{sel[1]}]')
-        select[dim] = sel = slice(*sel)
+        ds = ds.sel(**{dim, slice(*sel)})
     else:
         Logger.debug(f'Selecting: {dim}=={sel}')
-        select[dim] = sel
-    Logger.debug(f'Selecting on dimension `{dim}` using: {sel}')
-
-if select:
-    ds = ds.sel(**select)
+        ds = ds.sel(**{dim, sel})
 
 #%%
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #%%
+
+xr.core.dataset.Dataset
+
+type(ds)
+
+#%%
+
+import xarray as xr
+
+import sudsaq
+
+xarray.core.dataset.Dataset
+
+type(ds)
