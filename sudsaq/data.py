@@ -211,7 +211,7 @@ def config_sel(ds, sels):
     sels: mlky.Section
         Selections defined by the config
     """
-    for dim, sel in config.input.sel.items():
+    for dim, sel in sels.items():
         if dim == 'vars':
             Logger.debug(f'Selecting variables: {sel}')
             ds = ds[sel]

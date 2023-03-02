@@ -163,7 +163,7 @@ def fit(model, data, target, i=None, test=True):
             )
         except:
             Logger.exception('Test analysis raised an exception')
-            Critical.append(f'Test analysis failed for fold {fold}')
+            Critical.append(f'Test analysis failed for fold {i}')
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
@@ -177,7 +177,7 @@ def fit(model, data, target, i=None, test=True):
         except:
             Logger.exception('SHAP explanations failed:')
 
-def hyperoptimize(data, target, model):
+def hyperoptimize(data, target, model, kfold=None, groups=None):
     """
     Searches hyperparameter space to determine the best parameters
     to use for a given model and data input.
@@ -201,18 +201,6 @@ def hyperoptimize(data, target, model):
         data.load().dropna('loc'),
         target.load().dropna('loc')
     )
-
-    # If KFold is enabled, set it up
-    kfold  = None
-    groups = None
-    if config.KFold:
-        Logger.debug('Using KFold')
-        kfold  = KFold(**config.KFold)
-    # Split using grouped years
-    elif config.GroupKFold:
-        Logger.debug('Using GroupKFold')
-        kfold  = GroupKFold(n_splits=len(set(data.time.dt.year.values)))
-        groups = target.time.dt.year.values
 
     gscv = GridSearchCV(
         estimator   = model(),
@@ -258,7 +246,7 @@ def create():
         groups = target.time.dt.year.values
 
     if config.hyperoptimize:
-        model = hyperoptimize(data, target, ensemble)
+        model = hyperoptimize(data, target, ensemble, kfold=kfold, groups=groups)
     else:
         model = lambda: ensemble(**config.model.params)
 
