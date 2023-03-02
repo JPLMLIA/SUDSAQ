@@ -146,6 +146,8 @@ def mkdir(path):
         if not os.path.exists(dir):
             try:
                 os.mkdir(dir, mode=0o775)
+            except FileExistsError:
+                continue
             except Exception as e:
                 Logger.exception(f'Failed to create directory {dir}')
                 raise e

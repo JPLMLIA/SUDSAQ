@@ -211,31 +211,27 @@ def config_sel(ds, sels):
     sels: mlky.Section
         Selections defined by the config
     """
-    select = {}
-    for dim, sel in sels.items():
+    for dim, sel in config.input.sel.items():
         if dim == 'vars':
+            Logger.debug(f'Selecting variables: {sel}')
             ds = ds[sel]
 
         # Special integer month support
         elif dim == 'month':
-            select['time'] = ds['time.month'] == sel
-            dim, sel = 'time', f'time.month == {sel}'
+            Logger.debug(f'Selecting: month=={sel}')
+            ds = ds.sel(time=ds['time.month']==sel)
 
         elif isinstance(sel, list):
-            # Allows crossing the 0 line
-            if dim in ['lat', 'lon'] and sel[1] < sel[0]:
-                select[dim] = (sel[0] < ds[dim]) | (ds[dim] < sel[1])
-                sel = f'{sel[0]} < {dim} < {sel[1]}'
+            Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
+            # Enables crossing the 0 lon line
+            if isinstance(sel, list) and sel[1] < sel[0]:
+                ds = ds.where(ds[dim][(sel[0] < ds[dim]) | (ds[dim] < sel[1])])
             else:
-                sel = slice(*sel)
-                select[dim] = sel
+                ds = ds.sel(**{dim: slice(*sel)})
 
         else:
-            select[dim] = sel
-        Logger.debug(f'Selecting on dimension `{dim}` using: {sel}')
-
-    if select:
-        ds = ds.sel(**select)
+            Logger.debug(f'Selecting: {dim}=={sel}')
+            ds = ds.sel(**{dim: sel})
 
     return ds
 
