@@ -127,18 +127,20 @@ extended:
 bias[median]:
   target: momo.mda8 - toar.o3.dma8epa.median
   train: (?!toar).+\.(?!o3|mda8).*
-  daily:
-    toar:
-      vars: [toar.o3.dma8epa.median]
+  input:
+    daily:
+      toar:
+        vars: [toar.o3.dma8epa.median]
   env:
     type: bias
 
 bias[mean]:
   target: momo.mda8 - toar.o3.dma8epa.mean
   train: (?!toar).+\.(?!o3|mda8).*
-  daily:
-    toar:
-      vars: [toar.o3.dma8epa.mean]
+  input:
+    daily:
+      toar:
+        vars: [toar.o3.dma8epa.mean]
   env:
     type: bias
 
