@@ -258,14 +258,15 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
 
         return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
     else:
-        ret = None, None, None
+        ret = False
         try:
             ret = _predict_forest_ray(model, X)
+        except:
+            Logger.exception('Ray raised an exception')
+        finally:
             if ret is False:
-                raise ModuleNotFoundError # Module is found but not initialized, fallback
-        except ModuleNotFoundError:
-            Logger.debug('Using multiprocessing as backend')
-            ret = _predict_forest_mp(model, X, n_jobs)
+                Logger.debug('Using multiprocessing as backend')
+                ret = _predict_forest_mp(model, X, n_jobs)
 
         return ret
 
