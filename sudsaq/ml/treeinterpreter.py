@@ -151,7 +151,6 @@ def _predict_forest_ray(model, X):
 
     Logger.debug('Using ray as backend')
 
-    @ray.remote(num_returns=3)
     def mean(jobs):
         """
         results is a list of tuples (predict, bias, contribution)
@@ -185,6 +184,7 @@ def _predict_forest_ray(model, X):
     Logger.debug('Starting jobs')
     func  = ray.remote(_predict_tree)
     jobs  = [func.remote(estimator, X_id) for estimator in model.estimators_]
+    mean  = ray.remote(mean, num_returns=3)
     means = ray.get(mean.remote(jobs))
     del jobs
 

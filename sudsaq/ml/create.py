@@ -26,6 +26,55 @@ from sudsaq.utils      import (
 
 Logger = logging.getLogger('sudsaq/ml/create.py')
 
+def prepare(kind, data, target, drop_features=False, align=False):
+    """
+    """
+    # Make sure the data is loaded into memory
+    Logger.debug(f'Loading {kind}ing data')
+    data   = data.load()
+    target = target.load()
+
+    # Replace inf values if they exist
+    Logger.debug('Replacing inf values if they exist')
+    data   = data.where(np.isfinite(data), np.nan)
+    target = target.where(np.isfinite(target), np.nan)
+
+    # Detect if a given feature will drop everything
+    counts = data.count('loc')
+    feats  = data['variable'][counts == 0]
+    if any(feats):
+        Logger.error(f'{feats.size} features for this fold will cause all data to be dropped due to NaNs, see debug for more')
+        for feat in feats.values:
+            Logger.debug(f'  - {feat}')
+
+        # Attempt to drop the problematic features so the fold can continue forwards
+        if drop_features:
+
+    # Always remove NaNs on the training set
+    Logger.debug(f'Dropping NaNs from {kind}ing data')
+    data   = data.dropna('loc')
+    target = target.dropna('loc')
+
+    if align:
+        Logger.debug(f'Aligning {kind}ing data')
+        data, target = xr.align(data, target, copy=False)
+
+    Logger.debug(f'{kind} set stats:')
+    Logger.debug(f'- Target shape: {list(zip(target.dims, target.shape))}')
+    Logger.debug(f'- Data   shape: {list(zip(data.dims, data.shape))}')
+    Logger.debug(f'Memory footprint in GB:')
+    Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
+    Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
+
+    if target.size == 0:
+        Logger.error(f'{kind} target detected to be empty')
+        return None, None
+    if data.size == 0:
+        Logger.error(f'{kind} data detected to be empty')
+        return None, None
+
+    return data, target
+
 def fit(model, data, target, i=None, test=True):
     """
     Fits a model and analyzes the performance
@@ -53,36 +102,7 @@ def fit(model, data, target, i=None, test=True):
 
     Logger.info('Preparing data for model training')
 
-    # Make sure the data is loaded into memory
-    Logger.debug('Loading training data')
-    data.train   = data.train.load()
-    target.train = target.train.load()
-
-    # Replace inf values if they exist
-    data.train   = data.train.where(np.isfinite(data.train), np.nan)
-    target.train = target.train.where(np.isfinite(target.train), np.nan)
-
-    # Always remove NaNs on the training set
-    Logger.debug('Dropping NaNs from training data')
-    data.train   = data.train.dropna('loc')
-    target.train = target.train.dropna('loc')
-
-    Logger.debug('Aligning training data')
-    data.train, target.train = xr.align(data.train, target.train, copy=False)
-
-    Logger.debug('Train set:')
-    Logger.debug(f'- Target shape: {list(zip(target.train.dims, target.train.shape))}')
-    Logger.debug(f'- Data   shape: {list(zip(data.train.dims, data.train.shape))}')
-    Logger.debug(f'Memory footprint for train in GB:')
-    Logger.debug(f'- Data   = {data.train.nbytes / 2**30:.3f}')
-    Logger.debug(f'- Target = {target.train.nbytes / 2**30:.3f}')
-
-    if target.train.size == 0:
-        Logger.error('Train target detected to be empty, skipping this fold')
-        return
-    if data.train.size == 0:
-        Logger.error('Train data detected to be empty, skipping this fold')
-        return
+    data.train, target.train = prepare('train', data.train, target.train, align=True)
 
     Logger.info('Training model')
     model.fit(data.train, target.train)
@@ -112,29 +132,11 @@ def fit(model, data, target, i=None, test=True):
         )
 
     if test:
-        Logger.debug('Loading test data')
-        target.test = target.test.load()
-        data.test   = data.test.load()
+        data.test, target.test = prepare('test', data.test, target.test, align=config.align_test)
 
-        # Replace inf values if they exist
-        data.test   = data.test.where(np.isfinite(data.test), np.nan)
-        target.test = target.test.where(np.isfinite(target.test), np.nan)
-
-        Logger.debug('Dropping NaNs in test data')
-        # Target and data drop NaNs separately for prediction, will be aligned afterwards
-        data.test   = data.test.dropna('loc')
-        target.test = target.test.dropna('loc')
-
-        if config.align_test:
-            Logger.debug('Aligning test data')
-            data.test, target.test = xr.align(data.test, target.test, copy=False)
-
-        Logger.debug('Test set:')
-        Logger.debug(f'- Target shape: {list(zip(target.test.dims, target.test.shape))}')
-        Logger.debug(f'- Data   shape: {list(zip(data.test.dims, data.test.shape))}')
-        Logger.debug(f'Memory footprint for test in GB:')
-        Logger.debug(f'- Data   = {data.test.nbytes / 2**30:.3f}')
-        Logger.debug(f'- Target = {target.test.nbytes / 2**30:.3f}')
+        if None in [data.test, target.test]:
+            Logger.error('Test set analysis for this fold was cancelled')
+            return
 
         Logger.debug('Saving test objects')
         save_objects(
@@ -143,14 +145,6 @@ def fit(model, data, target, i=None, test=True):
             data    = data.test,
             target  = target.test
         )
-
-        if target.test.size == 0:
-            Logger.warning('Test target detected to be entirely NaN, cancelling test analysis for this fold')
-            return
-
-        if data.test.size == 0:
-            Logger.warning('Test data detected to be entirely NaN, cancelling test analysis for this fold')
-            return
 
         Logger.info(f'Creating test set performance analysis')
         try:

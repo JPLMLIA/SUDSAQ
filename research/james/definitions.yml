@@ -15,6 +15,45 @@
 # {system}<-v4<-toar<-extended<-{month}
 # {system}<-v4<-mda8<-toar-limited<-extended<-{month}
 #
+# %% - This month did not finish correctly (various reasons)
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Europe"
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Asia"
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-NorthAmerica"
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Europe"
+#                                                                   %%                          %%
+#^python qsub.py -c ../../research/james/definitions.yml -s mar oct -i "gattaca<-v4<-toar<-Europe"
+
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Asia"
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-NorthAmerica"
+#                                                                                   %%  %%
+#^python qsub.py -c ../../research/james/definitions.yml -s jul aug -i "gattaca<-v4<-toar<-NorthAmerica"
+
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+#                                                           %%                      %%          %%
+#^python qsub.py -c ../../research/james/definitions.yml -s jan jul oct -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+
+# python qsub.py -c ../../research/james/definitions.yml -s jan jul oct -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Asia"
+#
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
+#                                                               %%                      %%
+#^python qsub.py -c ../../research/james/definitions.yml -s feb aug -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
+
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-extended"
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-extended"
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-extended"
+
+python qsub.py -c ../../research/james/definitions.yml -s mar oct -i "gattaca<-v4<-toar<-Europe"
+python qsub.py -c ../../research/james/definitions.yml -s jul aug -i "gattaca<-v4<-toar<-NorthAmerica"
+python qsub.py -c ../../research/james/definitions.yml -s jan jul oct -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+python qsub.py -c ../../research/james/definitions.yml -s feb aug -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
+
 default:
   range: 201[1-5]
   train_performance: False
@@ -104,8 +143,8 @@ v5:
   ^inherit: v4
   input:
     glob:
-      - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO
-      - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc # TOAR
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
+      - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
       - ${.env.input}/gee/modis/201[1-5].expanded.nc           # MODIS
       - ${.env.input}/gee/pop/2010_population_density_globe.nc # Population
     daily:
@@ -191,6 +230,10 @@ jan:
 feb:
   month: feb
   mon_n: '02'
+  input:
+    sel:
+      drop_date:
+        day: 29
 
 mar:
   month: mar

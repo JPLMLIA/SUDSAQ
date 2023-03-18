@@ -220,6 +220,21 @@ def config_sel(ds, sels):
             Logger.debug(f'Selecting: month=={sel}')
             ds = ds.sel(time=ds['time.month']==sel)
 
+        # Support for special drop operations
+    elif dim == 'drop_date':
+            Logger.debug(f'Dropping date:')
+            mask = np.full(ds.time.shape, True)
+            if 'year' in sel:
+                Logger.debug(f' - year = {year}')
+                mask &= ds.time.dt.year == sel['year']
+            if 'month' in sel:
+                Logger.debug(f' - month = {month}')
+                mask &= ds.time.dt.year == sel['month']
+            if 'day' in sel:
+                Logger.debug(f' - day = {day}')
+                mask &= ds.time.dt.day == sel['day']
+
+            ds = ds.where(ds.time[~mask], drop=True)
         elif isinstance(sel, list):
             Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
             # Enables crossing the 0 lon line
