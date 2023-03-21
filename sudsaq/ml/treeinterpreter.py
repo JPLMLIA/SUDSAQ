@@ -140,7 +140,7 @@ def _iterative_mean(iter, current_mean, x):
     """
     return current_mean + ((x - current_mean) / (iter + 1))
 
-def _predict_forest(model, X, n_jobs):
+def _predict_forest_mp(model, X, n_jobs):
     """
     """
     mean_pred = None
@@ -172,7 +172,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
     # Use sklearn n_jobs: (processes=None == all cores)
     # - all cores if -1
     # - 1 core if None
-    # - N cores if N >= 1
+    # - N cores if N > 1
     n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
 
     if joint_contribution:
@@ -208,7 +208,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
 
         return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
     else:
-        return _predict_forest(model, X, n_jobs)
+        return _predict_forest_mp(model, X, n_jobs)
 
 def predict(model, X, joint_contribution=False, n_jobs=None):
     """ Returns a triple (prediction, bias, feature_contributions), such
