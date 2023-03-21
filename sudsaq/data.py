@@ -221,7 +221,7 @@ def config_sel(ds, sels):
             ds = ds.sel(time=ds['time.month']==sel)
 
         # Support for special drop operations
-    elif dim == 'drop_date':
+        elif dim == 'drop_date':
             Logger.debug(f'Dropping date:')
             mask = np.full(ds.time.shape, True)
             if 'year' in sel:
