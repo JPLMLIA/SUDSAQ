@@ -49,6 +49,7 @@ def prepare(kind, data, target, drop_features=False, align=False):
 
         # Attempt to drop the problematic features so the fold can continue forwards
         if drop_features:
+            pass # TODO: Implement?
 
     # Always remove NaNs on the training set
     Logger.debug(f'Dropping NaNs from {kind}ing data')
