@@ -225,13 +225,13 @@ def config_sel(ds, sels):
             Logger.debug(f'Dropping date:')
             mask = np.full(ds.time.shape, True)
             if 'year' in sel:
-                Logger.debug(f' - year = {year}')
+                Logger.debug(f" - year = {sel['year']}")
                 mask &= ds.time.dt.year == sel['year']
             if 'month' in sel:
-                Logger.debug(f' - month = {month}')
-                mask &= ds.time.dt.year == sel['month']
+                Logger.debug(f" - month = {sel['month']}")
+                mask &= ds.time.dt.month == sel['month']
             if 'day' in sel:
-                Logger.debug(f' - day = {day}')
+                Logger.debug(f" - day = {sel['day']}")
                 mask &= ds.time.dt.day == sel['day']
 
             ds = ds.where(ds.time[~mask], drop=True)
