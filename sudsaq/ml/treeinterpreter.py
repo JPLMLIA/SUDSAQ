@@ -140,57 +140,7 @@ def _iterative_mean(iter, current_mean, x):
     """
     return current_mean + ((x - current_mean) / (iter + 1))
 
-def _predict_forest_ray(model, X):
-    """
-    """
-    import ray
-
-    if not ray.is_initialized():
-        Logger.debug('Ray is not initialized')
-        return False
-
-    Logger.debug('Using ray as backend')
-
-    def mean(jobs):
-        """
-        results is a list of tuples (predict, bias, contribution)
-        from each estimator
-        """
-        # pred = np.mean([result[0] for result in jobs], axis=0)
-        # bias = np.mean([result[1] for result in jobs], axis=0)
-        # cont = np.mean([result[2] for result in jobs], axis=0)
-        # return pred, bias, cont
-        for i in tqdm(range(len(jobs)), desc='TreeInterpreter Jobs'):
-            [done], running     = ray.wait(jobs, num_returns=1)
-            _pred, _bias, _cont = ray.get(done)
-
-            jobs = running
-            if i < 1: # first iteration
-                pred = _pred
-                bias = _bias
-                cont = _cont
-            else:
-                pred = _iterative_mean(i, pred, _pred)
-                bias = _iterative_mean(i, bias, _bias)
-                cont = _iterative_mean(i, cont, _cont)
-
-            del _pred, _bias, _cont
-
-        return pred, bias, cont
-
-    Logger.debug(f'Placing X into shared memory')
-    X_id = ray.put(X)
-
-    Logger.debug('Starting jobs')
-    func  = ray.remote(_predict_tree)
-    jobs  = [func.remote(estimator, X_id) for estimator in model.estimators_]
-    mean  = ray.remote(mean, num_returns=3)
-    means = ray.get(mean.remote(jobs))
-    del jobs
-
-    return means
-
-def _predict_forest_mp(model, X, n_jobs):
+def _predict_forest(model, X, n_jobs):
     """
     """
     mean_pred = None
@@ -222,7 +172,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
     # Use sklearn n_jobs: (processes=None == all cores)
     # - all cores if -1
     # - 1 core if None
-    # - N cores if N > 1
+    # - N cores if N >= 1
     n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
 
     if joint_contribution:
@@ -258,17 +208,7 @@ def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
 
         return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
     else:
-        ret = False
-        try:
-            ret = _predict_forest_ray(model, X)
-        except:
-            Logger.exception('Ray raised an exception')
-        finally:
-            if ret is False:
-                Logger.debug('Using multiprocessing as backend')
-                ret = _predict_forest_mp(model, X, n_jobs)
-
-        return ret
+        return _predict_forest(model, X, n_jobs)
 
 def predict(model, X, joint_contribution=False, n_jobs=None):
     """ Returns a triple (prediction, bias, feature_contributions), such
