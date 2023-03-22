@@ -48,6 +48,7 @@ Timezones = [
     (  0, (352.5, 360.0))
 ]
 
+
 Logger = logging.getLogger('sudsaq/select.py')
 
 def save_by_month(ds, path):
@@ -164,6 +165,15 @@ def daily(ds, config):
             ds.coords['time'] = ds.time.dt.floor('1D')
 
         return ds
+
+    # Convert the Timezones from 0-360 format to -180-180 format if needed
+    if ds.lon.min < 0:
+        global Timezones
+        for i, (tz, (west, east)) in enumerate(Timezones):
+            if west >= 180:
+                west -= 360
+                east -= 360
+            Timezones[i] = (tz, (west, east))
 
     # Select time ranges per config
     time = ds.time.dt.time

@@ -61,8 +61,8 @@ def prepare(kind, data, target, drop_features=False, align=False):
         data, target = xr.align(data, target, copy=False)
 
     Logger.debug(f'{kind} set stats:')
-    Logger.debug(f'- Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'- Data   shape: {list(zip(data.dims, data.shape))}')
+    Logger.debug(f'- Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Memory footprint in GB:')
     Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
     Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
