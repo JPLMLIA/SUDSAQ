@@ -301,7 +301,7 @@ def load(config, split=False, lazy=True):
         ds.load()
 
     Logger.debug('Returning dataset')
-    return ds
+    return ds.sortby('lon')
 
 class Dataset(xr.Dataset):
     """
