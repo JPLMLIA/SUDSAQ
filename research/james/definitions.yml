@@ -203,13 +203,13 @@ NorthAmerica:
   input:
     sel:
       lat: [10, 80]
-      lon: [220, 310]
+      lon: [-140, -50]
 
 Europe:
   input:
     sel:
       lat: [25, 80]
-      lon: [340, 40]
+      lon: [-20, 40]
 
 Asia:
   input:
