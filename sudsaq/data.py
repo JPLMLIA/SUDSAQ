@@ -315,7 +315,7 @@ class Dataset(xr.Dataset):
             return super().__getitem__(key)
         except KeyError as e:
             if isinstance(key, str):
-                key  = key.replace('\\', '\')
+                key  = key.replace('\\\\', '\\')
                 keys = [var for var in self.variables.keys() if re.fullmatch(key, var)]
                 if keys:
                     Logger.debug(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
