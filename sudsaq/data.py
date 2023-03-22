@@ -237,6 +237,7 @@ def config_sel(ds, sels):
             ds = ds.where(ds.time[~mask], drop=True)
         elif isinstance(sel, list):
             Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
+            ds = ds.sortby(dim)
             # Enables crossing the 0 lon line
             if isinstance(sel, list) and sel[1] < sel[0]:
                 ds = ds.where(ds[dim][(sel[0] < ds[dim]) | (ds[dim] < sel[1])])
