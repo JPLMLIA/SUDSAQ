@@ -167,7 +167,7 @@ def daily(ds, config):
         return ds
 
     # Convert the Timezones from 0-360 format to -180-180 format if needed
-    if ds.lon.min < 0:
+    if ds.lon.min() < 0:
         global Timezones
         for i, (tz, (west, east)) in enumerate(Timezones):
             if west >= 180:
