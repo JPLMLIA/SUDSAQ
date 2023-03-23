@@ -135,7 +135,7 @@ def fit(model, data, target, i=None, test=True):
     if test:
         data.test, target.test = prepare('test', data.test, target.test, align=config.align_test)
 
-        if None in [data.test, target.test]:
+        if data.test is None or target.test is None:
             Logger.error('Test set analysis for this fold was cancelled')
             return
 
