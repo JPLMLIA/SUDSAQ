@@ -182,7 +182,7 @@ def daily(ds, config):
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
             Logger.debug('-- Using local timezones')
-            ns    = ds[sel.vars]
+            ns    = ds[sel.vars].sortby('lon')
             local = []
             for offset, bounds in tqdm(Timezones, desc='Timezones Processed'):
                 sub  = ns.sel(lon=slice(*bounds))
