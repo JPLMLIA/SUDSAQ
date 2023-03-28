@@ -192,6 +192,9 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     if data is None:
         data, target = load(config, split=True, lazy=False)
 
+    # Stores information about this analysis
+    stats = Section('scores', {})
+
     # Prepare the storage variables
     bias, contributions = None, None
     if not config.not_ti and 'Forest' in str(model):
@@ -200,29 +203,26 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         Logger.info('Predicting')
         predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
         predict[:] = model.predict(data.values)
-
-    # Some functions require the target and predict be the same shape
-    target, aligned = xr.align(target, predict)
-
-    Logger.info('Calculating scores')
-    stats = Section('scores', {
-        'mape'  : mean_absolute_percentage_error(target, aligned),
-        'rmse'  : mean_squared_error(target, aligned, squared=False),
-        'r2'    : r2_score(target, aligned),
-        'r corr': pearsonr(target, aligned)[0]
-    })
-
-    # Log the scores
-    scores = align_print(stats, enum=False, prepend='  ', print=Logger.info)
-    if config.output.scores:
-        Logger.info(f'Saving scores to {output}/{kind}.scores.txt')
-        with open(f'{output}/{kind}.scores.txt', 'w') as file:
-            file.write('Scores:\n')
-            file.write('\n'.join(scores))
-
-    # Attach additional objects
     stats.predict = predict
-    stats.aligned = aligned
+
+    if target is not None:
+        # Some functions require the target and predict be the same shape
+        target, aligned = xr.align(target, predict)
+        stats.aligned = aligned
+
+        Logger.info('Calculating scores')
+        stats['mape']   = mean_absolute_percentage_error(target, aligned)
+        stats['rmse']   = mean_squared_error(target, aligned, squared=False)
+        stats['r2']     = r2_score(target, aligned)
+        stats['r corr'] = pearsonr(target, aligned)[0]
+
+        # Log the scores
+        scores = align_print(stats, enum=False, prepend='  ', print=Logger.info)
+        if config.output.scores:
+            Logger.info(f'Saving scores to {output}/{kind}.scores.txt')
+            with open(f'{output}/{kind}.scores.txt', 'w') as file:
+                file.write('Scores:\n')
+                file.write('\n'.join(scores))
 
     # Feature importances
     impout = None
@@ -247,22 +247,23 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
                     save = f'{output}/{kind}.importances.png'
                 )
 
-        if config.plots.compare_target_predict is not False:
-            plots.compare_target_predict(
-                target.unstack().mean('time').sortby('lon'),
-                predict.unstack().mean('time').sortby('lon'),
-                reindex = config._reindex,
-                title   = f'{kind.capitalize()} Set Performance',
-                save    = f'{output}/{kind}.compare_target_predict.png'
-            )
+        if target is not None:
+            if config.plots.compare_target_predict is not False:
+                plots.compare_target_predict(
+                    target.unstack().mean('time').sortby('lon'),
+                    predict.unstack().mean('time').sortby('lon'),
+                    reindex = config._reindex,
+                    title   = f'{kind.capitalize()} Set Performance',
+                    save    = f'{output}/{kind}.compare_target_predict.png'
+                )
 
-        if config.plots.truth_vs_predicted is not False:
-            plots.truth_vs_predicted(
-                target.dropna('loc'),
-                aligned.dropna('loc'),
-                label = '\n'.join([score.lstrip()[:15] for score in scores]),
-                save  =  f'{output}/{kind}.truth_vs_predicted.png'
-            )
+            if config.plots.truth_vs_predicted is not False:
+                plots.truth_vs_predicted(
+                    target.dropna('loc'),
+                    aligned.dropna('loc'),
+                    label = '\n'.join([score.lstrip()[:15] for score in scores]),
+                    save  =  f'{output}/{kind}.truth_vs_predicted.png'
+                )
 
     # Save objects as requested
     save_objects(
