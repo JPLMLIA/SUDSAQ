@@ -37,7 +37,9 @@ class Explanation(shap.Explanation):
         """
         """
         super().__init__(*args, **kwargs)
-        self._dataset = _dataset
+        if _dataset is not None:
+            _dataset['variable'] = self.feature_names
+            self._dataset = _dataset
 
     def to_dataset(self):
         """
@@ -66,9 +68,10 @@ class Dataset(xr.Dataset):
             np.array (self['values']),
             np.float_(self['base_values']),
             np.array (self['data']),
-            feature_names = self['variable'].values
+            feature_names = self['variable'].values,
+            _dataset = ds[ds.coords.keys()].copy()
         )
-        ex._dataset = ds[ds.coords.keys()].copy()
+
         return ex
 
 
@@ -186,7 +189,7 @@ def explain(model, data, kind='test', output=None):
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
     explanation = shap_values(model, X,
-        n_jobs   = config.get('n_job', -1)
+        n_jobs   = config.get('n_job', -1),
         _dataset = data[data.coords.keys()].copy()
     )
 
