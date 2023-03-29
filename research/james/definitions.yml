@@ -49,6 +49,8 @@
 # python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-extended"
 # python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-extended"
 
+# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-cap-leaves"
+
 default:
   range: 201[1-5]
   train_performance: False
@@ -156,6 +158,16 @@ toar-limited:
 
 extended:
   range: 20[0-1][0-9]
+
+cap-leaves:
+  model:
+    params:
+      max_leaf_nodes: 100000
+
+cap-depth:
+  model:
+    params:
+      max_depth: 30
 
 # Run Types
 
