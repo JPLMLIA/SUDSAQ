@@ -159,10 +159,14 @@ toar-limited:
 extended:
   range: 20[0-1][0-9]
 
+# Cap sections are to limit a model's parameters likely due to the size of the data we're processing
+# These sometimes need to disable the truth_vs_predicted plot for the same reason
 cap-leaves:
   model:
     params:
       max_leaf_nodes: 100000
+  plots:
+    truth_vs_predicted: False
 
 cap-depth:
   model:

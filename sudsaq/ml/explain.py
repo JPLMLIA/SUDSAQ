@@ -31,6 +31,47 @@ sns.set_context('talk')
 
 Logger = logging.getLogger('sudsaq/ml/explain.py')
 
+
+class Explanation(shap.Explanation):
+    def __init__(self, *args, _dataset=None, **kwargs):
+        """
+        """
+        super().__init__(*args, **kwargs)
+        self._dataset = _dataset
+
+    def to_dataset(self):
+        """
+        """
+        if hasattr(self, '_dataset'):
+            self._dataset['values'] = (('loc', 'variable'), self.values)
+            self._dataset['data']   = (('loc', 'variable'), self.data  )
+            self._dataset['base_values'] = self.base_values
+
+            return self._dataset
+        else:
+            Logger.error('This object is missing the _dataset attribute, did you set it?')
+
+
+class Dataset(xr.Dataset):
+    """
+    Small override of xarray.Dataset that enables regex matching names in the variables
+    list
+    """
+    __slots__ = () # Required for subclassing
+
+    def to_explanation(self):
+        """
+        """
+        ex = Explanation(
+            np.array (self['values']),
+            np.float_(self['base_values']),
+            np.array (self['data']),
+            feature_names = self['variable'].values
+        )
+        ex._dataset = ds[ds.coords.keys()].copy()
+        return ex
+
+
 def summary(explanation, data, save=None):
     """
     """
@@ -87,7 +128,7 @@ def to_dataset(explanation, data):
 
     return ds
 
-def shap_values(model, data, n_jobs=-1):
+def shap_values(model, data, n_jobs=-1, _dataset=None):
     """
     """
     Logger.debug('Creating explainer')
@@ -113,9 +154,10 @@ def shap_values(model, data, n_jobs=-1):
     # Combine the results together to one Explanation object
     explanation = shap.Explanation(
         np.vstack([ret.values      for ret in rets]),
-        np.vstack([ret.base_values for ret in rets]),
+        np.  mean([ret.base_values for ret in rets]),
         np.vstack([ret.data        for ret in rets]),
-        feature_names = data.columns
+        feature_names = data.columns,
+        _dataset = Dataset(_dataset)
     )
 
     return explanation
@@ -143,7 +185,10 @@ def explain(model, data, kind='test', output=None):
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
-    explanation = shap_values(model, X, n_jobs=config.get('n_job', -1))
+    explanation = shap_values(model, X,
+        n_jobs   = config.get('n_job', -1)
+        _dataset = data[data.coords.keys()].copy()
+    )
 
     save_objects(
         output      = output,
