@@ -72,7 +72,10 @@ default:
     reset: True
     config: ${.env.output}/${.env.type}/${$ID}/
   dask:
-    dashboard_address: null
+    config:
+      admin.tick.limit: 60s
+    client:
+      dashboard_address: null
 
 # System
 
