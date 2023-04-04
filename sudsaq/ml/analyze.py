@@ -1,6 +1,5 @@
 """
 """
-import joblib
 import logging
 import numpy  as np
 import pandas as pd
@@ -44,8 +43,7 @@ def perm_importance(model, data, target, output=None):
     # Make sure the inputs are aligned first
     data, target = xr.align(data, target)
 
-    with joblib.parallel_backend('dask'):
-        permimp = permutation_importance(model, data, target, **config.permutation_importance)
+    permimp = permutation_importance(model, data, target, **config.permutation_importance)
 
     # Only want the summaries, remove the importances array
     del permimp['importances']

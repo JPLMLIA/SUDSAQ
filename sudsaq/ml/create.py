@@ -1,4 +1,7 @@
+"""
+"""
 import argparse
+import joblib
 import logging
 import numpy  as np
 import xarray as xr
@@ -302,7 +305,8 @@ if __name__ == '__main__':
     loop     = 1
     while args.restart or loop == 1:
         try:
-            state = create()
+            with joblib.parallel_backend('dask'):
+                state = create()
         except Exception:
             Logger.exception('Caught an exception during runtime')
         finally:
