@@ -164,7 +164,7 @@ def daily(ds, config):
             # Floor the times to the day for the groupby operation
             ds.coords['time'] = ds.time.dt.floor('1D')
 
-        return ds.load()
+        return ds.compute()
 
     # Convert the Timezones from 0-360 format to -180-180 format if needed
     if ds.lon.min() < 0:

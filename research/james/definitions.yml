@@ -74,20 +74,10 @@ default:
   dask:
     config:
       distributed.admin.tick.limit: 60s
-      distributed.worker.memory.target   : False
-      distributed.worker.memory.spill    : True
-      distributed.worker.memory.pause    : 0.85
-      distributed.worker.memory.terminate: 0.95
+      distributed.worker.memory.terminate: 0.98
     client:
       dashboard_address: null
 
-
-worker:
-  memory:
-    target: False
-    spill: False
-    pause: 0.80  # fraction at which we pause worker threads
-    terminate: 0.95
 # System
 
 gattaca:
