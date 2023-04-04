@@ -1,6 +1,5 @@
 """
 """
-import dask
 import cf_xarray as cfxr
 import logging
 import os
@@ -9,6 +8,7 @@ import shutil
 import sys
 import xarray as xr
 
+from dask.distributed import Client
 from glob import glob
 
 from sudsaq import Config
@@ -82,7 +82,7 @@ def init(args):
         shutil.copy(args.config, config.log.config)
 
     Logger.debug('Instantiating the Dask cluster')
-    client = dask.distributed.Client(**config.dask)
+    config.dask_client = Client(**config.dask)
 
     return args, config
 
