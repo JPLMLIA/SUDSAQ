@@ -74,9 +74,20 @@ default:
   dask:
     config:
       admin.tick.limit: 60s
+      worker.memory.target: False
+      worker.memory.spill: True
+      worker.memory.pause: 0.85
+      worker.memory.terminate: 0.95
     client:
       dashboard_address: null
 
+
+worker:
+  memory:
+    target: False
+    spill: False
+    pause: 0.80  # fraction at which we pause worker threads
+    terminate: 0.95
 # System
 
 gattaca:
@@ -128,7 +139,7 @@ v5:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
       - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
-      - ${.env.input}/gee/modis/*.expanded.nc                  # MODIS
+      - ${.env.input}/gee/modis/*.nc                           # MODIS
       - ${.env.input}/gee/pop_2010_fixed.nc                    # Population
     daily:
       modis:
