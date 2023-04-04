@@ -1,56 +1,36 @@
-#
+#%% Example Usage
 # {system}<-v4<-bias[median]<-Asia<-{month}
 # {system}<-v4<-bias[median]<-NorthAmerica<-{month}
 # {system}<-v4<-bias[median]<-Europe<-{month}
-#
-# {system}<-v4<-toar<-Asia<-{month}
-# {system}<-v4<-toar<-NorthAmerica<-{month}
-# {system}<-v4<-toar<-Europe<-{month}
-#
-# {system}<-v4<-mda8<-toar-limited<-Asia<-{month}
-# {system}<-v4<-mda8<-toar-limited<-NorthAmerica<-{month}
-# {system}<-v4<-mda8<-toar-limited<-Europe<-{month}
-#
-# {system}<-v4<-bias[median]<-extended<-{month}
-# {system}<-v4<-toar<-extended<-{month}
-# {system}<-v4<-mda8<-toar-limited<-extended<-{month}
-#
-# %% - This month did not finish correctly (various reasons)
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Europe"
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Asia"
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-NorthAmerica"
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Europe"
-#                                                                   %%                          %%
-#^python qsub.py -c ../../research/james/definitions.yml -s mar oct -i "gattaca<-v4<-toar<-Europe"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Asia"
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-NorthAmerica"
-#                                                                                   %%  %%
-#^python qsub.py -c ../../research/james/definitions.yml -s jul aug -i "gattaca<-v4<-toar<-NorthAmerica"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
-#                                                           %%                      %%          %%
-#^python qsub.py -c ../../research/james/definitions.yml -s jan jul oct -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan jul oct -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Asia"
-#
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
-#                                                               %%                      %%
-#^python qsub.py -c ../../research/james/definitions.yml -s feb aug -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-extended"
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-extended"
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-extended"
-
-# python qsub.py -c ../../research/james/definitions.yml -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-cap-leaves"
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+#%% Command: python qsub.py -c ../../research/james/definitions.yml -s ...
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Europe"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-Asia"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-NorthAmerica"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Europe"
+#^... -s         mar                         oct         -i "gattaca<-v4<-toar<-Europe"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-Asia"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-NorthAmerica"
+#^... -s                         jul aug                 -i "gattaca<-v4<-toar<-NorthAmerica"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+#^... -s jan                     jul         oct         -i "gattaca<-v4<-mda8<-toar-limited<-Europe"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-Asia"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
+#^... -s     feb                     aug                 -i "gattaca<-v4<-mda8<-toar-limited<-NorthAmerica"
+#%%%%%%%%%%%%%%%%
+#%% Extended
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-bias[median]<-extended"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-toar<-extended"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-toar-limited<-extended"
+#%%%%%%%%%%%%%%%%
+#%% Full emulator
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v4<-mda8<-cap-leaves"
+#%%%%%%%%%%%%%%%%
+#%% v5
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v5<-bias[median]"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v5<-toar"
+# ... -s jan feb mar apr may jun jul aug sep oct nov dec -i "gattaca<-v5<-mda8<-toar-limited"
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 default:
   range: 201[1-5]
   train_performance: False
