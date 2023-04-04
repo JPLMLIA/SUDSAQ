@@ -73,11 +73,11 @@ default:
     config: ${.env.output}/${.env.type}/${$ID}/
   dask:
     config:
-      admin.tick.limit: 60s
-      worker.memory.target: False
-      worker.memory.spill: True
-      worker.memory.pause: 0.85
-      worker.memory.terminate: 0.95
+      distributed.admin.tick.limit: 60s
+      distributed.worker.memory.target   : False
+      distributed.worker.memory.spill    : True
+      distributed.worker.memory.pause    : 0.85
+      distributed.worker.memory.terminate: 0.95
     client:
       dashboard_address: null
 
