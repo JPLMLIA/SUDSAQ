@@ -49,7 +49,7 @@ class Explanation(shap.Explanation):
             self._dataset['data']   = (('loc', 'variable'), self.data  )
             self._dataset['base_values'] = self.base_values
 
-            return self._dataset
+            return Dataset(self._dataset)
         else:
             Logger.error('This object is missing the _dataset attribute, did you set it?')
 
@@ -69,7 +69,7 @@ class Dataset(xr.Dataset):
             np.float_(self['base_values']),
             np.array (self['data']),
             feature_names = self['variable'].values,
-            _dataset = ds[ds.coords.keys()].copy()
+            _dataset = self[self.coords.keys()].copy()
         )
 
         return ex

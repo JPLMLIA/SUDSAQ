@@ -91,6 +91,8 @@ default:
     level: debug
     reset: True
     config: ${.env.output}/${.env.type}/${$ID}/
+  dask:
+    dashboard_address: null
 
 # System
 
@@ -143,8 +145,8 @@ v5:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
       - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
-      - ${.env.input}/gee/modis/201[1-5].expanded.nc           # MODIS
-      - ${.env.input}/gee/pop/2010_population_density_globe.nc # Population
+      - ${.env.input}/gee/modis/*.expanded.nc                  # MODIS
+      - ${.env.input}/gee/pop/pop_2010_fixed.nc                # Population
     daily:
       modis:
         vars: modis.*

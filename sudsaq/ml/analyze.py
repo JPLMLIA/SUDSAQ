@@ -1,6 +1,6 @@
 """
 """
-import argparse
+import joblib
 import logging
 import numpy  as np
 import pandas as pd
@@ -15,7 +15,7 @@ from sklearn.metrics    import (
 )
 from tqdm import tqdm
 
-from sudsaq import  (
+from sudsaq import (
     Config,
     Section,
     Null
@@ -44,7 +44,9 @@ def perm_importance(model, data, target, output=None):
     # Make sure the inputs are aligned first
     data, target = xr.align(data, target)
 
-    permimp = permutation_importance(model, data, target, **config.permutation_importance)
+    with joblib.parallel_backend('dask'):
+        permimp = permutation_importance(model, data, target, **config.permutation_importance)
+
     # Only want the summaries, remove the importances array
     del permimp['importances']
 

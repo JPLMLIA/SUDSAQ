@@ -1,11 +1,15 @@
 """
 """
+import dask
+import cf_xarray as cfxr
 import logging
 import os
 import pickle
 import shutil
 import sys
 import xarray as xr
+
+from glob import glob
 
 from sudsaq import Config
 
@@ -77,15 +81,8 @@ def init(args):
     if config.log.config:
         shutil.copy(args.config, config.log.config)
 
-    if config.ray:
-        try:
-            import ray
-            Logger.debug('Initializing ray')
-            ray.init(**config.ray)
-        except Exception as e:
-            Logger.debug('ray could not be initialized:\n{e}')
-    else:
-        Logger.debug('ray is disabled for this run')
+    Logger.debug('Instantiating the Dask cluster')
+    client = dask.distributed.Client(**config.dask)
 
     return args, config
 
@@ -183,6 +180,16 @@ def save_pkl(data, output, **kwargs):
     with open(output, 'wb') as file:
         pickle.dump(data, file)
 
+def encode(data):
+    """
+    """
+    return cfxr.encode_multi_index_as_compress(data, 'loc')
+
+def decode(file):
+    """
+    """
+    return cfxr.decode_compress_to_multi_index(xr.open_dataset(file), 'loc')
+
 def save_netcdf(data, name, output, dataset=False, reindex=None):
     """
     Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
@@ -207,10 +214,6 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
         Logger.error(f'Wrong dtype for object {name!r}, cannot save netcdf. Got: {type(data)}')
         return
 
-    if 'loc' in data.dims:
-        Logger.warning(f'Saving {name} must be done unstacked')
-        data = data.unstack()
-
     # Names always get set on DataArray objects
     if isinstance(data, xr.core.dataarray.DataArray):
         data.name = name
@@ -225,6 +228,11 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
 
     # Correct if lon got mixed up as it normally does during the pipeline
     data = data.sortby('lon')
+
+    if 'loc' in data.dims:
+        Logger.warning(f'The `loc` dimension required being encoded for saving and decoded after loading from file')
+        data = encode(data)
+        output += '.ec'
 
     Logger.info(f'Saving {name} to {output}')
     data.to_netcdf(output, engine='netcdf4')
@@ -251,33 +259,50 @@ def save_objects(output, kind, **others):
         else:
             Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
-def load_from_run(path, kind, objs=['model', 'data', 'target', 'predict']):
+def load_from_run(path, kind=None, objs=None):
     """
     Loads objects from a given run
     """
     files = {
-        'model'  : f'{path}/model.pkl',
-        'data'   : f'{path}/{kind}.data.nc',
-        'target' : f'{path}/{kind}.target.nc',
-        'predict': f'{path}/{kind}.predict.nc'
+        'model'      : f'{path}/model.pkl',
+        'data'       : f'{path}/{kind}.data.nc*',
+        'target'     : f'{path}/{kind}.target.nc*',
+        'predict'    : f'{path}/{kind}.predict.nc*',
+        'explanation': f'{path}/shap.explanation.nc*'
     }
-    ret = []
+    if not objs:
+        objs = files.keys()
 
+    ret = []
     for obj, file in files.items():
         if obj in objs:
-            if os.path.exists(file):
-                if file.endswith('.pkl'):
-                    ret.append(
-                        load_pkl(file)
-                    )
-                elif file.endswith('.nc'):
-                    ret.append(
-                        xr.open_dataset(file)
-                    )
-                else:
-                    Logger.error(f'Invalid option: {obj}')
-            else:
+            match = glob(file)
+            if not match:
                 Logger.error(f'File not found: {file}')
+            elif len(match) > 1:
+                Logger.error(f'Unable to determine the correct file for {obj!r} from list, see debug for more information')
+                Logger.debug(f'Multiple files matched {obj!r} using {file!r}:')
+                for file in match:
+                    Logger.debug(f'- {file}')
+
+            file, = match
+            if file.endswith('.pkl'):
+                Logger.info(f'Loading {obj}: {file}')
+                ret.append(
+                    load_pkl(file)
+                )
+            elif file.endswith('.nc'):
+                Logger.info(f'Loading {obj}: {file}')
+                ret.append(
+                    xr.open_dataset(file)
+                )
+            elif file.endswith('.ec'):
+                Logger.info(f'Loading {obj}: {file}')
+                ret.append(
+                    decode(file)
+                )
+            else:
+                Logger.error(f'Invalid option: {obj}')
 
     return ret
 
