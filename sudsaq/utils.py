@@ -82,9 +82,9 @@ def init(args):
     if config.log.config:
         shutil.copy(args.config, config.log.config)
 
-    Logger.debug('Instantiating the Dask cluster')
-    dask.config.set(dict(config.dask.config))
-    config.dask_client = Client(**config.dask.client)
+    # Logger.debug('Instantiating the Dask cluster')
+    # dask.config.set(dict(config.dask.config))
+    # config.dask_client = Client(**config.dask.client)
 
     return args, config
 
