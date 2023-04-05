@@ -305,8 +305,8 @@ if __name__ == '__main__':
     loop     = 1
     while args.restart or loop == 1:
         try:
-            with joblib.parallel_backend('dask'):
-                state = create()
+            # with joblib.parallel_backend('dask'):
+            state = create()
         except Exception:
             Logger.exception('Caught an exception during runtime')
         finally:
