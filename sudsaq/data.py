@@ -185,6 +185,7 @@ def daily(ds, config):
             ns    = ds[sel.vars].sortby('lon')
             local = []
             for offset, bounds in tqdm(Timezones, desc='Timezones Processed'):
+                Logger.debug(f'--- Processing offset {offset} for (west, east) bounds {bounds}')
                 sub  = ns.sel(lon=slice(*bounds))
                 time = ( sub.time + np.timedelta64(offset, 'h') ).dt.time
                 sub  = select_times(sub, sel.time, time)
@@ -270,8 +271,17 @@ def load(config, split=False, lazy=True):
         Logger.debug(f'Collected {len(match)} files using "{string}"')
         files += match
 
+    if not files:
+        Logger.error('No files collected, exiting early')
+        return None, None if split else None
+
     Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files, engine='netcdf4', lock=False, parallel=config.input.get('parallel', True))
+    ds = xr.open_mfdataset(files,
+        engine   = config.input.get('engine'  , 'netcdf4'),
+        lock     = config.input.get('lock'    , False    ),
+        parallel = config.input.get('parallel', False    ),
+        chunks   = dict(config.input.chunks)
+    )
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)

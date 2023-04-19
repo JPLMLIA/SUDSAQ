@@ -67,7 +67,7 @@ default:
     lazy: True
     parallel: True
     chunks:
-      time: 12
+      time: 8
       lat: 16
       lon: 32
   log:
@@ -146,7 +146,8 @@ toar-limited:
     use_locs_of: toar.o3.dma8epa.mean
 
 extended:
-  range: 20[0-1][0-9]
+  # Only 2005 to 2015
+  range: 20{0[5-9],1[0-5]}
 
 # Cap sections are to limit a model's parameters likely due to the size of the data we're processing
 # These sometimes need to disable the truth_vs_predicted plot for the same reason
