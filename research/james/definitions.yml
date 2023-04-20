@@ -66,10 +66,10 @@ default:
   input:
     lazy: True
     parallel: True
-    chunks:
-      time: 8
-      lat: 16
-      lon: 32
+    # chunks:
+    #   time: 8
+    #   lat: 16
+    #   lon: 32
   log:
     file: ${.env.output}/${.env.type}/${$ID}/${.month}/run.log
     level: debug
