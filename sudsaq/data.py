@@ -8,9 +8,16 @@ import os
 import re
 import xarray   as xr
 
-from glob                  import glob
 from sklearn.preprocessing import StandardScaler
 from tqdm                  import tqdm
+
+Logger = logging.getLogger('sudsaq/select.py')
+
+try:
+    from wcmatch import glob as _glob
+    glob = lambda pattern: _glob.glob(pattern, flags=_glob.BRACE)
+else:
+    from glob import glob
 
 from sudsaq import Config
 
@@ -48,8 +55,6 @@ Timezones = [
     (  0, (352.5, 360.0))
 ]
 
-
-Logger = logging.getLogger('sudsaq/select.py')
 
 def save_by_month(ds, path):
     """
