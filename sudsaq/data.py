@@ -16,8 +16,10 @@ Logger = logging.getLogger('sudsaq/select.py')
 try:
     from wcmatch import glob as _glob
     glob = lambda pattern: _glob.glob(pattern, flags=_glob.BRACE)
-else:
+    Logger.debug('Using wcmatch for glob')
+except:
     from glob import glob
+    Logger.debug('Failed to load wcmatch, falling back to builtin glob')
 
 from sudsaq import Config
 
