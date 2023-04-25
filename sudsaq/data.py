@@ -8,7 +8,7 @@ import os
 import re
 import xarray   as xr
 
-from sklearn.preprocessing import StandardScaler
+from dask_ml.preprocessing import StandardScaler
 from tqdm                  import tqdm
 
 Logger = logging.getLogger('sudsaq/select.py')
@@ -58,6 +58,29 @@ Timezones = [
 ]
 
 
+def unstacked(func):
+    """
+    Unstacks the first parameter of the decorated `func` and restacks it if
+    the incoming `data` is already stacked, otherwise do nothing
+    """
+    def wrapped(data, *args, **kwargs):
+        loc = False
+        if 'loc' in data:
+            loc  = True
+            data = data.unstack()
+
+        data = func(data, *args, **kwargs)
+
+        if loc and isinstance(data, (
+            xr.core.dataarray.DataArray,
+            xr.core.dataarray.Dataset
+        )):
+            return flatten(data)
+        return data
+
+    return wrapped
+
+
 def save_by_month(ds, path):
     """
     Saves an xarray dataset by monthly files
@@ -74,6 +97,7 @@ def save_by_month(ds, path):
             Logger.info(f'- {month:02}')
             mds.to_netcdf(f'{output}/{month:02}.nc', engine='netcdf4')
 
+
 def calc(ds, string):
     """
     Performs simple calculations to create new features at runtime.
@@ -85,6 +109,7 @@ def calc(ds, string):
     Logger.debug(f'Attempting to evaluate: {string!r}')
     return eval(string)
 
+
 def flatten(data):
     """
     """
@@ -95,6 +120,36 @@ def flatten(data):
     if 'time' in data.dims:
         dims.append('time')
     return data.stack({'loc': dims})
+
+
+@unstacked
+def resample(data, freq, how='mean'):
+    """
+    """
+    data = data.resample(time=freq)
+    data = getattr(data, how)()
+
+    return data
+
+
+@unstacked
+def subsample(data, dim, N):
+    """
+    Subsamples along a dimension by dropping every N sample
+
+    Parameters
+    ----------
+    data: xarray
+        Data to subsample on
+    dim: str
+        Name of the dimension to subsample
+    N: int
+        Every Nth sample is dropped
+    """
+    # Select every Nth index
+    drop = data[dim][N-1::N]
+    return data.drop_sel(**{dim: drop})
+
 
 def split_and_stack(ds, config, lazy=True):
     """
@@ -146,6 +201,7 @@ def split_and_stack(ds, config, lazy=True):
         data[:] = scaler.fit_transform(data)
 
     return data, target
+
 
 def daily(ds, config):
     """
@@ -219,6 +275,7 @@ def daily(ds, config):
     # Cast back to custom Dataset (xr.merge creates new)
     return Dataset(ds)
 
+
 def config_sel(ds, sels):
     """
     Performs custom sel operations defined in the config
@@ -268,6 +325,7 @@ def config_sel(ds, sels):
 
     return Dataset(ds)
 
+
 def load(config, split=False, lazy=True):
     """
     """
@@ -316,6 +374,14 @@ def load(config, split=False, lazy=True):
         Logger.info('Aligning to a daily average')
         ds = daily(ds, config)
 
+    if config.input.resample:
+        Logger.info('Resampling data')
+        ds = resample(ds, **config.input.resample)
+
+    if config.input.resample:
+        Logger.info('Resampling data')
+        ds = subsample(ds, **config.input.subsample)
+
     # `split` is hardcoded by the calling script
     # If `lazy` is set in the config use that else use the parameter
     lazy = config.input.get('lazy', lazy)
@@ -329,6 +395,7 @@ def load(config, split=False, lazy=True):
 
     Logger.debug('Returning dataset')
     return ds.sortby('lon')
+
 
 class Dataset(xr.Dataset):
     """

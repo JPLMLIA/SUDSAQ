@@ -148,6 +148,10 @@ toar-limited:
 extended:
   # Only 2005 to 2015
   range: 20{0[5-9],1[0-5]}
+  input:
+    subsample:
+      dim: time
+      N: 3 # Drop every 3rd sample of time
 
 # Cap sections are to limit a model's parameters likely due to the size of the data we're processing
 # These sometimes need to disable the truth_vs_predicted plot for the same reason
