@@ -378,8 +378,8 @@ def load(config, split=False, lazy=True):
         Logger.info('Resampling data')
         ds = resample(ds, **config.input.resample)
 
-    if config.input.resample:
-        Logger.info('Resampling data')
+    if config.input.subsample:
+        Logger.info('Subsampling data')
         ds = subsample(ds, **config.input.subsample)
 
     # `split` is hardcoded by the calling script
