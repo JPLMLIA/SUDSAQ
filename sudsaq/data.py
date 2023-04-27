@@ -8,8 +8,7 @@ import os
 import re
 import xarray   as xr
 
-from dask_ml.preprocessing import StandardScaler
-from tqdm                  import tqdm
+from tqdm import tqdm
 
 Logger = logging.getLogger('sudsaq/select.py')
 
@@ -151,6 +150,17 @@ def subsample(data, dim, N):
     return data.drop_sel(**{dim: drop})
 
 
+def scale(x):
+    """
+    The standard score of a sample x is calculated as:
+        z = (x - u) / s
+    """
+    u = x.mean(skipna=True)
+    s = x.std(skipna=True)
+    z = (x - u) / s
+    return z
+
+
 def split_and_stack(ds, config, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
@@ -187,6 +197,10 @@ def split_and_stack(ds, config, lazy=True):
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
 
+    if config.input.scale:
+        Logger.info('Scaling data (X)')
+        data = scale(data)
+
     if not lazy:
         Logger.info('Loading data into memory')
         data.load()
@@ -194,11 +208,6 @@ def split_and_stack(ds, config, lazy=True):
         Logger.debug(f'Memory footprint in GB:')
         Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
         Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
-
-    if config.input.scale:
-        Logger.info('Scaling data (X)')
-        scaler  = StandardScaler(**config.input.StandardScaler)
-        data[:] = scaler.fit_transform(data)
 
     return data, target
 
