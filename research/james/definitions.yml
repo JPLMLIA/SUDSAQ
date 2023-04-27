@@ -133,7 +133,7 @@ v5:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
       - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
       - ${.env.input}/gee/modis/*.nc                           # MODIS
-      - ${.env.input}/gee/pop_2010_fixed.nc                    # Population
+      - ${.env.input}/gee/pop.2010.fixed.nc                    # Population
     daily:
       modis:
         vars: modis.*
