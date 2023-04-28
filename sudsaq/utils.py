@@ -12,7 +12,8 @@ import xarray as xr
 from dask.distributed import Client
 from glob import glob
 
-from sudsaq import Config
+from sudsaq      import Config
+from sudsaq.data import unstacked
 
 
 Logger = logging.getLogger('sudsaq/utils.py')
@@ -192,6 +193,7 @@ def decode(file):
     """
     return cfxr.decode_compress_to_multi_index(xr.open_dataset(file), 'loc')
 
+@unstacked
 def save_netcdf(data, name, output, dataset=False, reindex=None):
     """
     Handles saving NetCDF (.nc) files. Unstacks an object if the `loc` dimension is present.
@@ -234,10 +236,10 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
     # Correct if lon got mixed up as it normally does during the pipeline
     data = data.sortby('lon')
 
-    if 'loc' in data.dims:
-        Logger.warning(f'The `loc` dimension required being encoded for saving and decoded after loading from file')
-        data = encode(data)
-        output += '.ec'
+    # if 'loc' in data.dims:
+    #     Logger.warning(f'The `loc` dimension required being encoded for saving and decoded after loading from file')
+    #     data = encode(data)
+    #     output += '.ec'
 
     Logger.info(f'Saving {name} to {output}')
     data.to_netcdf(output, engine='netcdf4')
