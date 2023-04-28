@@ -226,7 +226,10 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
 
     # Apply reindexing if its available
     if isinstance(reindex, (xr.core.dataarray.DataArray, xr.core.dataarray.Dataset)):
-        data = data.reindex_like(reindex)
+        try:
+            data = data.reindex_like(reindex)
+        except:
+            Logger.exception('Failed to reindex, leaving as-is')
 
     # Correct if lon got mixed up as it normally does during the pipeline
     data = data.sortby('lon')
