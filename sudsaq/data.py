@@ -64,8 +64,8 @@ def unstacked(func):
     """
     def wrapped(data, *args, **kwargs):
         loc = False
-        if 'loc' in data:
-            Logger.debug('Unstacked data for {func.__name__}()')
+        if 'loc' in data.dims:
+            Logger.debug(f'Unstacked data for {func.__name__}()')
             loc  = True
             data = data.unstack()
 
