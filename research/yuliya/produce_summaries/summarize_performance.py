@@ -29,6 +29,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import explained_variance_score
 from sklearn.metrics import r2_score
 from scipy import stats
+#sys.path.append('/Users/marchett/Documents/SUDSAQ/analysis_mount/code/suds-air-quality/research/yuliya/produce_summaries/')
 import summary_plots as plots
 import read_output as read
 
@@ -264,7 +265,7 @@ def main(sub_dir):
     res = {}
     for k in keys:
         res[k] = np.zeros_like(un_lons)
-    for s in range(len(un_lons)):
+    for s in tqdm(range(len(un_lons)), desc = 'Computing trends'):
         mask1 = np.in1d(lon, un_lons[s])
         mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
@@ -296,10 +297,13 @@ def main(sub_dir):
              for k in res.keys():
                  res[k][s] = np.nan 
 
-
-    zlim_a = np.nanpercentile(res['y'], [10, 90])
-    min_b = np.nanpercentile(res['res'], 0)
-    zlim_b = (min_b, -min_b)
+    if key == 'bias':
+        zlim_a = [-5., 0., 15.]
+        zlim_b = [-10., 0., 10.]
+    else:
+        zlim_a = np.nanpercentile(res['y'], [10, 50, 90])
+        min_b = np.nanpercentile(res['res'], 0)
+        zlim_b = (min_b, 0, -min_b)
 
     #---------- residuals on maps
     plots.residual_scatter(un_lons, un_lats, res['y'], zlim = zlim_a, 
@@ -310,11 +314,11 @@ def main(sub_dir):
                            key = keys[2], plots_dir = plots_dir)   
     # plots.residual_scatter(un_lons, un_lats, res['res_std'], zlim = (-30, 30), 
     #                        key = keys[3], plots_dir = plots_dir)
-    plots.residual_scatter(un_lons, un_lats, res['rmse'], zlim = (5, 20), 
+    plots.residual_scatter(un_lons, un_lats, res['rmse'], zlim = (5, 7.5, 20), 
                            key = keys[4], cmap = 'YlOrRd', plots_dir = plots_dir)
-    plots.residual_scatter(un_lons, un_lats, res['rmse_trend'], zlim = (5, 20), 
+    plots.residual_scatter(un_lons, un_lats, res['rmse_trend'], zlim = (5, 7.5, 20), 
                            key = keys[5], cmap = 'YlOrRd', plots_dir = plots_dir)
-    plots.residual_scatter(un_lons, un_lats, res['std_y'], zlim = (5, 20), 
+    plots.residual_scatter(un_lons, un_lats, res['std_y'], zlim = (5, 7.5, 20), 
                            key = keys[6], cmap = 'YlOrRd', plots_dir = plots_dir)
     
     a = np.nanpercentile(res['res'], [98])
@@ -333,43 +337,59 @@ def main(sub_dir):
     # toar_dat = dat['toar.o3.dma8epa.median'].values
     # toar_dat[:, ilat, ilon]
     
-    if not os.path.exists(f'{plots_dir}/large_residuals/'):
-        os.makedirs(f'{plots_dir}/large_residuals/')
+    if not os.path.exists(f'{plots_dir}/residuals/large'):
+        os.makedirs(f'{plots_dir}/residuals/large')
     for s in idx_res:
-        mask1 = np.in1d(lon, un_lons[s])
-        mask2 = np.in1d(lat, un_lats[s])
-        mask3 = mask1 & mask2
+        plots.time_series_loc(un_lons[s], un_lats[s], output, 
+                              plots_dir = f'{plots_dir}/residuals/large/')
+        # mask1 = np.in1d(lon, un_lons[s])
+        # mask2 = np.in1d(lat, un_lats[s])
+        # mask3 = mask1 & mask2
         
-        time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
-        #time = years_y[mask3] * 100 + days_y[mask3]
-        sidx = np.argsort(time)
-        ys = y[mask3][sidx]
-        ys_hat = yhat[mask3][sidx]
-        mr = np.mean(ys - ys_hat)
+        # time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+        # #time = years_y[mask3] * 100 + days_y[mask3]
+        # sidx = np.argsort(time)
+        # ys = y[mask3][sidx]
+        # ys_hat = yhat[mask3][sidx]
+        # mr = np.mean(ys - ys_hat)
         
-        t = np.arange(0, len(ys))
-        z = lowess(ys, t, frac = 0.1)[:,1]
-        zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+        # t = np.arange(0, len(ys))
+        # z = lowess(ys, t, frac = 0.1)[:,1]
+        # zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
         
-        plt.figure(figsize = (10, 5))
-        plt.plot(ys_hat, '-', alpha = 0.8, label = 'pred') 
-        plt.plot(zhat, ls = '-', alpha = 0.5, color = 'darkblue')
-        plt.plot(ys, '-', color = '0.5', alpha = 0.5, label = 'true') 
-        plt.plot(z, ls = '-', color = '0.5')
-        plt.legend()
-        plt.xlabel(f'time (w/ gaps)')
-        plt.grid(ls=':', alpha = 0.5)    
-        plt.title(f'location: {un_lons[s]}, {un_lats[s]}, mean res: {np.round(mr,2)}')
-        plt.tight_layout()
-        plt.savefig(f'{plots_dir}/large_residuals/signal_{un_lons[s]}_.{un_lats[s]}.png',
-                    bbox_inches='tight')
-        plt.close()
+        # plt.figure(figsize = (10, 5))
+        # plt.plot(ys_hat, '-', alpha = 0.8, label = 'pred') 
+        # plt.plot(zhat, ls = '-', alpha = 0.5, color = 'darkblue')
+        # plt.plot(ys, '-', color = '0.5', alpha = 0.5, label = 'true') 
+        # plt.plot(z, ls = '-', color = '0.5')
+        # plt.legend()
+        # plt.xlabel(f'time (w/ gaps)')
+        # plt.grid(ls=':', alpha = 0.5)    
+        # plt.title(f'location: {un_lons[s]}, {un_lats[s]}, mean res: {np.round(mr,2)}')
+        # plt.tight_layout()
+        # plt.savefig(f'{plots_dir}/large_residuals/signal_{un_lons[s]}_.{un_lats[s]}.png',
+        #             bbox_inches='tight')
+        # plt.close()
 
+    #small residuals
+    if not os.path.exists(f'{plots_dir}/residuals/small'):
+        os.makedirs(f'{plots_dir}/residuals/small')
+        
+    idx_res_small = np.where((np.abs(res['res']) > 0) & (np.abs(res['res']) < 1))[0]
+    np.random.seed(0)
+    idx_res_small = np.random.choice(idx_res_small, 20, replace=False)
+    for s in idx_res_small:
+        plots.time_series_loc(un_lons[s], un_lats[s], output, 
+                              plots_dir = f'{plots_dir}/residuals/small/')
+    
     #------histrograms and kde
     print(f'plotting KDE and hist')
-    hlims = np.percentile(y, [0.1, 99.9])
+    if key == 'bias':
+        hlims = [-50, 50]
+    else:
+        hlims = np.percentile(y, [0.1, 99.9])
     plots.predicted_hist(output, lims = hlims, key = key, plots_dir = plots_dir)
-    plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
+    #plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
 
 

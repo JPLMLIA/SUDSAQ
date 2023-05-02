@@ -18,8 +18,9 @@ from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import scipy.cluster.hierarchy as sch
 from sklearn.metrics import pairwise_distances
+from matplotlib import colors
+import pandas as pd
 
 
 MONTHS = ['dec', 'jan', 'feb', 'mar', 
@@ -72,7 +73,8 @@ def imp_barplotv(labels, var1, var2 = None, var3 = None, mask_top = None,
     plt.xticks(x, labels[mask_top], rotation = 90, color = 'k');
     plt.grid(ls=':', alpha = 0.5)
     plt.legend()
-    plt.title(f'top {a} mean importance with std \n all months')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'top {a} mean importance with std \n all months, {ver}')
     plt.tight_layout()
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/baplot_comb{a}_all.png',
@@ -112,7 +114,8 @@ def imp_bubble(labels, var1, key, var2 = None, var3 = None, mask_top = None, plo
                labels[mask_top], rotation = 90)
     plt.xlabel('feature')
     plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'monthly average {key}')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'monthly average {key}, {ver}')
     plt.colorbar()
     plt.tight_layout()
     if plots_dir is not None:
@@ -142,7 +145,8 @@ def imp_fullbar(labels, var1, key, mask_top= None, plots_dir = None):
     plt.ylim((-0.05, 1.02))
     #[plt.gca().get_xticklabels()[x].set_color("red") for x in np.where(box_mask)[0]]
     plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'{key} distributions per month+cv, all months')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'{key} distributions per month+cv, all months, {ver}')
     plt.tight_layout()
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/boxplots_{key}_comb{a}.png',
@@ -208,13 +212,19 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
                      cmap = 'bwr', plots_dir = None):
     #var = 'momo.t'
     #data = xr.open_dataset(models[m])
-    if zlim[1] > 20:
+    if zlim is not None:
+        divnorm=colors.TwoSlopeNorm(vmin=zlim[0], vcenter=zlim[1], vmax=zlim[2])
+    else:
+        divnorm = None
+    
+    if zlim[2] > 40:
         scale = 0.05
     else:
-        scale = 0.5
+        scale = 0.4
         
     fig, ax = plt.subplots(figsize=(14, 10), subplot_kw={'projection': ccrs.PlateCarree()})
-    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*scale, c = res, cmap = cmap)
+    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*scale, c = res, cmap = cmap,
+                norm=divnorm)
     ax.coastlines()
     #ax.stock_img()
     ax.set_extent(bbox_dict['globe'], crs=ccrs.PlateCarree())  # NA region
@@ -223,10 +233,11 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     #im_ratio = len(lat) / len(lon)
-    plt.clim(zlim)
+    #plt.clim(zlim)
     cb = plt.colorbar(fraction = 0.025, pad = 0.05)
     plt.tight_layout()
-    plt.title(f'mean {key} per location')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'mean {key} per location, {ver}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/map_mean_{key}.png',
                     bbox_inches='tight', dpi = 200)
@@ -234,48 +245,67 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
 
 
 import statsmodels.api as sm
-def time_series_loc(lons, lats, y, yhat, years, months, days, idx = None, plots_dir = None):
+def time_series_loc(lon_0, lat_0, output, plots_dir = None):
+    
+    lons = np.hstack(output['lon'])
+    lats = np.hstack(output['lat'])
+    lons = (lons + 180) % 360 - 180
+    
+    y = np.hstack(output['truth'])
+    yhat = np.hstack(output['pred'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    
+    time_full = years_y * 10000 + months_y * 100 + days_y
+    time_line = np.sort(np.unique(time_full))
+    time_formatted = pd.to_datetime(time_line, format='%Y%m%d')
     
     lowess = sm.nonparametric.lowess
-    un_lons, un_lats = np.unique([lons, lats], axis = 1)
-    if idx is None:
-        idx = range(len(un_lons))
-    for s in idx:
-        mask1 = np.in1d(lons, un_lons[s])
-        mask2 = np.in1d(lats, un_lats[s])
-        mask3 = mask1 & mask2
-        
-        time = years[mask3] * 10000 + months[mask3] * 100 + days[mask3]
-        #time = years[mask3] * 100 + days[mask3]
-        sidx = np.argsort(time)
-        ys = y[mask3][sidx]
-        ys_hat = yhat[mask3][sidx]
-        
-        #count = mask3.sum()
-        t = np.arange(0, len(ys))
-        z = lowess(ys, t, frac = 0.1)
-        zhat = lowess(ys_hat, t, frac = 0.1)
-        
-        error_trend = np.sqrt(mean_squared_error(z[:,1], zhat[:,1]))
-        error = np.sqrt(mean_squared_error(ys, ys_hat))
-        #std_y[s] = np.sqrt(np.mean((ys - z[:,1])**2))
-        
-        # mask_gap = np.diff(np.hstack([time[sidx], time[sidx].max()+1])) > 1
-        # ys[mask_gap] = np.nan
-        # ys_hat[mask_gap] = np.nan
-        # z[mask_gap,1] = np.nan
-        # zhat[mask_gap,1] = np.nan
-        plt.figure()
-        plt.plot(ys, '.-', color = '0.5', alpha = 0.3, label = 'true')
-        plt.plot(ys_hat, '.-', color = 'C0', alpha = 0.3, label = 'pred')
-        plt.plot(z[:,1], '--', color = '0.3', lw = 2)
-        plt.plot(zhat[:,1], '--', color = 'C0', lw =2)
-        plt.grid(ls = ':', alpha = 0.5)
-        plt.legend()
-        if plots_dir is not None:
-            plt.savefig(f'{plots_dir}/ts_{un_lons[s]}_{un_lats[s]}.png',
-                        bbox_inches='tight', dpi = 200)
-            plt.close()
+
+    mask1 = np.in1d(lons, lon_0)
+    mask2 = np.in1d(lats, lat_0)
+    mask3 = mask1 & mask2
+    
+    time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+    #time = years_y[mask3] * 100 + days_y[mask3]
+    sidx = np.argsort(time)
+    ys = y[mask3][sidx]
+    ys_hat = yhat[mask3][sidx]
+    mr = np.mean(ys - ys_hat)
+    
+    t = np.arange(0, len(ys))
+    z = lowess(ys, t, frac = 0.1)[:,1]
+    zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+    
+    var = {'y': ys, 'yhat': ys_hat, 'z': z, 'zhat': zhat}
+    var_matched = {'y': [], 'yhat': [], 'z': [], 'zhat': []}
+    mask_gaps = np.in1d(time_line, time)
+    
+    for k in var.keys():
+        var_matched[k] = np.zeros_like(time_line, dtype = float)
+        var_matched[k][:] = np.nan
+        var_matched[k][mask_gaps] = var[k]
+    
+    plt.figure(figsize = (10, 5))
+    plt.plot(time_formatted, var_matched['y'], 
+             '-', alpha = 0.8, lw = 1, label = 'true', color = '0.5') 
+    plt.plot(time_formatted, var_matched['yhat'], 
+             '-', alpha = 0.5, label = 'pred', color = 'blue')
+    plt.plot(time_formatted, var_matched['z'], '-', alpha = 1., color = '0.4') 
+    plt.plot(time_formatted, var_matched['zhat'], '-', alpha = 0.5, color = 'blue')
+    #plt.ylim((res['y'].min(), res['y'].max()))
+    plt.xlim((time_formatted.min(), time_formatted.max()))
+    plt.legend()
+    plt.xlabel(f'time (w/ gaps)')
+    plt.grid(ls=':', alpha = 0.5)  
+    #ver = plots_dir.split('/')[-3]
+    plt.title(f'location: {lon_0}, {lat_0}, mean res: {np.round(mr,2)}')
+    plt.tight_layout()
+    if plots_dir is not None:
+        plt.savefig(f'{plots_dir}/signal_{lon_0}_{lat_0}.png',
+                    bbox_inches='tight')
+        plt.close()
 
 
 
@@ -320,7 +350,8 @@ def predicted_kde(output, lims = (-80, 80), key = 'bias', plots_dir = None):
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
     
-    plt.suptitle(f'true vs predicted {key}, per month')
+    ver = plots_dir.split('/')[-3]
+    plt.suptitle(f'true vs predicted {key}, per month, {ver}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/residuals_monthly.png',
                      bbox_inches='tight')
@@ -353,6 +384,8 @@ def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
             plt.axvline(x = np.hstack(output['truth'][m]).mean(), color = 'orange',
                         alpha = 0.5)
             plt.xlim(lims)
+            if key == 'bias':
+                plt.ylim(top = 0.09)
             plt.legend(fontsize = 6)
             plt.grid(ls = ':')
             plt.xlabel(f'ppb')
@@ -393,6 +426,8 @@ def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
     plt.axvline(x = np.hstack(output['truth']).mean(), color = 'orange',
                 alpha = 0.5)
     plt.xlim(lims)
+    if key == 'bias':
+        plt.ylim(top = 0.09)
     plt.legend()
     plt.grid(ls = ':')
     plt.xlabel(f'ppb')

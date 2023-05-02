@@ -27,7 +27,7 @@ def main(sub_dir, months = 'all'):
     evaluate.main(sub_dir)
     
     #--produce raw feature correlations (toar locs only)
-    correlations.main(sub_dir, months)
+    #correlations.main(sub_dir, months)
     
     
     
