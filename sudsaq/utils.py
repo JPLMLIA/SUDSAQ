@@ -11,6 +11,7 @@ import xarray as xr
 
 from dask.distributed import Client
 from glob import glob
+from pathlib import Path
 
 from sudsaq      import Config
 from sudsaq.data import unstacked
@@ -137,20 +138,16 @@ def mkdir(path):
     # Make sure this is a directory path
     path, _ = os.path.split(path)
 
-    # Split into parts to reconstruct
-    split = path.split('/')
+    # Cast to pathlib and use their mkdir
+    path = Path(path)
 
-    # Now reconstruct the path one step at a time and ensure the directory exists
-    for i in range(2, len(split)+1):
-        dir = '/'.join(split[:i])
-        if not os.path.exists(dir):
-            try:
-                os.mkdir(dir, mode=0o775)
-            except FileExistsError:
-                continue
-            except Exception as e:
-                Logger.exception(f'Failed to create directory {dir}')
-                raise e
+    try:
+        path.mkdir(mode=0o775, parents=True, exist_ok=True)
+    except:
+        Logger.exception(f'Exception raised attempting to create directory: {dir}')
+    finally:
+        if not path.exists():
+            Logger.error(f'Failed to create directory {dir}')
 
 def load_pkl(file):
     """
