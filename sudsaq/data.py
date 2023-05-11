@@ -151,13 +151,13 @@ def subsample(data, dim, N):
     return data.drop_sel(**{dim: drop})
 
 
-def scale(x):
+def scale(x, dims=['loc']):
     """
     The standard score of a sample x is calculated as:
         z = (x - u) / s
     """
-    u = x.mean(skipna=True)
-    s = x.std(skipna=True)
+    u = x.mean(skipna=True, dim=dims)
+    s = x.std(skipna=True, dim=dims)
     z = (x - u) / s
     return z
 
