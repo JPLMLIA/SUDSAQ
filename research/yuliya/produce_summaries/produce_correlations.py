@@ -6,12 +6,9 @@ Created on Mon Oct 31 13:10:36 2022
 @author: marchett
 """
 import os, glob
-import sys
-import json
 import numpy as np
 import h5py
 import xarray as xr
-from scipy.io import netcdf
 from tqdm import tqdm
 from contextlib import closing
 from datetime import datetime, timedelta, date
@@ -19,10 +16,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import pickle
 import scipy.cluster.hierarchy as sch
 from sklearn.metrics import pairwise_distances
-import seaborn
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from scipy import stats
@@ -30,10 +25,16 @@ import summary_plots as plots
 import read_output as read
 from sklearn.preprocessing import StandardScaler
 
+from scipy.cluster.hierarchy import ClusterWarning
+from warnings import simplefilter
+simplefilter("ignore", ClusterWarning)
+
 #root_dir = '/Users/marchett/Documents/SUDS_AQ/analysis_mount/'
 #sub_dir = '/bias/local/8hr_median/v1/'
 
-def main(sub_dir, months = 'all', max_corr = 0.9, raw = True, contributions = False):
+def main(sub_dir, months = 'all', max_corr = 0.9, 
+         regions = ['globe', 'north_america', 'europe', 'asia'],
+         raw = False):
     
     root_dir = '/Volumes/MLIA_active_data/data_SUDSAQ/'
     if not os.path.exists(root_dir):
@@ -41,140 +42,131 @@ def main(sub_dir, months = 'all', max_corr = 0.9, raw = True, contributions = Fa
     
     #set plot directory
     summaries_dir = f'{root_dir}/summaries/{sub_dir}/combined_data/' 
-    # plots_dir = f'{root_dir}/summaries/{sub_dir}/summary_plots/'
-    # # create one if it's not there
-    # if not os.path.exists(plots_dir):
-    #     os.makedirs(plots_dir)
-    bbox = plots.bbox_dict['globe']
+    plots_dir = f'{root_dir}/summaries/{sub_dir}/summary_plots/'
+    if not os.path.exists(plots_dir):
+        os.makedirs(plots_dir)
     if months == 'all':
         months = plots.MONTHS
-    
-    # make the full correlation matrix
-    exclude = ['momo.hno3', 'momo.oh', 'momo.pan', 'momo.q2',
-               'momo.sens', 'momo.so2', 'momo.T2', 'momo.taugxs',
-               'momo.taugys', 'momo.taux', 'momo.tauy', 'momo.twpc',
-               'momo.2dsfc.CFC11', 'momo.2dsfc.CFC113', 'momo.2dsfc.CFC12',
-               'momo.ch2o', 'momo.cumf0', 'momo.2dsfc.dms']
-    
-    #run correlations for all months
-    for month in months:
+    key = plots.get_model_type(sub_dir)    
         
-        #data_file = f'{summaries_dir}/{month}/test.data.mean.nc'
-        # data_file = f'{summaries_dir}/{month}/data.h5'
-        # print(data_file)
-        # if not os.path.isfile(data_file):
-        #     continue
-         
-        #data = xr.open_dataset(data_file)
-        # data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
-        # data = data.sortby(data.lon)
-        # var_names = list(data.keys())
-        
-        #crop the data for the region
-        # data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
-        #                         lon=slice(bbox[0], bbox[1]))
-        # data_stacked = data_cropped.stack(z=('lon', 'lat'))
-        
-        # #extract the values and remove non-TOAR locs
-        # data_array = data_stacked.to_array().values
-        
-        #option2: optionally can run on contributions
-        if raw:
-            key = 'variable'
-            data_file = f'{summaries_dir}/{month}/data.h5'
-            with closing(h5py.File(data_file, 'r')) as f:
-                var_names = f['var_names'][:].astype(str)
-                data_array = f['X'][:]
-        
-        if contributions:
-            key = 'contributions'
-            files_cont = glob.glob(f'{summaries_dir}/{month}/test.contributions.mean.nc')[0]
-            #files_cont = glob.glob(f'{models_dir}/{month}/*/test.contributions.nc')
-            data = xr.open_dataset(files_cont)
-            data.coords['lon'] = (data.coords['lon'] + 180) % 360 - 180
-            var_names = list(data.keys())
-            # data_cropped = data.sel(lat=slice(bbox[2], bbox[3]), 
-            #                         lon=slice(bbox[0], bbox[1]))
-            data_stacked = data.stack(z=('lon', 'lat'))
-            data_array = data_stacked.to_array().values.T
+    for region in tqdm(regions, desc = 'Computing correlations'):
+        bbox = plots.bbox_dict[region]
+        # make the full correlation matrix
+        exclude = []
+        #run correlations for all months
+        collect_data = []
+        for month in months:
+            #option2: optionally can run on contributions
+            if raw:
+                key = 'variable'
+                data_file = f'{summaries_dir}/{month}/data.h5'
+                with closing(h5py.File(data_file, 'r')) as f:
+                    var_names = f['var_names'][:].astype(str)
+                    data_array = f['X'][:]
             
-            
-        
-        # with closing(h5py.File(data_file, 'r')) as f:
-        #     var_names = f['var_names'][:].astype(str)
-        #     data_array = f['X'][:]
-        
-        #extract the values and remove non-TOAR locs
-        counts_nan = np.isnan(data_array).sum(axis = 0)
-        mask_locs = counts_nan < len(var_names)
-        
-        # some variables have all zeros, mask them
-        counts_zero = (data_array == 0).sum(axis = 0)
-        mask_zero =  counts_zero < len(data_array)
-    
-        mask_vars = ~np.in1d(np.hstack(var_names), exclude) & mask_zero
-        #mask_ = mask_zero & mask_vars
-        
-        #scale the data
-        scaler = StandardScaler()
-        data_stand = scaler.fit(data_array).transform(data_array)
+            else:
+                key = 'contributions'
+                files_cont = glob.glob(f'{summaries_dir}/{month}/test.contributions.mean.nc')[0]
+                #files_cont = glob.glob(f'{models_dir}/{month}/*/test.contributions.nc')
+                data = xr.open_dataset(files_cont)
+                #data.coords['lon'] = (data.lon + 180) % 360 - 180
+                #data = data.sortby('lon')
+                var_names = list(data.keys())
+                data_cropped = data.sel(lat = slice(bbox[2], bbox[3]), 
+                                        lon = slice(bbox[0], bbox[1]))
+                try:
+                    data_stacked = data_cropped.stack(z=('lon', 'lat'))
+                    data_array = data_stacked.to_array().values.T
+                except:
+                    data_array = []
+                    continue
+                #data_array = data_stacked.to_array().values.T
+                
+                if not os.path.exists(f'{plots_dir}/contributions'):
+                    os.makedirs(f'{plots_dir}/contributions')
 
-        corr_mat = np.corrcoef(data_stand[:, mask_vars].T)
+            if len(data_array) == 0:
+                continue
+            # with closing(h5py.File(data_file, 'r')) as f:
+            #     var_names = f['var_names'][:].astype(str)
+            #     data_array = f['X'][:]
+            
+            #extract the values and remove non-TOAR locs
+            counts_nan = np.isnan(data_array).sum(axis = 1)
+            mask_locs = counts_nan > 0
+            
+            data_array = data_array[~mask_locs,:]
+            
+            # some variables have all zeros, mask them
+            counts_zero = (data_array == 0).sum(axis = 0)
+            mask_zero =  counts_zero < len(data_array)
+        
+            mask_vars = ~np.in1d(np.hstack(var_names), exclude) & mask_zero
+            #mask_ = mask_zero & mask_vars
+            
+            print(f'{region, month}')
+            #scale the data
+            scaler = StandardScaler()
+            data_stand = scaler.fit(data_array).transform(data_array)
+            collect_data.append(data_stand[:, mask_vars])
+    
+            corr_mat = np.corrcoef(data_stand[:, mask_vars].T)
+            var_names = np.hstack(var_names)[mask_vars]
+            # output_file = f'{summaries_dir}/{month}/{key}_corr_matrix.h5'
+            # with closing(h5py.File(output_file, 'w')) as f:
+            #     f['corr_mat'] = corr_mat
+            #     f['var_names'] = var_names.astype(np.string_)   
+            
+            
+            #clean up variable names to make them shorter
+            #labels = np.hstack([x.split('.')[-1] for x in var_names])
+            #plot full correlation matrix
+            #cluster the correlation matrix to see groups better
+            plots.plot_correlations(corr_mat, var_names, f' {key} correlation {region}',  
+                                    max_corr = 0.5 if key == 'bias' else 0.7, 
+                                    new = False, plot_name = None)
+            plt.text(0.87, 1.015, f', {month}', fontsize = 12,
+                     bbox=dict(facecolor='none', edgecolor='none'),
+                     transform=plt.gca().transAxes)
+            plt.savefig(f'{plots_dir}/contributions/{key}_corr_{region}_{month}.png', 
+                        dpi = 150, bbox = 'tight')
+            plt.close()
+            
+            # name1 = 'momo.2dsfc.Cl2'
+            # name2 = 'momo.2dsfc.dflx.hno3'
+            # name1_idx = np.where(np.in1d(var_names_X, name1))[0]
+            # name2_idx = np.where(np.in1d(var_names_X, name2))[0]
+            # plt.figure()
+            # plt.plot(X[:, name1_idx], X[:, name2_idx], '.')
+            
+            # cluster_ids = sch.fcluster(H, 0.9, criterion="distance")
+            # idx, cluster_counts = np.unique(cluster_ids, return_counts=True)
+            # np.where(cluster_counts > 1)
+            # var_names[cluster_ids == idx[8]]
+    
+        if len(collect_data) == 0:
+            continue 
+         
+        collect_data = np.row_stack(collect_data)
+        corr_mat = np.corrcoef(collect_data.T)
         var_names = np.hstack(var_names)[mask_vars]
-        output_file = f'{summaries_dir}/{month}/{key}_corr_matrix.h5'
-        with closing(h5py.File(output_file, 'w')) as f:
-            f['corr_mat'] = corr_mat
-            f['var_names'] = var_names.astype(np.string_)   
-        
-        #clean up variable names to make them shorter
-        #labels = np.hstack([x.split('.')[-1] for x in var_names])
-        
-        #plot full correlation matrix
-        #cluster the correlation matrix to see groups better
-        plots.plot_correlations(corr_mat, var_names, ' contributions correlation',  
-                                max_corr = 0.5, plot_name = None)
-        plt.savefig(f'{summaries_dir}/{month}/{key}_corr_matrix_{month}.png', 
+        # output_file = f'{summaries_dir}/{month}/{key}_corr_matrix.h5'
+        # with closing(h5py.File(output_file, 'w')) as f:
+        #     f['corr_mat'] = corr_mat
+        #     f['var_names'] = var_names.astype(np.string_)   
+      
+        plots.plot_correlations(corr_mat, var_names, f' {key} correlation',  
+                                max_corr = 0.3 if key == 'bias' else 0.5, 
+                                new = False, plot_name = None)
+        plt.text(0.87, 1.015, f', {month}', fontsize = 12,
+                 bbox=dict(facecolor='none', edgecolor='none'),
+                 transform=plt.gca().transAxes)
+        plt.savefig(f'{plots_dir}/contributions/{key}_corr_{region}.png', 
                     dpi = 150, bbox = 'tight')
-        plt.close()
+        plt.close()    
         
-        # X0 = corr_mat.copy()
-        # X0[np.isnan(X0)] = 0.
-        # D = pairwise_distances(X0)
-        # H = sch.linkage(D, method='average')
-        # d1 = sch.dendrogram(H, no_plot=True)
-        # idx = d1['leaves']
-        # X = X0[idx,:][:, idx]
-        # var_names_X = np.hstack(var_names)[idx]
-        
-        # X2 = X - np.eye(X.shape[0])
-        # X2_max = np.abs(X2).max(axis = 0)
-        # mask_corr = X2_max > max_corr
-        # labels_mask = np.hstack(var_names_X)[mask_corr]
-        
-        # X2 = X[mask_corr, :][:, mask_corr]
-        # x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
-        # plt.figure(figsize = (12, 10))
-        # plt.scatter(x, y, s = np.abs(X2)*20, c = X2, cmap = 'bwr')
-        # plt.xticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 90);
-        # plt.yticks(np.arange(len(labels_mask)), labels_mask, fontsize = 7, rotation = 0);
-        # plt.colorbar()
-        # plt.tight_layout()
-        # plt.title(f'momo variable correlations, truncated for {max_corr} max corr, {month}');
-        # plt.savefig(f'{summaries_dir}/{month}/variable_corr_matrix.png', 
-        #             dpi = 150, bbox = 'tight')
-        # plt.close()
-        
-        # name1 = 'momo.2dsfc.Cl2'
-        # name2 = 'momo.2dsfc.dflx.hno3'
-        # name1_idx = np.where(np.in1d(var_names_X, name1))[0]
-        # name2_idx = np.where(np.in1d(var_names_X, name2))[0]
-        # plt.figure()
-        # plt.plot(X[:, name1_idx], X[:, name2_idx], '.')
-        
-        # cluster_ids = sch.fcluster(H, 0.9, criterion="distance")
-        # idx, cluster_counts = np.unique(cluster_ids, return_counts=True)
-        # np.where(cluster_counts > 1)
-        # var_names[cluster_ids == idx[8]]
+
+
 
 
 if __name__ == '__main__':

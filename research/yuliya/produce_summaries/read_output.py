@@ -290,7 +290,39 @@ def load_predictions(summaries_dir):
                 output[k].append([])
     return output
 
+ 
+
+#--------- load FULL predictions and toar mask
+def load_predictions_full(summaries_dir):
+    ml_files = glob.glob(f'{summaries_dir}/*/')
+    months_list = np.hstack([x.split('/')[-2] for x in ml_files])
+    idx = [np.where(np.hstack(months_list) == x)[0] for x in plots.MONTHS]
+    ml_files = [ml_files[x[0]] if len(x) > 0 else [] for x in idx]
     
+    output = {'mask': [], 'pred': [], 'lon': [], 'lat': [], 'years': [], 
+              'months': [], 'days': []}
+    
+    output_dir = '/'.join(summaries_dir.split('/')[:6])
+    
+    for m in tqdm(range(len(plots.MONTHS)), desc = 'Loading full predicts'):
+    #for m in range(len(ml_files)):
+        is_month = (np.hstack(months_list) == plots.MONTHS[m]).sum()
+        
+        if is_month > 0:
+            dat = xr.open_dataset(f'{ml_files[m]}/test.predict.nc')
+            output['pred'].append(dat.predict.values)
+            
+            
+            with closing(h5py.File(f'{ml_files[m]}/toar_mask.h5', 'r')) as f:
+                output['mask'].append(f['mask'][:])
+        else:
+            output['pred'].append([])
+            output['mask'].append([])
+    
+    
+    return output
+
+   
 
 #--------- load predictions and truth
 # def load_predictions(summaries_dir):
