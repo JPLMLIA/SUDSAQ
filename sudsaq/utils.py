@@ -267,7 +267,7 @@ def load_from_run(path, kind=None, objs=None):
     Loads objects from a given run
     """
     files = {
-        'model'      : f,
+        'model'      : f'{path}/model.pkl',
         'data'       : f'{path}/{kind}.data.nc',
         'target'     : f'{path}/{kind}.target.nc',
         'predict'    : f'{path}/{kind}.predict.nc',
