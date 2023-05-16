@@ -1,6 +1,7 @@
 """
 """
 import argparse
+import fasttreeshap
 import logging
 import matplotlib.pyplot as plt
 import multiprocessing   as mp
@@ -106,6 +107,18 @@ def dependence(explanation, save=None):
         Logger.info(f'Saving dependence plot to {save}')
         plt.savefig(save)
 
+def fast_shap_values(model, data, n_jobs=-1, _dataset=None):
+    """
+    """
+    Logger.debug('Performing FastTreeSHAP calculations')
+
+    explainer   = fasttreeshap.TreeExplainer(model)
+    explanation = Explanation(explainer(data), _dataset=_dataset)
+
+    Logger.debug('Finished SHAP calculations')
+
+    return explanation
+
 def shap_values(model, data, n_jobs=-1, _dataset=None):
     """
     """
@@ -133,7 +146,7 @@ def shap_values(model, data, n_jobs=-1, _dataset=None):
             bar.update()
 
             if bar.n % step == 0:
-                Logger.info(str(bar))
+                Logger.debug(str(bar))
 
     # Combine the results together to one Explanation object
     explanation = shap.Explanation(
@@ -169,8 +182,11 @@ def explain(model, data, kind='test', output=None):
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
-    explanation = shap_values(model, X,
-        n_jobs   = config.get('n_job', -1),
+    # explanation = shap_values(model, X,
+    #     n_jobs   = config.get('n_job', -1),
+    #     _dataset = data[data.coords.keys()].copy()
+    # )
+    explanation = fast_shap_values(model, X,
         _dataset = data[data.coords.keys()].copy()
     )
 
