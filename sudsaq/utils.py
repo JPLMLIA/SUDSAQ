@@ -10,7 +10,6 @@ import sys
 import xarray as xr
 
 from dask.distributed import Client
-from glob import glob
 from pathlib import Path
 
 from sudsaq      import Config
@@ -268,11 +267,11 @@ def load_from_run(path, kind=None, objs=None):
     Loads objects from a given run
     """
     files = {
-        'model'      : f'{path}/model.pkl',
-        'data'       : f'{path}/{kind}.data.nc*',
-        'target'     : f'{path}/{kind}.target.nc*',
-        'predict'    : f'{path}/{kind}.predict.nc*',
-        'explanation': f'{path}/shap.explanation.nc*'
+        'model'      : f,
+        'data'       : f'{path}/{kind}.data.nc',
+        'target'     : f'{path}/{kind}.target.nc',
+        'predict'    : f'{path}/{kind}.predict.nc',
+        'explanation': f'{path}/shap.explanation.nc'
     }
     if not objs:
         objs = files.keys()
@@ -280,16 +279,9 @@ def load_from_run(path, kind=None, objs=None):
     ret = []
     for obj, file in files.items():
         if obj in objs:
-            match = glob(file)
-            if not match:
+            if not os.path.exists(file):
                 Logger.error(f'File not found: {file}')
-            elif len(match) > 1:
-                Logger.error(f'Unable to determine the correct file for {obj!r} from list, see debug for more information')
-                Logger.debug(f'Multiple files matched {obj!r} using {file!r}:')
-                for file in match:
-                    Logger.debug(f'- {file}')
 
-            file, = match
             if file.endswith('.pkl'):
                 Logger.info(f'Loading {obj}: {file}')
                 ret.append(
