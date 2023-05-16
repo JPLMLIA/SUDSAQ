@@ -11,8 +11,8 @@ import shap
 import xarray            as xr
 
 from functools import partial
+from pathlib   import Path
 from tqdm      import tqdm
-from glob      import glob
 
 from sudsaq import  Config
 from sudsaq.utils  import (
@@ -207,9 +207,9 @@ if __name__ == '__main__':
 
     args, config = init(parser.parse_args())
 
-    folds = glob(f'{config.output.path}/[0-9]*')
+    folds = list(Path(config.output.path).glob('[0-9]*'))
     if not folds:
-        Logger.error(f'No folds found for path: {config.output.path}')
+        Logger.error(f'No folds found for path: {config.a}')
     else:
         Logger.info(f'Running SHAP calculations for {len(folds)} folds')
 
