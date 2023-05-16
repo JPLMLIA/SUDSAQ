@@ -114,20 +114,26 @@ def shap_values(model, data, n_jobs=-1, _dataset=None):
 
     n_jobs  = {-1: os.cpu_count(), None: 1}.get(n_jobs, n_jobs)
     subsets = np.array_split(data, n_jobs)
+    total   = len(subsets)
 
     Logger.debug(f'Using {n_jobs} jobs')
+    Logger.debug(f'Split into {total} subsets')
     Logger.debug('Performing SHAP calculations')
 
     # Disable additivity check for now, needs more looking into
     # Issues due to multiprocessing/splitting the input X
     func = partial(explainer, check_additivity=False)
 
-    bar  = tqdm(total=len(subsets), desc='Processes Finished')
+    step = int(total * .1)
+    bar  = tqdm(total=total, desc='Processes Finished')
     rets = []
     with mp.Pool(processes=n_jobs) as pool:
         for ret in pool.imap(func, subsets):
             rets.append(ret)
             bar.update()
+
+            if bar.n % step == 0:
+                Logger.info(str(bar))
 
     # Combine the results together to one Explanation object
     explanation = shap.Explanation(
