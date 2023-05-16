@@ -106,31 +106,6 @@ def dependence(explanation, save=None):
         Logger.info(f'Saving dependence plot to {save}')
         plt.savefig(save)
 
-def to_explanation(ds):
-    """
-    Converts an xarray.Dataset to a shap.Explanation
-    """
-    assert tuple(ds.dims.keys()) == ('variable', 'loc'), f'Dataset is not of expected shape (variable, loc): {ds.dims}'
-
-    return shap.Explanation(
-        ds['values'].values,
-        ds['base_values'].values.reshape(1, len(ds['base_values'])),
-        ds['data'].values,
-        feature_names = ds['variable'].values
-    )
-
-def to_dataset(explanation, data):
-    """
-    Converts an shap.Explanation to a xarray.Dataset
-    """
-    # Convert variables to a dimension then go back to an empty dataset
-    ds = data.to_array().to_dataset(name='').drop('')
-    ds['values']      = (('loc', 'variable'), explanation.values               )
-    ds['data']        = (('loc', 'variable'), explanation.data                 )
-    ds['base_values'] = (('loc',           ), explanation.base_values.flatten())
-
-    return ds
-
 def shap_values(model, data, n_jobs=-1, _dataset=None):
     """
     """

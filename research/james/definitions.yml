@@ -104,6 +104,12 @@ mac:
     input: /Volumes/MLIA_active_data/data_SUDSAQ/data
     output: /Volumes/MLIA_active_data/data_SUDSAQ/models
 
+# Script-specific arguments (inherit these last)
+
+explain:
+  log:
+    file: ${.env.output}/${.env.type}/${$ID}/${.month}/explain.log
+
 # Versions
 
 v4:
