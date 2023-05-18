@@ -193,7 +193,7 @@ def explain(model, data, kind='test', output=None):
     save_objects(
         output      = output,
         kind        = kind,
-        explanation = to_dataset(explanation, data)
+        explanation = explanation.to_dataset()
     )
 
     if config.output.plots:
