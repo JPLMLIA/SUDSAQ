@@ -68,6 +68,10 @@ SECTIONS=(\
 
 export ID="{inherit}"
 
+# Run this on each node; sometimes glob fails if these weren't refreshed beforehand
+ls -R /projects/mlia-active-data/data_SUDSAQ/data/momo/
+ls -R /projects/mlia-active-data/data_SUDSAQ/data/toar/matched/
+
 python {repo}/ml/{script}.py -c {config} -i "{inherit}<-${_sects}" {extra}
 """
 
