@@ -320,7 +320,7 @@ def config_sel(ds, sels):
                 mask &= ds.time.dt.day == sel['day']
 
             if mask.any():
-                ds = ds.where(ds.time[~mask], drop=True)
+                ds = ds.sel(time=ds.time[~mask])
 
         elif isinstance(sel, list):
             Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
