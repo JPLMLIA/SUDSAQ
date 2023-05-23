@@ -49,8 +49,8 @@ PBS = """\
 #PBS -q array-sn
 #PBS -l select=1:ncpus={cpu}:mem={mem}gb
 #PBS -l walltime=240:00:00
-#PBS -e {logs}/job_{id}/
-#PBS -o {logs}/job_{id}/
+#PBS -e {logs}/job_{id}/oe
+#PBS -o {logs}/job_{id}/oe
 #PBS -v summary=true
 #PBS -J {range}
 #PBS -W group_list=mlia-active-data
@@ -62,8 +62,6 @@ conda activate {env}
 export JOBLIB_TEMP_FOLDER=$TMPDIR
 export HDF5_USE_FILE_LOCKING=FALSE
 
-ln -s {logs}/job_{id} {logs}/running/job_{id}
-
 SECTIONS=(\
 {sections}
 )
@@ -71,8 +69,6 @@ SECTIONS=(\
 export ID="{inherit}"
 
 python {repo}/ml/{script}.py -c {config} -i "{inherit}<-${_sects}" {extra}
-
-rm {logs}/running/job_{id}
 """
 
 def qstat(logs, user):
@@ -98,9 +94,9 @@ def ls(logs, file, inherit, sections):
     ls = []
     for section in sections:
         dir = Config(file, f'{inherit}<-{section}').output.path
-        cmd = f'ls "{dir}/**"'
+        cmd = f'ls "{dir}"/**'
         ls.append('echo ""')
-        ls.append(f'echo "Section {section}: {cmd}"')
+        ls.append(f"echo 'Section {section}: {cmd}'")
         ls.append(cmd)
 
     with open(f'{logs}/ls_run.sh', 'w') as output:
@@ -144,7 +140,7 @@ def create_job(file, inherit, sections, script, logs, n=1, preview=False, histor
         mem      = min(Resources.node.mem, int(Resources.user.mem / n)),
         logs     = logs,
         range    = f'0-{len(sections)-1}',
-        env      = os.environ['CONDA_DEFAULT_ENV'],
+        env      = os.environ['CONDA_PREFIX'],
         sections = ''.join([f'\n  "{sect}"' for sect in sections]),
         repo     = sudsaq.__path__[0],
         script   = script,
@@ -162,6 +158,7 @@ def create_job(file, inherit, sections, script, logs, n=1, preview=False, histor
     else:
         Logger.info('Preparing job for launch')
         os.mkdir(logs)
+        os.mkdir(f'{logs}/oe')
 
         with open(f'{logs}/job.pbs', 'w') as output:
             output.write(job)
@@ -229,9 +226,6 @@ if __name__ == '__main__':
     elif not logs.is_dir():
         Logger.error(f'The logs directory must be a directory: {logs}')
         sys.exit(4)
-
-    if not os.path.exists(f'{logs}/running'):
-        os.mkdir(f'{logs}/running')
 
     hfile   = f'{logs}/history.pkl'
     history = {}
