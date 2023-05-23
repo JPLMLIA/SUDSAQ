@@ -319,7 +319,9 @@ def config_sel(ds, sels):
                 Logger.debug(f" - day = {sel['day']}")
                 mask &= ds.time.dt.day == sel['day']
 
-            ds = ds.where(ds.time[~mask], drop=True)
+            if mask.any():
+                ds = ds.where(ds.time[~mask], drop=True)
+
         elif isinstance(sel, list):
             Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
             ds = ds.sortby(dim)
