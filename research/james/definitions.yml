@@ -218,20 +218,20 @@ o3:
 NorthAmerica:
   input:
     sel:
-      lat: [10, 80]
-      lon: [-140, -50]
+      lat: [20, 55]
+      lon: [-125, -70]
 
 Europe:
   input:
     sel:
-      lat: [25, 80]
-      lon: [-20, 40]
+      lat: [35, 65]
+      lon: [-10, 25]
 
 Asia:
   input:
     sel:
-      lat: [10, 70]
-      lon: [110, 160]
+      lat: [20, 50]
+      lon: [100, 145]
 
 # Months
 
