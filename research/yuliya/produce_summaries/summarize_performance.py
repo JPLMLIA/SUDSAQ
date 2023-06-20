@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import explained_variance_score
 from sklearn.metrics import r2_score
 from scipy import stats
-#sys.path.insert(0, '/Users/marchett/Documents/SUDS_AQ/analysis_mount/code/suds-air-quality/research/yuliya/produce_summaries/')
+sys.path.insert(0, '/Users/marchett/Documents/SUDS_AQ/analysis_mount/code/suds-air-quality/research/yuliya/produce_summaries/')
 import summary_plots as plots
 import read_output as read
 
@@ -50,45 +50,102 @@ def main(sub_dir):
     if not os.path.exists(plots_dir):
         os.makedirs(plots_dir)
 
-    ver = sub_dir.split('/')[-1]
+    ver = sub_dir.split('/')[-2]
 
     #--------- prediction and RESIDUAL plots
     output = read.load_predictions(summaries_dir)
     
-    boxes = []
-    mkeys = ['rmse', 'pve']
-    metrics = {k: [None] * len(output['pred']) for k in mkeys}
-    for m in range(len(output['pred'])):
+    
+    print(f'compute trends --->')
+    lon = np.hstack(output['lon'])
+    lat = np.hstack(output['lat'])
+    #lon = (lon + 180) % 360 - 180
+    un_lons, un_lats = np.unique([lon, lat], axis = 1)
+    
+    import statsmodels.api as sm
+    lowess = sm.nonparametric.lowess
+    
+    y = np.hstack(output['truth'])
+    yhat = np.hstack(output['pred'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    
+    zhat = np.zeros(len(yhat),)
+    z = np.zeros(len(yhat),)
+    for s in tqdm(range(len(un_lons)), desc = 'Computing trends'):
+        mask1 = np.in1d(lon, un_lons[s])
+        mask2 = np.in1d(lat, un_lats[s])
+        mask3 = mask1 & mask2
         
-        u_years = np.unique(output['years'][m])
-        metrics['pve'][m] = []     
-        metrics['rmse'][m] = [] 
-        if len(output['pred'][m]) > 1:
+        time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+        #time = years_y[mask3] * 100 + days_y[mask3]
+        sidx = np.argsort(time)
+        ys = y[mask3][sidx]
+        ys_hat = yhat[mask3][sidx]
+        mask_nan = ~np.isnan(ys_hat)
+        
+        if mask_nan.sum() > 0:
+            #true variance per location
+            t = np.arange(0, len(ys))
+            z[mask3] = lowess(ys, t, frac = 0.1)[:,1][sidx]
+            zhat[mask3] = lowess(ys_hat, t, frac = 0.1)[:, 1][sidx]
+  
+        else:
+            z[mask3] = np.repeat(np.nan, len(ys_hat))
+            zhat[mask3] = np.repeat(np.nan, len(ys_hat))
+    
+    
+    #---------- plot metrics of performance
+    boxes = []
+    mkeys = ['rmse', 'rmse_trend', 'pve', 'pve_trend']
+    metrics = {k: [None] * len(output['pred']) for k in mkeys}
+    
+    u_months = np.arange(1, len(plots.MONTHS)+ 1)
+    u_months = np.hstack([u_months[-1], u_months[:-1]])
+    u_years = np.unique(years_y)
+    for m in range(len(plots.MONTHS)):
+
+        #u_years = np.unique(output['years'][m])
+        mask_months = months_y == u_months[m]
+        if mask_months.sum() > 0:
+        
+            metrics['pve'][m] = []     
+            metrics['rmse'][m] = [] 
+            metrics['rmse_trend'][m] = []
+            metrics['pve_trend'][m] = []
             for j in range(len(u_years)):
-                mask_years = output['years'][m] == u_years[j]
-                diff = output['truth'][m] - output['pred'][m]
-                boxes.append(diff)
-                ys = output['truth'][m][mask_years]
-                ys_hat = output['pred'][m][mask_years]
+                mask_years = years_y == u_years[j]
+                diff = (y - yhat)[mask_years & mask_months]
+                #boxes.append(diff)
+                ys = y[mask_years & mask_months]
+                ys_hat = yhat[mask_years & mask_months]
                 mask_nan = ~np.isnan(ys_hat)
                 
-                error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
-                #q = np.percentile(truth_list[m], [25, 75])
-                #nrmse.append(error / np.std(output['truth'][m][mask_years]))
-                #mae.append(mean_absolute_error(output['truth'][m][mask_years], 
-                                               #output['pred'][m][mask_years]))
-                #pve.append(explained_variance_score(output['truth'][m], output['pred'][m]))
-                metrics['pve'][m].append(r2_score(ys[mask_nan], ys_hat[mask_nan]))
-                metrics['rmse'][m].append(error)
-        else:
-            metrics['pve'][m].append(np.nan)
-            metrics['rmse'][m].append(np.nan)
+                zs = z[mask_years & mask_months]
+                zs_hat = zhat[mask_years & mask_months]
+                
+                if mask_nan.sum() > 0:
+                    error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
+                    error_trend = np.sqrt(mean_squared_error(zs[mask_nan], zs_hat[mask_nan]))
+                    metrics['pve'][m].append(r2_score(ys[mask_nan], ys_hat[mask_nan]))
+                    metrics['rmse'][m].append(error)
+                    metrics['rmse_trend'][m].append(error_trend)
+                    metrics['pve_trend'][m].append(r2_score(zs[mask_nan], zs_hat[mask_nan]))
+                else:
+                    metrics['pve'][m].append(np.nan)
+                    metrics['rmse'][m].append(np.nan)
+                    metrics['rmse_trend'][m].append(np.nan)
+                    metrics['pve_trend'][m].append(np.nan)
+            else:
+                metrics['pve'][m].append(np.nan)
+                metrics['rmse'][m].append(np.nan)
+                metrics['rmse_trend'][m].append(np.nan)
+                metrics['pve_trend'][m].append(np.nan)
     
     mask_nan = ~np.isnan(np.hstack(output['pred']))
-    rmse_total = np.round(np.sqrt(mean_squared_error(np.hstack(output['truth'])[mask_nan], 
-                                            np.hstack(output['pred'])[mask_nan])), 2)    
-    r2_total =   np.round(r2_score(np.hstack(output['truth'])[mask_nan], 
-                                            np.hstack(output['pred'])[mask_nan]) , 2) 
+    rmse_total = np.round(np.sqrt(mean_squared_error(y[mask_nan], yhat[mask_nan])), 2)    
+    r2_total =   np.round(r2_score(y[mask_nan], yhat[mask_nan]) , 2) 
     
     
     # --- by value
@@ -112,20 +169,20 @@ def main(sub_dir):
             print('not a valid model type')
     
     
-    #------rmse vs mae
+    #------ plot metrics
     for mk in mkeys:
         metric = metrics[mk]
-        metric_mean = np.hstack([np.mean(x) for x in metric])
-        metric_err = np.hstack([np.std(x) for x in metric])
+        metric_mean = np.hstack([np.nanmean(x) for x in metric])
+        metric_err = np.hstack([np.nanstd(x) for x in metric])
         
         pos0 = np.arange(1, len(metric)+1)
-        plabels = [f'{y}\n{np.round(np.mean(x), 2)}' for y, x in zip(plots.MONTHS, metric)]
+        plabels = [f'{y}\n{np.round(np.nanmean(x), 2)}' for y, x in zip(plots.MONTHS, metric)]
         
         plt.figure()
         plt.errorbar(pos0, metric_mean, yerr= metric_err, color = '0.5', ls = '--')
         plt.plot(pos0, metric_mean, 'o', label = '')
         plt.xticks(np.arange(1, len(plots.MONTHS)+1), plabels, color = 'k');
-        if mk == 'pve':
+        if (mk == 'pve') | (mk == 'pve_trend'):
             plt.ylim((0, 1))    
         plt.grid(ls = ':', alpha = 0.5)
         plt.title(f'{key} ({ver}) {mk}');
@@ -216,11 +273,11 @@ def main(sub_dir):
             
             #true variance per location
             t = np.arange(0, len(ys))
-            z = lowess(ys, t, frac = 0.1)
-            zhat = lowess(ys_hat, t, frac = 0.1)
+            zs = lowess(ys, t, frac = 0.1)
+            zs_hat = lowess(ys_hat, t, frac = 0.1)
             
-            res['rmse_trend'][s] = np.sqrt(mean_squared_error(z[:,1], zhat[:,1]))
-            res['std_y'][s] = np.sqrt(np.mean((ys - z[:,1])**2))
+            res['rmse_trend'][s] = np.sqrt(mean_squared_error(zs[:,1], zs_hat[:,1]))
+            res['std_y'][s] = np.sqrt(np.mean((ys - zs[:,1])**2))
         else:
              for k in res.keys():
                  res[k][s] = np.nan 
@@ -316,48 +373,76 @@ def main(sub_dir):
     #plots.predicted_kde(output, lims = (-hlims[1], hlims[1]), plots_dir = plots_dir)
 
 
+    
+
     # -------- REGIONAL plots
     print('regional plots ---> ')
-    gkeys = ['north_america', 'europe', 'asia', 'australia', 'east_europe1']
+    gkeys = ['north_america', 'europe', 'asia', 'australia']
     gmetrics = {m: {k: [None] * len(output['pred']) for k in gkeys} for m in mkeys}
+    u_months = np.arange(1, len(plots.MONTHS)+ 1)
+    u_months = np.hstack([u_months[-1], u_months[:-1]])
+    u_years = np.unique(years_y)
     for k in gkeys:
         for m in range(len(output['pred'])):
             gmetrics['rmse'][k][m] = [] 
             gmetrics['pve'][k][m] = [] 
+            gmetrics['rmse_trend'][k][m] = [] 
+            gmetrics['pve_trend'][k][m] = []
+           
+            mask_months = months_y == u_months[m]
             #n[k][m] = []
-            u_years = np.unique(output['years'][m])
+            #u_years = np.unique(output['years'][m])
             for j in range(len(u_years)):
-                mask_years = output['years'][m] == u_years[j]
-                lats = output['lat'][m][mask_years]
-                lons = output['lon'][m][mask_years]
-                #lons = (lons + 180) % 360 - 180
-                bbox = plots.bbox_dict[k]
-                mask_lons = (lons > bbox[0]) & (lons < bbox[1])
-                mask_lats = (lats > bbox[2]) & (lats < bbox[3])
-                mask = mask_lons & mask_lats
+                mask_years = years_y == u_years[j]
                 
-                mask_nan = ~np.isnan(output['pred'][m][mask_years][mask])
-               
-                if (mask.sum() > 0) & (mask_nan.sum() > 0):
-                    ys = output['truth'][m][mask_years][mask]
-                    ys_hat = output['pred'][m][mask_years][mask]
-                    mask_nan = ~np.isnan(output['pred'][m][mask_years][mask])
-                    error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
-                    gmetrics['rmse'][k][m].append(error)
-                    gmetrics['pve'][k][m].append(r2_score(ys[mask_nan], 
-                                                          ys_hat[mask_nan]))
+                if (mask_years & mask_months).sum() > 0:
+                    lats = lat[mask_years & mask_months]
+                    lons = lon[mask_years & mask_months]
+                    if np.max(lons) > 180:
+                        lons = (lons + 180) % 360 - 180
+                    bbox = plots.bbox_dict[k]
+                    mask_lons = (lons > bbox[0]) & (lons < bbox[1])
+                    mask_lats = (lats > bbox[2]) & (lats < bbox[3])
+                    mask = mask_lons & mask_lats
+                    
+                    mask_nan = ~np.isnan(yhat[mask_years & mask_months][mask])
+                   
+                    if (mask.sum() > 0) & (mask_nan.sum() > 0):
+                        ys = y[mask_years & mask_months][mask]
+                        ys_hat = yhat[mask_years & mask_months][mask]
+                        mask_nan = ~np.isnan(yhat[mask_years & mask_months][mask])
+                        error = np.sqrt(mean_squared_error(ys[mask_nan], ys_hat[mask_nan]))
+                        gmetrics['rmse'][k][m].append(error)
+                        gmetrics['pve'][k][m].append(r2_score(ys[mask_nan], 
+                                                              ys_hat[mask_nan]))
+                        
+                        zs = z[mask_years & mask_months][mask]
+                        zs_hat = zhat[mask_years & mask_months][mask]
+                        error_trend = np.sqrt(mean_squared_error(zs[mask_nan], zs_hat[mask_nan]))
+                        gmetrics['rmse_trend'][k][m].append(error_trend)
+                        gmetrics['pve_trend'][k][m].append(r2_score(zs[mask_nan], 
+                                                              zs_hat[mask_nan]))
+                    
+                    else:
+                        gmetrics['rmse'][k][m].append(np.nan)
+                        gmetrics['pve'][k][m].append(np.nan)
+                        gmetrics['rmse_trend'][k][m].append(np.nan)
+                        gmetrics['pve_trend'][k][m].append(np.nan)
+    
                 else:
                     gmetrics['rmse'][k][m].append(np.nan)
                     gmetrics['pve'][k][m].append(np.nan)
-                #n[k][m].append(mask.sum())
+                    gmetrics['rmse_trend'][k][m].append(np.nan)
+                    gmetrics['pve_trend'][k][m].append(np.nan)
+        
     
     c = plt.cm.rainbow(np.linspace(0,1, len(gkeys)))
     for mk in mkeys:
         plt.figure()
         for i, k in enumerate(gkeys):
             pos = np.arange(len(gmetrics[mk][k]) * len(gkeys))[::len(gkeys)]
-            y_mean = [np.mean(x) for x in gmetrics[mk][k]]
-            y_err = [np.std(x) for x in gmetrics[mk][k]]
+            y_mean = [np.nanmean(x) for x in gmetrics[mk][k]]
+            y_err = [np.nanstd(x) for x in gmetrics[mk][k]]
             plt.errorbar(pos, y_mean, yerr= y_err, ls = '--', color = c[i])
             plt.plot(pos, y_mean, 'o', color = c[i], label = k)
         plt.grid(ls = ':', alpha = 0.5) 
@@ -366,7 +451,7 @@ def main(sub_dir):
         if mk == 'pve':
             plt.ylim((0, 1))   
         plt.title(f'{key} ({ver}) {mk} per region'); 
-        plt.savefig(f'{plots_dir}/{mk}_regional_all1.png', bbox_inches='tight')
+        plt.savefig(f'{plots_dir}/{mk}_regional_all.png', bbox_inches='tight')
         plt.close()    
 
 

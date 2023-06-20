@@ -42,18 +42,24 @@ def main(sub_dir):
    
     for year in tqdm(years, desc = 'Saving data annually'):
         
+        
+        #save predicts
+        print(f'merging {year} -----> yhat/test.predict')
+        files_y0 = glob.glob(f'{models_dir}/*/{year}/test.predict.nc')
+        
+        if len(files_y0) == 0:
+            continue
         out_dir = f'{summ_dir}/annual_data/{year}/'
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-            
         
-        #save predicts
-        print(f'merging -----> yhat/test.predict')
-        files_y0 = glob.glob(f'{models_dir}/*/{year}/test.predict.nc')
+        
         data_y0 = xr.open_mfdataset(files_y0, parallel=True, lock=False)
-        lons = (data_y0.lon + 180) % 360 - 180
-        data_y0['lon'] = lons
-        data_y0 = data_y0.sortby('lon')
+        
+        if data_y0.lon.max() > 180:
+            lons = (data_y0.lon + 180) % 360 - 180
+            data_y0['lon'] = lons
+            data_y0 = data_y0.sortby('lon')
         
         filename = f'{out_dir}/test.predict.nc'
         if os.path.exists(filename):
@@ -73,9 +79,10 @@ def main(sub_dir):
         for f in files_y:
             data_y.append(xr.open_dataset(f))
         data_y = xr.merge(data_y)
-        lons = (data_y.lon + 180) % 360 - 180
-        data_y['lon'] = lons
-        data_y = data_y.sortby('lon')
+        if data_y.lon.max() > 180:
+            lons = (data_y.lon + 180) % 360 - 180
+            data_y['lon'] = lons
+            data_y = data_y.sortby('lon')
         xr.save_mfdataset([data_y], [f'{out_dir}/test.target.nc'])
         
         
@@ -83,10 +90,11 @@ def main(sub_dir):
         print(f'merging + mean -----> contributions/test.contributions')
         files_c = [x + '/test.contributions.nc' for x in match_dirs]
         data = xr.open_mfdataset(files_c, parallel=True)
-        lons = (data.lon + 180) % 360 - 180
-        data['lon'] = lons
-        data = data.sortby('lon')
-        #data_mean = data.mean(dim='time', skipna= True)
+        if data.lon.max() > 180:
+            lons = (data.lon + 180) % 360 - 180
+            data['lon'] = lons
+            data = data.sortby('lon')
+            #data_mean = data.mean(dim='time', skipna= True)
         filename = f'{out_dir}/test.contributions.nc'
         if os.path.exists(filename):
             os.remove(filename)
@@ -96,9 +104,10 @@ def main(sub_dir):
         print(f'merging + mean -----> X/test.data')
         files_x = [x + '/test.data.nc' for x in match_dirs]
         data = xr.open_mfdataset(files_x, parallel=True, lock = False)
-        lons = (data.lon + 180) % 360 - 180
-        data['lon'] = lons
-        data = data.sortby('lon')
+        if data.lon.max() > 180:
+            lons = (data.lon + 180) % 360 - 180
+            data['lon'] = lons
+            data = data.sortby('lon')
         filename = f'{out_dir}/test.data.nc'
         if os.path.exists(filename):
             os.remove(filename)

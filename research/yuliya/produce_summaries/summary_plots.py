@@ -75,11 +75,11 @@ def imp_barplotv(labels, var1, var2 = None, var3 = None, mask_top = None,
     plt.xticks(x, labels[mask_top], rotation = 90, color = 'k');
     plt.grid(ls=':', alpha = 0.5)
     plt.legend()
-    ver = plots_dir.split('/')[-3]
+    ver = [plots_dir.split('/')[-3] if plots_dir is not None else 'None']
     plt.title(f'top {a} mean importance with std \n all months, {ver}')
     plt.tight_layout()
     if plots_dir is not None:
-        plt.savefig(f'{plots_dir}/baplot_comb{a}_all.png',
+        plt.savefig(f'{plots_dir}/barplot_comb{a}_all.png',
                      bbox_inches='tight')
         plt.close()
 
@@ -223,7 +223,10 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
     #plt.clim(zlim)
     cb = plt.colorbar(fraction = 0.025, pad = 0.05)
     plt.tight_layout()
-    ver = plots_dir.split('/')[-3]
+    if plots_dir is not None:
+        ver = plots_dir.split('/')[-3]
+    else:
+        ver = None
     plt.title(f'mean {key} per location, {ver}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/map_mean_{key}.png',
@@ -314,6 +317,75 @@ def time_series_loc(lon_0, lat_0, output, plots_dir = None):
         plt.savefig(f'{plots_dir}/signal_{lon_0}_{lat_0}.png',
                     bbox_inches='tight')
         plt.close()
+
+
+def time_series_loc_noGaps(lon_0, lat_0, output, plots_dir = None):
+    
+    y = np.hstack(output['truth'])
+    yhat = np.hstack(output['pred'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    time_full = years_y * 10000 + months_y * 100 + days_y
+    
+    lowess = sm.nonparametric.lowess
+    
+    mask3, sidx = unique_loc(lon_0, lat_0, output)
+    ys = y[mask3][sidx]
+    ys_hat = yhat[mask3][sidx]
+    time = time_full[mask3][sidx]
+    mr = np.mean(ys - ys_hat)
+    
+    if len(ys) > 0:
+        t = np.arange(0, len(ys))
+        z = lowess(ys, t, frac = 0.1)[:,1]
+        #zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+        
+        #rolling mean
+        # ds = pd.Series(ys, index = pd.to_datetime(time, format='%Y%m%d'))
+        # new_idx = pd.date_range(ds.index.min(), ds.index.max(), freq='1D')
+        # ds = ds.reindex(new_idx, fill_value = np.nan)
+        # dsm = ds.rolling(window = 7, min_periods = 5, center = True).mean()
+        # mask_nan = ~np.isnan(ds)
+        # z = dsm.values[mask_nan] 
+        
+        yhat_0 = np.hstack(output['pred0'])[mask3][sidx]
+        
+        plt.figure(figsize = (10, 5))
+        plt.plot(t, ys, 
+                 '.--', alpha = 0.5, lw = 1, label = 'true', color = '0.2') 
+        plt.plot(t, ys_hat, 
+                 '.-', alpha = 0.5, label = 'pred-s', color = 'blue')
+        plt.plot(t, yhat_0, '.-', alpha = 0.5, color = 'g', label = 'pred-r') 
+        plt.plot(t, z, '-', alpha = 0.5, color = '0.2') 
+        #plt.plot(t, zhat, '-', alpha = 0.5, color = 'blue')
+        #plt.ylim((res['y'].min(), res['y'].max()))
+        plt.xlim((t.min(), t.max()))
+        plt.legend()
+        plt.xlabel(f'time (w/ gaps)')
+        plt.grid(ls=':', alpha = 0.5)  
+        #ver = plots_dir.split('/')[-3]
+        plt.title(f'location: {lon_0}, {lat_0}, mean res: {np.round(mr,2)}, n: {len(ys)}')
+        plt.tight_layout()
+        if plots_dir is not None:
+            plt.savefig(f'{plots_dir}/signal_{lon_0}_{lat_0}.png',
+                        bbox_inches='tight')
+            plt.close()
+
+
+
+def map_variable(un_lons, un_lats, var, lon, lat, years, months, days):    
+    var_s = []
+    for s in tqdm(range(len(un_lons)), desc = 'Computing trends'):
+        mask1 = np.in1d(lon, un_lons[s])
+        mask2 = np.in1d(lat, un_lats[s])
+        mask3 = mask1 & mask2
+        
+        time = years[mask3] * 10000 + months[mask3] * 100 + days[mask3]
+        sidx = np.argsort(time)
+        var_s.append(np.mean(var[mask3][sidx]))
+    
+    return np.hstack(var_s)
 
 
 

@@ -152,12 +152,18 @@ def main(months, sub_dir):
         mi = []; pi = []; mi_names = []; pi_names = []
         for file in files_imp:
             with closing(h5py.File(file, 'r')) as f:
+                P = len(f['model']['block0_values'][0,:])
                 mi.append(f['model']['block0_values'][0,:])
                 mi_names.append(f['model']['axis0'][:].astype(str))
                 
-                pi.append(f['permutation']['block0_values'][0, :])
-                pi_names.append(f['permutation']['axis0'][:].astype(str))
-                #pi_months.append(file.split('/')[-3])
+                if 'permutation' in f.keys():
+                    pi.append(f['permutation']['block0_values'][0, :])
+                    pi_names.append(f['permutation']['axis0'][:].astype(str))
+                    #pi_months.append(file.split('/')[-3])
+                else:
+                    pi.append(np.repeat(np.nan, P))
+                    pi_names.append(f['model']['axis0'][:].astype(str))
+                    
         with closing(h5py.File(f'{out_dir}/test.importances.h5', 'w')) as f:
             f['model/values'] = np.column_stack(mi)
             f['model/names'] = np.column_stack(mi_names).astype(np.string_)

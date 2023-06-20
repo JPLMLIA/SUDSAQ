@@ -66,15 +66,16 @@ def main(sub_dir, months = 'all', max_corr = 0.9,
             
             else:
                 key = 'contributions'
-                files_cont = glob.glob(f'{summaries_dir}/{month}/test.contributions.mean.nc')[0]
-                #files_cont = glob.glob(f'{models_dir}/{month}/*/test.contributions.nc')
-                data = xr.open_dataset(files_cont)
-                #data.coords['lon'] = (data.lon + 180) % 360 - 180
-                #data = data.sortby('lon')
-                var_names = list(data.keys())
-                data_cropped = data.sel(lat = slice(bbox[2], bbox[3]), 
-                                        lon = slice(bbox[0], bbox[1]))
                 try:
+                    files_cont = glob.glob(f'{summaries_dir}/{month}/test.contributions.mean.nc')[0]
+                    #files_cont = glob.glob(f'{models_dir}/{month}/*/test.contributions.nc')
+                    data = xr.open_dataset(files_cont)
+                    #data.coords['lon'] = (data.lon + 180) % 360 - 180
+                    #data = data.sortby('lon')
+                    var_names = list(data.keys())
+                    data_cropped = data.sel(lat = slice(bbox[2], bbox[3]), 
+                                            lon = slice(bbox[0], bbox[1]))
+                #try:
                     data_stacked = data_cropped.stack(z=('lon', 'lat'))
                     data_array = data_stacked.to_array().values.T
                 except:
@@ -100,11 +101,15 @@ def main(sub_dir, months = 'all', max_corr = 0.9,
             # some variables have all zeros, mask them
             counts_zero = (data_array == 0).sum(axis = 0)
             mask_zero =  counts_zero < len(data_array)
-        
-            mask_vars = ~np.in1d(np.hstack(var_names), exclude) & mask_zero
+            
+            #mask_vars = ~np.in1d(np.hstack(var_names), exclude) & mask_zero
+            if mask_zero.sum() < data_array.shape[1]:
+                print(f'Warning: some variables have contributions of exactly ZERO.')
+                print(f'Total {mask_zero.shape[0]} but un-masked {mask_zero.sum()}.')
+                print(f'{region, month}')
+            mask_vars = ~np.in1d(np.hstack(var_names), exclude)
             #mask_ = mask_zero & mask_vars
             
-            print(f'{region, month}')
             #scale the data
             scaler = StandardScaler()
             data_stand = scaler.fit(data_array).transform(data_array)
@@ -143,7 +148,7 @@ def main(sub_dir, months = 'all', max_corr = 0.9,
             # idx, cluster_counts = np.unique(cluster_ids, return_counts=True)
             # np.where(cluster_counts > 1)
             # var_names[cluster_ids == idx[8]]
-    
+           
         if len(collect_data) == 0:
             continue 
          
