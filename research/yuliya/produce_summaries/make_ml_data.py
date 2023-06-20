@@ -61,8 +61,8 @@ def main(sub_dir, months = 'all'):
     # if not os.path.exists(plots_dir):
     #     os.makedirs(plots_dir)
     
-    for month in months:
-        print(f'-----> making X and y for {month}')
+    for month in tqdm(months, desc = 'Making X and y'):
+        #print(f'-----> making X and y for {month}')
         #data_x = np.hstack(glob.glob(f'{models_dir}/{month}/*/test.data.nc'))
         #data_y = glob.glob(f'{models_dir}/{month}/*/test.target.nc')
         data_y0 = glob.glob(f'{models_dir}/{month}/*/test.predict.nc')

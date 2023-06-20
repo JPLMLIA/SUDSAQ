@@ -17,9 +17,11 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import scipy.cluster.hierarchy as sch
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from sklearn.metrics import pairwise_distances
+from matplotlib import colors
+import pandas as pd
 
 
 MONTHS = ['dec', 'jan', 'feb', 'mar', 
@@ -35,7 +37,8 @@ bbox_dict = {'globe':[-180, 180, -90, 90],
             'west_europe': [-20, 10, 25, 80],
             'east_europe': [10, 40, 25, 80],
             'west_na': [-140, -95, 10, 80],
-            'east_na': [-95, -50, 10, 80], }
+            'east_na': [-95, -50, 10, 80], 
+            'east_europe1': [20, 35, 40, 50]}
 
 
 
@@ -72,10 +75,11 @@ def imp_barplotv(labels, var1, var2 = None, var3 = None, mask_top = None,
     plt.xticks(x, labels[mask_top], rotation = 90, color = 'k');
     plt.grid(ls=':', alpha = 0.5)
     plt.legend()
-    plt.title(f'top {a} mean importance with std \n all months')
+    ver = [plots_dir.split('/')[-3] if plots_dir is not None else 'None']
+    plt.title(f'top {a} mean importance with std \n all months, {ver}')
     plt.tight_layout()
     if plots_dir is not None:
-        plt.savefig(f'{plots_dir}/baplot_comb{a}_all.png',
+        plt.savefig(f'{plots_dir}/barplot_comb{a}_all.png',
                      bbox_inches='tight')
         plt.close()
 
@@ -112,7 +116,8 @@ def imp_bubble(labels, var1, key, var2 = None, var3 = None, mask_top = None, plo
                labels[mask_top], rotation = 90)
     plt.xlabel('feature')
     plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'monthly average {key}')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'monthly average {key}, {ver}')
     plt.colorbar()
     plt.tight_layout()
     if plots_dir is not None:
@@ -142,7 +147,8 @@ def imp_fullbar(labels, var1, key, mask_top= None, plots_dir = None):
     plt.ylim((-0.05, 1.02))
     #[plt.gca().get_xticklabels()[x].set_color("red") for x in np.where(box_mask)[0]]
     plt.grid(ls=':', alpha = 0.5)
-    plt.title(f'{key} distributions per month+cv, all months')
+    ver = plots_dir.split('/')[-3]
+    plt.title(f'{key} distributions per month+cv, all months, {ver}')
     plt.tight_layout()
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/boxplots_{key}_comb{a}.png',
@@ -187,34 +193,25 @@ def cont_map(month, select_vars, summaries_dir, plots_dir = None):
             plt.close()
     
 
-def make_unique_locs(dat, lons, lats, years, days):
-    un_lons, un_lats = np.unique([lons, lats], axis = 1)
-    res = np.zeros_like(un_lons)
-    for s in range(len(un_lons)):
-        mask1 = np.in1d(lons, un_lons[s])
-        mask2 = np.in1d(lats, un_lats[s])
-        mask3 = mask1 & mask2
-        
-        time = years[mask3] * 100 + days[mask3]
-        sidx = np.argsort(time)
-        dat_select = dat[mask3][sidx]
-        res[s] = np.mean(dat_select)
-
-    return res
-
 
 #------- residual bubble plot
 def residual_scatter(un_lons, un_lats, res, key, zlim = None, 
-                     cmap = 'bwr', plots_dir = None):
+                     cmap = 'bwr', scale = 0.4, plots_dir = None):
     #var = 'momo.t'
     #data = xr.open_dataset(models[m])
-    if zlim[1] > 20:
-        scale = 0.05
+    if zlim is not None:
+        divnorm=colors.TwoSlopeNorm(vmin=zlim[0], vcenter=zlim[1], vmax=zlim[2])
     else:
-        scale = 0.5
+        divnorm = None
+    
+    # if zlim[2] > 40:
+    #     scale = 0.05
+    # else:
+    #     scale = 0.4
         
     fig, ax = plt.subplots(figsize=(14, 10), subplot_kw={'projection': ccrs.PlateCarree()})
-    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*scale, c = res, cmap = cmap)
+    plt.scatter(x = un_lons, y = un_lats, s = np.abs(res)*scale, c = res, cmap = cmap,
+                norm=divnorm)
     ax.coastlines()
     #ax.stock_img()
     ax.set_extent(bbox_dict['globe'], crs=ccrs.PlateCarree())  # NA region
@@ -223,59 +220,172 @@ def residual_scatter(un_lons, un_lats, res, key, zlim = None,
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     #im_ratio = len(lat) / len(lon)
-    plt.clim(zlim)
+    #plt.clim(zlim)
     cb = plt.colorbar(fraction = 0.025, pad = 0.05)
     plt.tight_layout()
-    plt.title(f'mean {key} per location')
+    if plots_dir is not None:
+        ver = plots_dir.split('/')[-3]
+    else:
+        ver = None
+    plt.title(f'mean {key} per location, {ver}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/map_mean_{key}.png',
                     bbox_inches='tight', dpi = 200)
         plt.close()
 
 
+def unique_loc(lon_0, lat_0, output):
+    lon = np.hstack(output['lon'])
+    lat = np.hstack(output['lat'])
+    lon = (lon + 180) % 360 - 180  
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    
+    mask1 = np.in1d(lon, lon_0)
+    mask2 = np.in1d(lat, lat_0)
+    mask3 = mask1 & mask2
+    
+    time = years_y[mask3] * 10000 + months_y[mask3] * 100 + days_y[mask3]
+    #time = years_y[mask3] * 100 + days_y[mask3]
+    sidx = np.argsort(time)
+    
+    return mask3, sidx
+
+
 import statsmodels.api as sm
-def time_series_loc(lons, lats, y, yhat, years, months, days, idx = None, plots_dir = None):
+def time_series_loc(lon_0, lat_0, output, plots_dir = None):
+    
+    # lons = np.hstack(output['lon'])
+    # lats = np.hstack(output['lat'])
+    # lons = (lons + 180) % 360 - 180
+    
+    y = np.hstack(output['truth'])
+    yhat = np.hstack(output['pred'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    
+    time_full = years_y * 10000 + months_y * 100 + days_y
+    time_line = np.sort(np.unique(time_full))
+    time_formatted = pd.to_datetime(time_line, format='%Y%m%d')
     
     lowess = sm.nonparametric.lowess
-    un_lons, un_lats = np.unique([lons, lats], axis = 1)
-    if idx is None:
-        idx = range(len(un_lons))
-    for s in idx:
-        mask1 = np.in1d(lons, un_lons[s])
-        mask2 = np.in1d(lats, un_lats[s])
+
+    # mask1 = np.in1d(lons, lon_0)
+    # mask2 = np.in1d(lats, lat_0)
+    # mask3 = mask1 & mask2
+    
+    # #time = years_y[mask3] * 100 + days_y[mask3]
+    # sidx = np.argsort(time)
+    
+    mask3, sidx = unique_loc(lon_0, lat_0, output)
+    ys = y[mask3][sidx]
+    ys_hat = yhat[mask3][sidx]
+    time = time_full[mask3][sidx]
+    mr = np.mean(ys - ys_hat)
+    
+    t = np.arange(0, len(ys))
+    z = lowess(ys, t, frac = 0.1)[:,1]
+    zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+    
+    var = {'y': ys, 'yhat': ys_hat, 'z': z, 'zhat': zhat}
+    var_matched = {'y': [], 'yhat': [], 'z': [], 'zhat': []}
+    mask_gaps = np.in1d(time_line, time)
+    
+    for k in var.keys():
+        var_matched[k] = np.zeros_like(time_line, dtype = float)
+        var_matched[k][:] = np.nan
+        var_matched[k][mask_gaps] = var[k]
+    
+    plt.figure(figsize = (10, 5))
+    plt.plot(time_formatted, var_matched['y'], 
+             '-', alpha = 0.8, lw = 1, label = 'true', color = '0.5') 
+    plt.plot(time_formatted, var_matched['yhat'], 
+             '-', alpha = 0.5, label = 'pred', color = 'blue')
+    plt.plot(time_formatted, var_matched['z'], '-', alpha = 1., color = '0.4') 
+    plt.plot(time_formatted, var_matched['zhat'], '-', alpha = 0.5, color = 'blue')
+    #plt.ylim((res['y'].min(), res['y'].max()))
+    plt.xlim((time_formatted.min(), time_formatted.max()))
+    plt.legend()
+    plt.xlabel(f'time (w/ gaps)')
+    plt.grid(ls=':', alpha = 0.5)  
+    #ver = plots_dir.split('/')[-3]
+    plt.title(f'location: {lon_0}, {lat_0}, mean res: {np.round(mr,2)}, n: {len(ys)}')
+    plt.tight_layout()
+    if plots_dir is not None:
+        plt.savefig(f'{plots_dir}/signal_{lon_0}_{lat_0}.png',
+                    bbox_inches='tight')
+        plt.close()
+
+
+def time_series_loc_noGaps(lon_0, lat_0, output, plots_dir = None):
+    
+    y = np.hstack(output['truth'])
+    yhat = np.hstack(output['pred'])
+    years_y = np.hstack(output['years'])
+    months_y = np.hstack(output['months'])
+    days_y = np.hstack(output['days'])
+    time_full = years_y * 10000 + months_y * 100 + days_y
+    
+    lowess = sm.nonparametric.lowess
+    
+    mask3, sidx = unique_loc(lon_0, lat_0, output)
+    ys = y[mask3][sidx]
+    ys_hat = yhat[mask3][sidx]
+    time = time_full[mask3][sidx]
+    mr = np.mean(ys - ys_hat)
+    
+    if len(ys) > 0:
+        t = np.arange(0, len(ys))
+        z = lowess(ys, t, frac = 0.1)[:,1]
+        #zhat = lowess(ys_hat, t, frac = 0.1)[:, 1]
+        
+        #rolling mean
+        # ds = pd.Series(ys, index = pd.to_datetime(time, format='%Y%m%d'))
+        # new_idx = pd.date_range(ds.index.min(), ds.index.max(), freq='1D')
+        # ds = ds.reindex(new_idx, fill_value = np.nan)
+        # dsm = ds.rolling(window = 7, min_periods = 5, center = True).mean()
+        # mask_nan = ~np.isnan(ds)
+        # z = dsm.values[mask_nan] 
+        
+        yhat_0 = np.hstack(output['pred0'])[mask3][sidx]
+        
+        plt.figure(figsize = (10, 5))
+        plt.plot(t, ys, 
+                 '.--', alpha = 0.5, lw = 1, label = 'true', color = '0.2') 
+        plt.plot(t, ys_hat, 
+                 '.-', alpha = 0.5, label = 'pred-s', color = 'blue')
+        plt.plot(t, yhat_0, '.-', alpha = 0.5, color = 'g', label = 'pred-r') 
+        plt.plot(t, z, '-', alpha = 0.5, color = '0.2') 
+        #plt.plot(t, zhat, '-', alpha = 0.5, color = 'blue')
+        #plt.ylim((res['y'].min(), res['y'].max()))
+        plt.xlim((t.min(), t.max()))
+        plt.legend()
+        plt.xlabel(f'time (w/ gaps)')
+        plt.grid(ls=':', alpha = 0.5)  
+        #ver = plots_dir.split('/')[-3]
+        plt.title(f'location: {lon_0}, {lat_0}, mean res: {np.round(mr,2)}, n: {len(ys)}')
+        plt.tight_layout()
+        if plots_dir is not None:
+            plt.savefig(f'{plots_dir}/signal_{lon_0}_{lat_0}.png',
+                        bbox_inches='tight')
+            plt.close()
+
+
+
+def map_variable(un_lons, un_lats, var, lon, lat, years, months, days):    
+    var_s = []
+    for s in tqdm(range(len(un_lons)), desc = 'Computing trends'):
+        mask1 = np.in1d(lon, un_lons[s])
+        mask2 = np.in1d(lat, un_lats[s])
         mask3 = mask1 & mask2
         
         time = years[mask3] * 10000 + months[mask3] * 100 + days[mask3]
-        #time = years[mask3] * 100 + days[mask3]
         sidx = np.argsort(time)
-        ys = y[mask3][sidx]
-        ys_hat = yhat[mask3][sidx]
-        
-        #count = mask3.sum()
-        t = np.arange(0, len(ys))
-        z = lowess(ys, t, frac = 0.1)
-        zhat = lowess(ys_hat, t, frac = 0.1)
-        
-        error_trend = np.sqrt(mean_squared_error(z[:,1], zhat[:,1]))
-        error = np.sqrt(mean_squared_error(ys, ys_hat))
-        #std_y[s] = np.sqrt(np.mean((ys - z[:,1])**2))
-        
-        # mask_gap = np.diff(np.hstack([time[sidx], time[sidx].max()+1])) > 1
-        # ys[mask_gap] = np.nan
-        # ys_hat[mask_gap] = np.nan
-        # z[mask_gap,1] = np.nan
-        # zhat[mask_gap,1] = np.nan
-        plt.figure()
-        plt.plot(ys, '.-', color = '0.5', alpha = 0.3, label = 'true')
-        plt.plot(ys_hat, '.-', color = 'C0', alpha = 0.3, label = 'pred')
-        plt.plot(z[:,1], '--', color = '0.3', lw = 2)
-        plt.plot(zhat[:,1], '--', color = 'C0', lw =2)
-        plt.grid(ls = ':', alpha = 0.5)
-        plt.legend()
-        if plots_dir is not None:
-            plt.savefig(f'{plots_dir}/ts_{un_lons[s]}_{un_lats[s]}.png',
-                        bbox_inches='tight', dpi = 200)
-            plt.close()
+        var_s.append(np.mean(var[mask3][sidx]))
+    
+    return np.hstack(var_s)
 
 
 
@@ -320,7 +430,8 @@ def predicted_kde(output, lims = (-80, 80), key = 'bias', plots_dir = None):
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
     
-    plt.suptitle(f'true vs predicted {key}, per month')
+    ver = plots_dir.split('/')[-3]
+    plt.suptitle(f'true vs predicted {key}, per month, {ver}')
     if plots_dir is not None:
         plt.savefig(f'{plots_dir}/residuals_monthly.png',
                      bbox_inches='tight')
@@ -330,7 +441,8 @@ def predicted_kde(output, lims = (-80, 80), key = 'bias', plots_dir = None):
 
 
 #------- histrograms of predicted vs true
-def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
+def predicted_hist_monthly(output, bbox = None, lims = (-50, 50), key = 'bias', 
+                   plots_dir = None):
     
     
     fig, ax = plt.subplots(2, 6, figsize = (6*3, 2*3))
@@ -339,24 +451,39 @@ def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
         
         if len(output['pred'][m]) > 0:
             
-            mask_nan = ~np.isnan(np.hstack(output['pred'][m]))
-            rmse_m = np.sqrt(mean_squared_error(output['truth'][m][mask_nan], 
-                                                output['pred'][m][mask_nan]))
-            r2_m = r2_score(output['truth'][m][mask_nan], output['pred'][m][mask_nan])
+            if bbox is None:
+                reg_mask = np.repeat(True, len(np.hstack(output['pred'][m])))
+            else:
+               lats = output['lat'][m]
+               lons = output['lon'][m]
+               lons = (lons + 180) % 360 - 180
+               mask_lons = (lons > bbox[0]) & (lons < bbox[1])
+               mask_lats = (lats > bbox[2]) & (lats < bbox[3])
+               reg_mask = mask_lons & mask_lats 
+
+            mask_nan = ~np.isnan(np.hstack(output['pred'][m])[reg_mask])
+            
+            truth = np.hstack(output['truth'][m])[reg_mask][mask_nan]
+            pred =  np.hstack(output['pred'][m])[reg_mask][mask_nan]
+            
+            rmse_m = np.sqrt(mean_squared_error(truth, pred))
+            r2_m = r2_score(truth, pred)
             
             plt.subplot(2, 6,m+1)
-            plt.hist(np.hstack(output['pred'][m])[mask_nan], bins = 300, density = True, 
+            plt.hist(pred, bins = 300, density = True, 
                      histtype = 'step', label = f'predicted');
-            plt.axvline(x = np.nanmean(np.hstack(output['pred'][m])), alpha = 0.5)
-            plt.hist(np.hstack(output['truth'][m]), bins = 300, density = True, 
+            plt.axvline(x = np.nanmean(pred), alpha = 0.5)
+            plt.hist(truth, bins = 300, density = True, 
                      histtype = 'step', label = f'true');
-            plt.axvline(x = np.hstack(output['truth'][m]).mean(), color = 'orange',
+            plt.axvline(x = truth.mean(), color = 'orange',
                         alpha = 0.5)
             plt.xlim(lims)
+            if 'bias' in key.split('_'):
+                plt.ylim(top = 0.11)
             plt.legend(fontsize = 6)
             plt.grid(ls = ':')
             plt.xlabel(f'ppb')
-            true_mean = np.hstack(output['truth'][m]).mean()
+            true_mean = truth.mean()
             plt.text(0.1, 0.8, f'mean true {np.round(true_mean, 2)}', 
                      bbox=dict(facecolor='none', edgecolor='none'), fontsize = 6,
                      transform=plt.gca().transAxes)
@@ -372,31 +499,49 @@ def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
     
     plt.suptitle(f'true vs predicted {key} histograms, per month')
     if plots_dir is not None:
-        plt.savefig(f'{plots_dir}/hist_predicted_monthly.png',
+        plt.savefig(f'{plots_dir}/hist_predicted_{key}_monthly.png',
                      bbox_inches='tight')
         plt.close()
     
 
+#------- histrograms of predicted vs true
+def predicted_hist_total(output, bbox = None, lims = (-50, 50), key = 'bias', 
+                   plots_dir = None):
+    
     ### ------ histograms ALL
-    mask_nan = ~np.isnan(np.hstack(output['pred']))
-    rmse_total = np.sqrt(mean_squared_error(np.hstack(output['truth'])[mask_nan], 
-                                            np.hstack(output['pred'])[mask_nan]))   
-    pve_total = r2_score(np.hstack(output['truth'])[mask_nan], 
-                                            np.hstack(output['pred'])[mask_nan])
+    if bbox is None:
+        reg_mask = np.repeat(True, len(np.hstack(output['pred'])))
+    else:
+       lats = np.hstack(output['lat'])
+       lons = np.hstack(output['lon'])
+       lons = (lons + 180) % 360 - 180
+       mask_lons = (lons > bbox[0]) & (lons < bbox[1])
+       mask_lats = (lats > bbox[2]) & (lats < bbox[3])
+       reg_mask = mask_lons & mask_lats 
+    
+        
+    mask_nan = ~np.isnan(np.hstack(output['pred'])[reg_mask])
+    truth = np.hstack(output['truth'])[reg_mask][mask_nan]
+    pred =  np.hstack(output['pred'])[reg_mask][mask_nan]
+    
+    rmse_total = np.sqrt(mean_squared_error(truth, pred))   
+    pve_total = r2_score(truth, pred)
     
     plt.figure()
-    plt.hist(np.hstack(output['pred'])[mask_nan], bins = 300, density = True, 
+    plt.hist(pred, bins = 300, density = True, 
              histtype = 'step', label = f'predicted');
-    plt.axvline(x = np.hstack(output['pred']).mean(), alpha = 0.5)
-    plt.hist(np.hstack(output['truth']), bins = 300, density = True, 
+    plt.axvline(x = pred.mean(), alpha = 0.5)
+    plt.hist(truth, bins = 300, density = True, 
              histtype = 'step', label = f'true');
-    plt.axvline(x = np.hstack(output['truth']).mean(), color = 'orange',
+    plt.axvline(x = truth.mean(), color = 'orange',
                 alpha = 0.5)
     plt.xlim(lims)
+    if 'bias' in key.split('_'):
+        plt.ylim(top = 0.11)
     plt.legend()
     plt.grid(ls = ':')
     plt.xlabel(f'ppb')
-    true_mean = np.hstack(output['truth']).mean()
+    true_mean = truth.mean()
     plt.text(0.1, 0.9, f'mean true {np.round(true_mean, 2)}', 
              bbox=dict(facecolor='none', edgecolor='none'), fontsize = 8,
              transform=plt.gca().transAxes)
@@ -407,11 +552,12 @@ def predicted_hist(output, lims = (-50, 50), key = 'bias', plots_dir = None):
              bbox=dict(facecolor='none', edgecolor='none'), fontsize = 8,
              transform=plt.gca().transAxes)
     
-    plt.title(f'predicted vs true bias, all months, rmse total = {np.round(rmse_total, 2)}')
+    plt.title(f'predicted vs true {key}, all months, rmse total = {np.round(rmse_total, 2)}')
     if plots_dir is not None:
-        plt.savefig(f'{plots_dir}/hist_predicted_all.png',
+        plt.savefig(f'{plots_dir}/hist_predicted_{key}_all.png',
                      bbox_inches='tight')
         plt.close()
+
 
 
 #------- histrograms of predicted vs true
@@ -449,7 +595,8 @@ def predicted_hist_single(output, plots_dir = None):
 
 
 #------- clustered correlation matrix
-def plot_correlations(corr_mat, var_names, key, max_corr = 0.9, plot_name = None):
+def plot_correlations(corr_mat, var_names, key, max_corr = 0.9, new = False,
+                      plot_name = None):
     
     X0 = corr_mat.copy()
     X0[np.isnan(X0)] = 0.
@@ -465,7 +612,7 @@ def plot_correlations(corr_mat, var_names, key, max_corr = 0.9, plot_name = None
     mask_corr = X2_max > max_corr
     labels_mask = np.hstack(var_names_X)[mask_corr]
     
-    scale = 150
+    scale = 120
     
     tick_labels = np.zeros_like(labels_mask)
     for l, label in enumerate(labels_mask):
@@ -475,13 +622,13 @@ def plot_correlations(corr_mat, var_names, key, max_corr = 0.9, plot_name = None
     
     X2 = X[mask_corr, :][:, mask_corr]
     x, y = np.meshgrid(np.arange(len(X2)), np.arange(len(X2)))
-    plt.figure(figsize = (12, 10))
+    plt.figure(figsize = (10, 8))
     plt.scatter(x, y, s = np.abs(X2)*scale, c = X2, marker = 's', edgecolors = '0.8', 
                 vmin = -0.85, vmax = 0.85, cmap = 'bwr')
     plt.xticks(np.arange(len(tick_labels)), tick_labels, fontsize = 9, rotation = 90);
     plt.yticks(np.arange(len(tick_labels)), tick_labels, fontsize = 9, rotation = 0);
     plt.colorbar()
-    plt.title(f'momo {key} metric, truncated for {max_corr} max')
+    plt.title(f'momo {key}, truncated for {max_corr} ')
     plt.tight_layout()
     if plot_name is not None:
         plt.savefig(f'{plot_name}', dpi = 150, bbox_inches = 'tight')
@@ -530,6 +677,26 @@ def imp_barplot(labels, var1, var2 = None, var3 = None, mask_top = None,
         plt.close()
 
 
+
+def get_model_type(sub_dir):
+      model_type = np.hstack(sub_dir.split('/'))
+      mtype_bias = np.in1d(model_type, 'bias').sum()
+      mtype_toar = np.in1d(model_type, 'toar').sum()
+      mtype_emu = np.in1d(model_type, 'emulator').sum()
+      if mtype_bias > 0:
+          key = 'bias'
+      else:
+          if mtype_toar + mtype_emu > 0:
+              if mtype_toar > 0:
+                  key = 'toar'
+              if mtype_emu > 0:
+                  key = 'emulator'
+          else:
+              print('not a valid model type')
+              
+      return key
+
+        
 
 #---------heatmap
 # mi_monthly = []
