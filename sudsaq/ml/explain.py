@@ -34,10 +34,22 @@ Logger = logging.getLogger('sudsaq/ml/explain.py')
 
 
 class Explanation(shap.Explanation):
-    def __init__(self, *args, _dataset=None, **kwargs):
+    """
+    """
+    def __init__(self, values, _dataset=None, **kwargs):
         """
         """
-        super().__init__(*args, **kwargs)
+        if issubclass(type(values), fasttreeshap._explanation.Explanation):
+            e = values
+            super().__init__(
+                values        = e.values,
+                base_values   = e.base_values,
+                data          = e.data,
+                **kwargs
+            )
+        else:
+            super().__init__(values, **kwargs)
+
         if _dataset is not None:
             _dataset['variable'] = self.feature_names
             self._dataset = _dataset
@@ -46,11 +58,11 @@ class Explanation(shap.Explanation):
         """
         """
         if hasattr(self, '_dataset'):
-            self._dataset['values'] = (('loc', 'variable'), self.values)
-            self._dataset['data']   = (('loc', 'variable'), self.data  )
-            self._dataset['base_values'] = self.base_values
+            self._dataset['values']      = ('loc', 'variable'), self.values
+            self._dataset['data']        = ('loc', 'variable'), self.data
+            self._dataset['base_values'] = ('loc'            ), self.base_values.flatten()
 
-            return Dataset(self._dataset)
+            return self._dataset
         else:
             Logger.error('This object is missing the _dataset attribute, did you set it?')
 
@@ -66,11 +78,11 @@ class Dataset(xr.Dataset):
         """
         """
         ex = Explanation(
-            np.array (self['values']),
-            np.float_(self['base_values']),
-            np.array (self['data']),
+            values        = np.array (self['values']     ),
+            base_values   = np.float_(self['base_values']),
+            data          = np.array (self['data']       ),
             feature_names = self['variable'].values,
-            _dataset = self[self.coords.keys()].copy()
+            _dataset      = data.drop(list(data)).copy()
         )
 
         return ex
@@ -113,7 +125,11 @@ def fast_shap_values(model, data, n_jobs=-1, _dataset=None):
     Logger.debug('Performing FastTreeSHAP calculations')
 
     explainer   = fasttreeshap.TreeExplainer(model)
-    explanation = Explanation(explainer(data), _dataset=_dataset)
+    explanation = Explanation(
+        explainer(data),
+        feature_names = data.columns,
+        _dataset      = _dataset
+    )
 
     Logger.debug('Finished SHAP calculations')
 
@@ -154,7 +170,7 @@ def shap_values(model, data, n_jobs=-1, _dataset=None):
         np.  mean([ret.base_values for ret in rets]),
         np.vstack([ret.data        for ret in rets]),
         feature_names = data.columns,
-        _dataset = Dataset(_dataset)
+        _dataset = _dataset
     )
 
     return explanation
@@ -187,7 +203,7 @@ def explain(model, data, kind='test', output=None):
     #     _dataset = data[data.coords.keys()].copy()
     # )
     explanation = fast_shap_values(model, X,
-        _dataset = data[data.coords.keys()].copy()
+        _dataset = Dataset(data.drop(list(data)).copy())
     )
 
     save_objects(
