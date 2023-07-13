@@ -108,6 +108,10 @@ def fit(model, data, target, i=None, test=True):
 
     data.train, target.train = prepare('train', data.train, target.train, align=True)
 
+    if data.train is None or target.train is None:
+        Logger.error('No train data available, skipping fold')
+        return
+
     Logger.info('Training model')
     model.fit(data.train, target.train)
 
@@ -139,7 +143,7 @@ def fit(model, data, target, i=None, test=True):
         data.test, target.test = prepare('test', data.test, target.test, align=config.align_test)
 
         if data.test is None or target.test is None:
-            Logger.error('Test set analysis for this fold was cancelled')
+            Logger.error('Test set analysis for this fold is unavailable')
             return
 
         Logger.debug('Saving test objects')
