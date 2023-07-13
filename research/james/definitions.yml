@@ -213,6 +213,17 @@ o3:
   env:
     type: emulator/o3
 
+oh:
+  target: momo.OH
+  train: momo.(?!o3|mda8).*
+  input:
+    glob:
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO v4
+      - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc # TOAR
+      - ${.env.input}/momo/OH/${.range}/${.mon_n}.nc      # MOMO OH
+  env:
+    type: emulator/oh
+
 # Regions
 
 NorthAmerica:
