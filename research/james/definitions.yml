@@ -220,7 +220,7 @@ oh:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO v4
       - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc # TOAR
-      - ${.env.input}/momo/OH/${.range}/${.mon_n}.nc      # MOMO OH
+      - ${.env.input}/momo/OH/${.range}/${.mon_n}.OH.nc   # MOMO OH
   env:
     type: emulator/oh
 
