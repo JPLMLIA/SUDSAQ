@@ -215,7 +215,7 @@ o3:
 
 oh:
   target: momo.OH
-  train: momo.(?!o3|mda8).*
+  train: momo.(?!o3|mda8|OH).*
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO v4
