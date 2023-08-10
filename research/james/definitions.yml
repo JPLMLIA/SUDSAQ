@@ -145,7 +145,25 @@ v5:
         vars: modis.*
         time: 0
 
+v6:
+  ^inherit: v4
+  range: 201[3-6]
+  input:
+    glob:
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
+      - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
+      - ${.env.input}/gee/modis/*.nc                           # MODIS
+      - ${.env.input}/gee/timeless.pop.2010.nc                 # Population
+      - ${.env.input}/gee/ # Night Light
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
+
 # Restrictions
+
+2013-16:
+  range: 201[3-6]
 
 toar-limited:
   input:
@@ -297,3 +315,23 @@ nov:
 dec:
   month: dec
   mon_n: '12'
+
+# Preprocessing matching scripts
+
+match-toar:
+  metrics:
+    - mean
+  variable: 'o3'
+  input:
+    toar:
+      file: /Users/jamesmo/projects/suds-air-quality/o3.h5
+      parameter: 'o3'
+    momo:
+      regex: ${.env.input}/momo/2012/01.nc
+  output:
+    by_month: True
+    path: /Users/jamesmo/projects/suds-air-quality/
+  log:
+    file: null
+    level: debug
+    config: null
