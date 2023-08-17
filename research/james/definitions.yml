@@ -236,6 +236,7 @@ oh:
   input:
     glob:
       - ${.env.input}/momo/OH/${.range}/${.mon_n}.nc  # MOMO OH
+    scale: True
   env:
     type: emulator/oh
 oh[300]:
