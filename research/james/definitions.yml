@@ -242,15 +242,15 @@ oh:
 oh[300]:
   ^inherit: oh
   target: momo.2d300.OH
-  train: momo.2d300.(?!OH)*
+  train: momo.2d300.(?!OH).*
 oh[500]:
   ^inherit: oh
   target: momo.2d500.OH
-  train: momo.2d500.(?!OH)*
+  train: momo.2d500.(?!OH).*
 oh[700]:
   ^inherit: oh
   target: momo.2d700.OH
-  train: momo.2d700.(?!OH)*
+  train: momo.2d700.(?!OH).*
 
 # Regions
 
