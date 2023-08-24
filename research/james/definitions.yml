@@ -232,6 +232,7 @@ o3:
     type: emulator/o3
 
 oh:
+  split_predict: 10
   range: 201[4-5]
   input:
     glob:
