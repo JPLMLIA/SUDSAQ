@@ -3,9 +3,9 @@ import logging
 import multiprocessing as mp
 import numpy as np
 import sklearn
+import warnings
 
 from distutils.version import LooseVersion
-from functools         import partial
 from sklearn.ensemble  import (
     RandomForestClassifier,
     ExtraTreesClassifier,
@@ -17,216 +17,130 @@ from sklearn.tree import (
     DecisionTreeClassifier,
     _tree
 )
-from tqdm import tqdm
 
 Logger = logging.getLogger('treeinterpreter.py')
 
 if LooseVersion(sklearn.__version__) < LooseVersion('0.17'):
     raise Exception('treeinterpreter requires scikit-learn 0.17 or later')
 
-def _get_tree_paths(tree, node_id, depth=0):
-    """
-    Returns all paths through the tree as list of node_ids
-    """
-    if node_id == _tree.TREE_LEAF:
-        raise ValueError("Invalid node_id %s" % _tree.TREE_LEAF)
-
-    left_child = tree.children_left[node_id]
-    right_child = tree.children_right[node_id]
-
-    if left_child != _tree.TREE_LEAF:
-        left_paths = _get_tree_paths(tree, left_child, depth=depth + 1)
-        right_paths = _get_tree_paths(tree, right_child, depth=depth + 1)
-
-        for path in left_paths:
-            path.append(node_id)
-        for path in right_paths:
-            path.append(node_id)
-        paths = left_paths + right_paths
-    else:
-        paths = [[node_id]]
-    return paths
-
-def _predict_tree(model, X, joint_contribution=False):
-    """
-    For a given DecisionTreeRegressor, DecisionTreeClassifier,
-    ExtraTreeRegressor, or ExtraTreeClassifier,
-    returns a triple of [prediction, bias and feature_contributions], such
-    that prediction ≈ bias + feature_contributions.
-    """
-    leaves = model.apply(X)
-    paths = _get_tree_paths(model.tree_, 0)
-
-    for path in paths:
-        path.reverse()
-
-    leaf_to_path = {}
-    #map leaves to paths
-    for path in paths:
-        leaf_to_path[path[-1]] = path
-
-    # remove the single-dimensional inner arrays
-    values = model.tree_.value.squeeze(axis=1)
-    # reshape if squeezed into a single float
-    if len(values.shape) == 0:
-        values = np.array([values])
-    if isinstance(model, DecisionTreeRegressor):
-        # we require the values to be the same shape as the biases
-        values = values.squeeze(axis=1)
-        biases = np.full(X.shape[0], values[paths[0][0]])
-        line_shape = X.shape[1]
-    elif isinstance(model, DecisionTreeClassifier):
-        # scikit stores category counts, we turn them into probabilities
-        normalizer = values.sum(axis=1)[:, np.newaxis]
-        normalizer[normalizer == 0.0] = 1.0
-        values /= normalizer
-
-        biases = np.tile(values[paths[0][0]], (X.shape[0], 1))
-        line_shape = (X.shape[1], model.n_classes_)
-    direct_prediction = values[leaves]
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 
-    #make into python list, accessing values will be faster
-    values_list = list(values)
-    feature_index = list(model.tree_.feature)
-
-    contributions = []
-    if joint_contribution:
-        for row, leaf in enumerate(leaves):
-            path = leaf_to_path[leaf]
-
-
-            path_features = set()
-            contributions.append({})
-            for i in range(len(path) - 1):
-                path_features.add(feature_index[path[i]])
-                contrib = values_list[path[i+1]] - \
-                         values_list[path[i]]
-                #path_features.sort()
-                contributions[row][tuple(sorted(path_features))] = \
-                    contributions[row].get(tuple(sorted(path_features)), 0) + contrib
-        return direct_prediction, biases, contributions
-
-    else:
-        unique_leaves = np.unique(leaves)
-        unique_contributions = {}
-
-        for row, leaf in enumerate(unique_leaves):
-            for path in paths:
-                if leaf == path[-1]:
-                    break
-
-            contribs = np.zeros(line_shape)
-            for i in range(len(path) - 1):
-
-                contrib = values_list[path[i+1]] - \
-                         values_list[path[i]]
-                contribs[feature_index[path[i]]] += contrib
-            unique_contributions[leaf] = contribs
-
-        for row, leaf in enumerate(leaves):
-            contributions.append(unique_contributions[leaf])
-
-        return direct_prediction, biases, np.array(contributions)
-
-def _iterative_mean(iter, current_mean, x):
-    """
-    Iteratively calculates mean using
-    http://www.heikohoffmann.de/htmlthesis/node134.html
-    :param iter: non-negative integer, iteration
-    :param current_mean: numpy array, current value of mean
-    :param x: numpy array, new value to be added to mean
-    :return: numpy array, updated mean
-    """
-    return current_mean + ((x - current_mean) / (iter + 1))
-
-def _predict_forest_mp(model, X, n_jobs):
+def get_paths(tree, node):
     """
     """
-    mean_pred = None
-    mean_bias = None
-    mean_cont = None
-    with mp.Pool(processes=n_jobs) as pool:
-        func    = partial(_predict_tree, X=X)
-        results = pool.imap_unordered(func, model.estimators_)
+    def traverse(node):
+        """
+        """
+        if node == _tree.TREE_LEAF:
+            raise ValueError(f'Invalid node id: {node}')
 
-        for i, (pred, bias, cont) in enumerate(tqdm(results, desc='TreeInterpreter Jobs', total=len(model.estimators_))):
-            if i < 1: # first iteration
-                mean_pred = pred
-                mean_bias = bias
-                mean_cont = cont
-            else:
-                mean_pred = _iterative_mean(i, mean_pred, pred)
-                mean_bias = _iterative_mean(i, mean_bias, bias)
-                mean_cont = _iterative_mean(i, mean_cont, cont)
+        left  = tree.children_left[node]
+        right = tree.children_right[node]
 
-    return mean_pred, mean_bias, mean_cont
+        if left == _tree.TREE_LEAF:
+            return [(node,),]
 
-def _predict_forest(model, X, joint_contribution=False, n_jobs=None):
+        paths = traverse(left) + traverse(right)
+
+        # Prepend instead of append to reverse the path in place
+        for i, path in enumerate(paths):
+            paths[i] = (node, *path)
+
+        return paths
+
+    # Initialize the cache as an attribute of this function for persistency
+    if not hasattr(get_paths, 'cache'):
+        get_paths.cache = {}
+
+    key = f'{tree}{node}'
+    if key not in get_paths.cache:
+        paths = traverse(node)
+        get_paths.cache[key] = {path[-1]: path for path in paths}
+
+    return get_paths.cache[key]
+
+def predict_tree(estimator, X):
     """
-    For a given RandomForestRegressor, RandomForestClassifier,
-    ExtraTreesRegressor, or ExtraTreesClassifier returns a triple of
-    [prediction, bias and feature_contributions], such that prediction ≈ bias +
-    feature_contributions.
     """
-    # Use sklearn n_jobs: (processes=None == all cores)
-    # - all cores if -1
-    # - 1 core if None
-    # - N cores if N > 1
-    n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
+    tree     = estimator.tree_
+    paths    = get_paths(tree, 0)
+    leaves   = estimator.apply(X)
+    uniques  = np.unique(leaves)
 
-    if joint_contribution:
-        biases        = []
-        contributions = []
-        predictions   = []
+    values   = tree.value.squeeze(axis=1)
+    predicts = values[leaves]
+    values   = list(values) # Slightly faster lookups
 
-        with mp.Pool(processes=n_jobs) as pool:
-            bar     = tqdm(total=len(model.estimators_))
-            func    = partial(_predict_tree, X=X, joint_contribution=joint_contribution)
-            results = pool.imap_unordered(func, model.estimators_)
+    # Maps the nodes of the tree to the feature index
+    features = list(tree.feature)
 
-            for i, (pred, bias, contribution) in enumerate(results):
-                predictions.append(pred)
-                biases.append(bias)
-                contributions.append(contribution)
+    # Index is the feature contribution for that leaf column
+    contribs = np.zeros((len(uniques), X.shape[1]))
+    contribs[:] = 0
 
-                bar.update()
+    biases = np.full_like(predicts, values[0])
+    for i, leaf in enumerate(uniques):
+        path = paths[leaf]
+        for j in range(len(path) - 1):
+            # Update the contributions for this leaf/path per feature
+            contribs[i, features[j]] += values[path[j+1]] - values[path[j]]
 
-        total_contributions = []
+    index = {leaf: i for i, leaf in enumerate(uniques)}
+    contributions = np.array([contribs[index[leaf]] for leaf in leaves])
 
-        for i in range(len(X)):
-            contr = {}
-            for j, dct in enumerate(contributions):
-                for k in set(dct[i]).union(set(contr.keys())):
-                    contr[k] = (contr.get(k, 0)*j + dct[i].get(k,0) ) / (j+1)
+    return predicts, biases, contributions
 
-            total_contributions.append(contr)
-
-        for i, item in enumerate(contribution):
-            total_contributions[i]
-            sm = sum([v for v in contribution[i].values()])
-
-        return (np.mean(predictions, axis=0), np.mean(biases, axis=0), total_contributions)
-    else:
-        return _predict_forest_mp(model, X, n_jobs)
-
-def predict(model, X, joint_contribution=False, n_jobs=None):
-    """ Returns a triple (prediction, bias, feature_contributions), such
-    that prediction ≈ bias + feature_contributions.
+def predict_forest(model, X, n_jobs=None):
+    """
     Parameters
     ----------
-    model : DecisionTreeRegressor, DecisionTreeClassifier,
-        ExtraTreeRegressor, ExtraTreeClassifier,
-        RandomForestRegressor, RandomForestClassifier,
+    model
+    X
+    n_jobs: int, defaults=None
+        Similar to sklearn n_jobs:
+              -1 = all cores
+            None = 1 core
+             int = N many cores
+    """
+    # processes=None == all cores
+    n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
+
+    predicts      = np.zeros((X.shape[0], 1))
+    biases        = np.zeros_like(predicts)
+    contributions = np.zeros_like(X)
+
+    total = len(model.estimators_)
+    with mp.Pool(processes=n_jobs) as pool:
+        results = pool.imap_unordered(predict_tree, model.estimators_)
+        for i, (p, b, c) in enumerate(results):
+            predicts      += p
+            biases        += b
+            contributions += c
+
+            Logger.debug(f'{i}/{total} ({i/total:.2f}%) completed')
+
+    predicts      /= total
+    biases        /= total
+    contributions /= total
+
+    return predicts, biases, contributions
+
+def predict(model, X, n_jobs=None):
+    """ Returns a triple (prediction, bias, feature_contributions), such
+    that prediction ≈ bias + feature_contributions.
+
+    Parameters
+    ----------
+    model: DecisionTreeRegressor, DecisionTreeClassifier, ExtraTreeRegressor,
+        ExtraTreeClassifier, RandomForestRegressor, RandomForestClassifier,
         ExtraTreesRegressor, ExtraTreesClassifier
-    Scikit-learn model on which the prediction should be decomposed.
 
-    X : array-like, shape = (n_samples, n_features)
-    Test samples.
+        Scikit-learn model on which the prediction should be decomposed.
 
-    joint_contribution : boolean
-    Specifies if contributions are given individually from each feature,
-    or jointly over them
+    X: array-like, shape=(n_samples, n_features)
+
+        Test samples.
 
     Returns
     -------
@@ -235,13 +149,10 @@ def predict(model, X, joint_contribution=False, n_jobs=None):
         for classification
     * bias, shape = (n_samples) for regression and (n_samples, n_classes) for
         classification
-    * contributions, If joint_contribution is False then returns and  array of
+    * contributions, array of
         shape = (n_samples, n_features) for regression or
         shape = (n_samples, n_features, n_classes) for classification, denoting
         contribution from each feature.
-        If joint_contribution is True, then shape is array of size n_samples,
-        where each array element is a dict from a tuple of feature indices to
-        to a value denoting the contribution from that feature tuple.
     """
     # Only single out response variable supported,
     if model.n_outputs_ > 1:
@@ -251,13 +162,13 @@ def predict(model, X, joint_contribution=False, n_jobs=None):
         DecisionTreeClassifier,
         DecisionTreeRegressor
     )):
-        return _predict_tree(model, X, joint_contribution=joint_contribution)
+        return predict_tree(model, X)
     elif isinstance(model, (
         RandomForestClassifier,
         ExtraTreesClassifier,
         RandomForestRegressor,
         ExtraTreesRegressor,
     )):
-        return _predict_forest(model, X, joint_contribution=joint_contribution, n_jobs=n_jobs)
+        return predict_forest(model, X, n_jobs=n_jobs)
     else:
         raise ValueError('Wrong model type. Base learner needs to be a DecisionTreeClassifier or DecisionTreeRegressor.')
