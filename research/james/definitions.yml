@@ -232,6 +232,8 @@ o3:
     type: emulator/o3
 
 oh:
+  treeinterpreter:
+    n_jobs: 10
   range: 201[4-5]
   input:
     glob:
