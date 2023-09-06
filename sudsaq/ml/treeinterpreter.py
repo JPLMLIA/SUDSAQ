@@ -6,6 +6,7 @@ import sklearn
 import warnings
 
 from distutils.version import LooseVersion
+from functools         import partial
 from sklearn.ensemble  import (
     RandomForestClassifier,
     ExtraTreesClassifier,
@@ -112,7 +113,8 @@ def predict_forest(model, X, n_jobs=None):
 
     total = len(model.estimators_)
     with mp.Pool(processes=n_jobs) as pool:
-        results = pool.imap_unordered(predict_tree, model.estimators_)
+        func    = partial(predict_tree, X=X)
+        results = pool.imap_unordered(func, model.estimators_)
         for i, (p, b, c) in enumerate(results):
             predicts      += p
             biases        += b
