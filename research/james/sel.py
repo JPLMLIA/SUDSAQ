@@ -94,11 +94,70 @@ xr.core.dataset.Dataset
 type(ds)
 
 #%%
-
-import xarray as xr
+from importlib import reload
 
 import sudsaq
 
-xarray.core.dataset.Dataset
+import xarray as xr
+
+
+xr.core.dataset.Dataset
+
+ds = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2007/11.nc')
 
 type(ds)
+
+#%%
+point = (0, 1)
+match point:
+    case (0, 0):
+        print("Origin")
+    case (0, y):
+        print(f"Y={y}")
+    case (x, 0):
+        print(f"X={x}")
+    case (x, y):
+        print(f"X={x}, Y={y}")
+    case _:
+        raise ValueError("Not a point")
+
+#%%
+
+
+dates = [
+    'Day of',
+    '0 days',
+    '1 day',
+    '7 days',
+    '1 month',
+    '3 months',
+    'yearly'
+]
+
+yearly = 'yearly' in dates
+
+for date in dates:
+    if date.lower() == 'day of':
+        date = '0 days'
+
+    match date.split(' '):
+        case n, 'day' | 'days':
+            print(f'Reminder is {n} days')
+        case n, 'month' | 'months':
+            print(f'Reminder is {n} months')
+
+
+
+sum([[0, 1], [2, 3]])
+
+#%%
+
+import xarray as xr
+
+help(xr.open_mfdataset)
+
+from mlky import Null
+
+dict(Null())
+
+data

@@ -107,7 +107,7 @@ class Dataset(xr.Dataset):
             base_values   = np.float_(self['base_values']),
             data          = np.array (self['data']       ),
             feature_names = self['variable'].values,
-            _dataset      = data.drop(list(data)).copy()
+            _dataset      = self.drop(list(self)).copy()
         )
 
         return ex
@@ -591,3 +591,431 @@ from wcmatch import glob as g1
 g2 = lambda pattern: g1.glob(pattern, flags=g1.BRACE)
 p = "/projects/mlia-active-data/data_SUDSAQ/data/momo/201[1-5]/02.nc"
 g2(p)
+
+#%%
+
+import xarray as xr
+
+t = xr.open_dataarray('.local/data/oh/test.target.nc').load()
+data = t.data.flatten()
+#%%
+t = xr.open_dataarray('test.target.nc').load()
+s = t.stack(stack=['lat', 'lon', 'time'])
+l = s.where(s > 1e3, drop=True)
+l.size / s.size
+#%%
+
+w = t.where(t > 1e3, drop=True)
+
+s = t.stack(stack=['lat', 'lon', 'time'])
+
+l = s.where(s > 1e3, drop=True)
+
+s.size
+l.size
+l.size / s.size
+
+#%%
+
+l.time.min()
+l.time.max()
+
+#%%
+t.where(t > 1e3, drop=True).time.size
+t.where(t > 1e3, drop=True).mean().data
+t.where(t < 1e3, drop=True).mean().data
+
+help(t.where)
+t
+t.plot.hist()
+
+#%%
+
+from mlky import Config
+
+c = Config('research/james/definitions.yml', 'default<-v6<-2013-16')
+c.range
+
+#%%
+import numpy as np
+
+w = t.where(t > 1e3, np.nan)
+w
+
+#%%
+
+
+#%%
+
+fig = plt.figure(figsize=(7, 5))
+ax = plt.subplot(111, projection=ccrs.PlateCarree())
+draw(t.max('time'), ax, vmax=1e6)
+
+
+#%%
+
+
+fig, ax = plt.subplots(figsize=(7, 5))
+draw(w.max('time'), ax)
+
+t.std()
+
+#%%
+
+t = xr.open_dataarray('.local/data/oh/test.target.nc').load()
+p = xr.open_dataarray('.local/data/oh/test.predict.nc').load()
+r = t - p
+
+#%%
+
+fig = plt.figure(figsize=(7, 5))
+ax = plt.subplot(111, projection=ccrs.PlateCarree())
+draw(r.max('time'), ax, vmax=1e6, vmin=0, title="Residuals")
+
+#%%
+from mlky   import Section
+from mlky.utils import align_print
+from yaspin import yaspin
+
+from yaspin.spinners import Spinners
+
+def forspin(func, iterable, args=(), kwargs={}, spinner=None, text=None, data={}):
+    """
+    Calls func(item, *args, data=data, **kwargs) for item in iterable and
+    records any errors. If func returns a string, that string will be counted
+    as an error and all errors displayed with their total count.
+
+    Parameters
+    ----------
+    func: function
+        The function to apply to each entry of `iterable`
+    iterable: iterable
+        Any iterable object
+    args: tuple
+        Passes to `func(item, *args, **kwargs)`
+    kwargs: dict
+        Passes to `func(item, *args, **kwargs)`
+    spinner: any, defaults=None
+        Any yaspin compatible spinner option
+    text: str, defaults=None
+        Text to use for the spinner
+    data: dict
+        Format keys to apply to the text. This is done after every iteration so
+        updating the values of this dict will reflect in the text. Additional
+        data variables will be populated for use include:
+            iter - Current iteration
+            tota - len(iterable)
+            perc - Percentage = iter/tota*100
+        This is also passed to the func as a key-word argument
+
+
+    """
+    data['tota'] = len(iterable)
+    errors = Section()
+    with yaspin(spinner, text=text, reversal=True) as sp:
+        for i, item in enumerate(iterable):
+            data['iter'] = i
+            data['perc'] = i / t * 100
+
+            e = None
+            try:
+                ret = func(item, *args, data=data, **kwargs)
+                if ret is not True:
+                    e = ret
+            except Exception as e:
+                ...
+            finally:
+                if e:
+                    if not errors[e]:
+                        errors[e] = 0
+                    errors[e] += 1
+
+            if text:
+                sp.text = '\n'.join([
+                    'Any errors that occur will appear below:',
+                    *column_fmt([(f'{v} ({v/t*100:.2f}%)', k) for k, v in errors.items()], print=False),
+                    text.format(**data) + ' '
+                ])
+
+from datetime import datetime as dtt
+
+class RefreshText:
+    def __init__(self, text='', data={}, errors=Section()):
+        self.text   = text
+        self.data   = data
+        self.errors = errors
+        self.start  = dtt.now()
+
+    def __str__(self):
+        sec = round((dtt.now() - self.start).total_seconds(), 1)
+        # Reverse the {errors: count} to ('count (%)', errors) for column_fmt
+        reverse = [(f'{v} ({v/t*100:.2f}%)', k) for k, v in self.errors.items()]
+        if reverse:
+            reverse = column_fmt(reverse, delimiter=':', print=False)
+
+        return '\n'.join([
+            *reverse,
+            '---------------------------------------------',
+            self.text.format(**self.data) + ' '
+        ])
+
+def forspin(func, iterable, args=(), kwargs={}, spinner=None, text=None, data={}):
+    """
+    """
+    data['iter'] = 0
+    data['perc'] = 0.
+    data['tota'] = t = len(iterable)
+    errors = {}
+    rt = RefreshText(text, data)
+    with yaspin(spinner, text=rt, reversal=True):
+        for i, item in enumerate(iterable):
+            data['iter'] = i
+            data['perc'] = i / t * 100
+
+            e = None
+            try:
+                ret = func(item, *args, data=data, **kwargs)
+                if ret is not True:
+                    e = ret
+            except Exception as e:
+                ...
+            finally:
+                if e:
+                    # if not errors[e]:
+                    if e not in errors:
+                        errors[e] = 0
+                    errors[e] += 1
+
+            rt.errors = errors
+            rt.data = data
+
+import numpy as np
+import time
+
+def pull(v, data):
+    time.sleep(.1)
+    n = np.random.randint(10)
+    if n >= 7:
+        return True
+    data['failed'] += 1
+    return f'Error {n}'
+
+data = {'failed': 0}
+forspin(pull, [0]*300,
+    spinner = Spinners.moon,
+    text    = 'Total: {tota} | Completed: {iter} ({perc}) | Failed: {failed}',
+    data    = data
+)
+
+
+#%%
+import shap
+import xarray as xr
+
+from sudsaq.ml.explain import Dataset
+
+file = '.local/data/shap/v4/jul/2011/test.explanation.nc'
+file = '/Volumes/MLIA_active_data/data_SUDSAQ/models/bias/gattaca.v4.bias-median/jun/**/test.explanation.nc'
+
+ds = Dataset(xr.open_mfdataset(file))
+
+
+#%%
+
+def cont_to_ex(dir):
+    """
+    Converts TreeInterpreter outputs to SHAP Explanation objects
+    """
+    bias = xr.open_mfdataset(f'{dir}/test.bias.nc').bias.data
+    data = xr.open_mfdataset(f'{dir}/test.data.nc').to_array('variable').transpose('lat', 'lon', 'time', 'variable').data
+    cont = xr.open_mfdataset(f'{dir}/test.contributions.nc').to_array('variable').transpose('lat', 'lon', 'time', 'variable')
+
+    ds = Dataset(cont.to_dataset(name='values'))
+    ds['data'] = (('lat', 'lon', 'time', 'variable'), data)
+    ds['base_values'] = (('lat', 'lon', 'time'), bias)
+    ex = ds.stack(loc=['lat', 'lon', 'time']).transpose().to_explanation()
+
+    return ds, ex
+
+ts, tx = cont_to_ex('/Volumes/MLIA_active_data/data_SUDSAQ/models/bias/gattaca.v4.bias-median/jun/**')
+ts
+ts.to_netcdf('/Volumes/MLIA_active_data/data_SUDSAQ/models/bias/gattaca.v4.bias-median/jun/treeinterpreter.explanations.nc')
+
+#%%
+from mlky import Section
+from tqdm import tqdm
+
+def load_regions(regions, ds):
+    """
+    regions: dict
+    """
+    r = Section()
+    for key, region in tqdm(regions.items(), desc='Loading Regions'):
+        lat, lon = region
+        region = ds.sel(lat=lat).sel(lon=lon).load()
+        r[key] = dict(
+            data    = region,
+            aligned = xr.align(ds, region, join='left')[1],
+            bounds  = f'lat: ({lat.start}, {lat.stop}), lon: ({lon.start}, {lon.stop})'
+        )
+
+    return r
+
+#%%
+
+# Mar: 1, 2
+# Jul: 3, 4, 5
+#                     lat, lon
+regions = {
+    # 1: [slice(15.9, 21.0), slice( 61.0,  68.5)],
+    # 2: [slice(34.2, 38.8), slice(121.8, 124.7)],
+    3: [slice(31.1, 36.7), slice(-89.2, -81.0)],
+    4: [slice(45.6, 52.4), slice(  3.6,  17.5)],
+    5: [slice(25.8, 34.3), slice(112.5, 118.6)],
+}
+
+#%%
+
+lat, lon = regions[3]
+reg = ds.sel(lat=lat).sel(lon=lon).load()
+
+#%%
+
+t = load_regions(regions, ds)
+
+#%%
+
+def draw(data, ax=None, figsize=(13, 7), title=None, coastlines=True, gridlines=True, **kwargs):
+    """
+    Portable geospatial plotting function
+    """
+    if ax is None:
+        if 'plt' not in globals():
+            global plt
+            import matplotlib.pyplot as plt
+        if 'ccrs' not in globals():
+            global ccrs
+            import cartopy.crs as ccrs
+
+        fig = plt.figure(figsize=figsize)
+        ax  = plt.subplot(111, projection=ccrs.PlateCarree())
+
+    plot = data.plot.pcolormesh(x='lon', y='lat', ax=ax, **kwargs)
+
+    if title:
+        ax.set_title(title)
+    if coastlines:
+        ax.coastlines()
+    if gridlines:
+        ax.gridlines(draw_labels=False, color='dimgray', linewidth=0.5)
+
+    return ax
+
+#%%
+
+# Verify region
+reg = t[3]
+draw(reg.aligned.count(['time', 'variable']).data, title=f'Bounds: {reg.bounds}')
+
+#%%
+
+reg = reg.data.mean(['lat', 'lon', 'time']).to_explanation(auto=False)
+# reg = reg.data.to_explanation().mean(0)
+
+shap.plots.waterfall(reg, max_display=20)
+
+#%%
+
+for i, region in t.items():
+    reg = region.data.to_explanation(auto=True).mean(0)
+    shap.plots.waterfall(reg, max_display=20, show=False)
+    plt.tight_layout()
+    plt.savefig(f'shap.waterfalls.jun.region-{i}.png')
+    plt.close('all')
+
+#%%
+
+draw(cs.mean('time').sel(variable='momo.ps')['values'])
+
+#%%
+
+_r = r.mean(['lat', 'lon', 'time']).to_explanation()
+shap.plots.waterfall(_r, max_display=20)
+
+#%%
+
+_r = ex.mean(['lat', 'lon', 'time']).to_explanation()
+shap.plots.waterfall(_r, max_display=20)
+#%%
+
+shap.plots.waterfall(mx, max_display=20)
+
+
+#%%
+r2 = r2.mean(['lat', 'lon', 'time']).to_explanation()
+shap.plots.waterfall(r2, max_display=20)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+import xarray as xr
+
+from sudsaq.utils import load_from_run
+
+data, target = load_from_run('/Volumes/MLIA_active_data/data_SUDSAQ/models/bias/gattaca.v4.bias-median/jul/2011', 'test', ['data', 'target'])
+
+data = data.stack({'loc': ['lat', 'lon', 'time']})
+data = data.to_array()
+target = target.stack({'loc': ['lat', 'lon', 'time']})
+target = target['target']
+
+target = target.dropna('loc')
+data = data.dropna('loc')
+
+data, target = xr.align(data, target)
+
+clustering = shap.utils.hclust(data.values.T, target.values)
+
+#%%
+"""
+Often features in datasets are partially or fully redundant with each other. Where redundant means that a model could use either feature and still get
+same accuracy. To find these features practitioners will often compute correlation matrices among the features, or use some type of clustering method.
+When working with SHAP we recommend a more direct approach that measures feature redundancy through model loss comparisions. The shap.utils.hclust
+method can do this and build a hierarchical clustering of the feature by training XGBoost models to predict the outcome for each pair of input
+features. For typical tabular dataset this results in much more accurate measures of feature redundancy than you would get from unsupervised methods
+like correlation.
+
+Once we compute such a clustering we can then pass it to the bar plot so we can simultainously visualize both the feature redundancy structure and the
+feature importances. Note that by default we don’t show all of the clustering structure, but only the parts of the clustering with distance < 0.5.
+Distance in the clustering is assumed to be scaled roughly between 0 and 1, where 0 distance means the features perfectly redundant and 1 means they
+are completely independent.
+"""
+
+shap.plots.bar(ex[0], clustering=clustering, max_display=None, clustering_cutoff=.13)
+#%%
+
+shap.plots.bar(ex, max_display=None)
+
+#%%
+
+# shap.plots.heatmap(ex, max_display=None)
+
+
+ts = ds.mean('time').stack(loc=['lat', 'lon']).transpose()
+tx = ts.to_explanation()
+
+shap.summary_plot(ex, max_display=10)
+
+shap.summary_plot(tx)
+
+#%%
+ex[:, 0].data.mean()
+shap.plots.scatter(ex[:, 'momo.no2'], color=ex[:, 'momo.no'])
+shap.plots.scatter(ex[:, 'momo.no'], color=ex[:, 'momo.no2'])
+
+shap.plots.scatter(ex[:, 'momo.2dsfc.CH2O'], xmax=0, color=ex[:, 'momo.co'])
+shap.plots.scatter(ex[:, 'momo.t'], xmax=0, color=ex[:, 'momo.co'])
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

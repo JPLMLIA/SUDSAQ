@@ -266,3 +266,182 @@ ns[ns == np.inf]
 
 
 help(ns.where)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+import xarray as xr
+
+from glob import glob
+
+from sudsaq.silos.momo.process import extract_tar
+
+lon   = None
+years = [str(year) for year in range(2005, 2011)]
+files = glob('/Volumes/MLIA_active_data/data_SUDSAQ/MOMOchem/*.tar.gz')
+for file in tqdm(files, desc='Processing Tars'):
+    year = file.split('/')[-1][11:15]
+    if year in years:
+        ds = extract_tar(file)
+
+        if lon is None:
+            lon = ds.lon.values
+            lon[lon > 180] -= 360
+
+        ds['lon'] = lon
+
+        rename = {}
+        for var in ds:
+            if '/' in var:
+                rename[var] = 'momo.' + var.replace('/', '.')
+            else:
+                rename[var] = f'momo.{var}'
+
+        ds = ds.rename(rename)
+
+        save_by_month(ds, '/data/MLIA_active_data/data_SUDSAQ/data/momo/processing/')
+
+#%%
+ts = '10-31'
+
+m, d = '10', '31'
+ds.time.dt.month == int(m)
+ds.time.dt.day == int(d)
+ds.where(ds.time == ts, drop=True)
+
+#%%
+
+input:
+    sel:
+        drop_days:
+            - month: 4
+              day: 29
+
+#%%
+import xarray as xr
+
+ds = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2013/02.nc')
+
+import numpy as np
+
+np.ones_like(ds.time.values.shape)
+
+m, d = '02', '29'
+
+mask = np.full(ds.time.shape, True)
+mask &= ds.time.dt.month == int(m)
+mask &= ds.time.dt.day == int(d)
+ds
+ds.where(ds.time[~mask], drop=True)
+mask.any()
+ds
+ds.where(ds.time[~mask], drop=True)
+ds.close()
+
+list(ds)
+
+for f in ds: print(f[5:])
+
+#%%
+
+ts = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/matched/2010/01.nc')
+for f in ts: print(f[5:])
+
+
+#%%
+
+from sudsaq.data import Dataset
+
+ds = Dataset(ds)
+
+v4 = '.+\.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr).*'
+
+for f in sorted(v): print(f[5:])
+v4
+
+v = set(ds) - set(v4)
+
+- momo.Restart
+- momo.agcm.forward-y2005
+
+- momo.CHEMTMP1
+- momo.CHEMTMP2
+- momo.SYSIN
+- momo.agcm.forward-y2008
+- momo.gralb
+- momo.prod.xco.gt3
+- momo.stderr.1937054.0
+
+- momo.PAN.gt3
+- momo.tcr2-t106l32.dactl-y2009
+
+- momo.PAN.gt3
+- momo.no2.gt3
+- momo.oh.gt3
+- momo.ps.gt3
+- momo.stderr.2208660.0
+
+'.+\.(?!Restart|agcm|CHEMTMP|SYSIN|gralb|*gt3)'
+ds = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2008/12.nc')
+ds['.+\.(?!Restart|agcm|CHEMTMP|SYSIN|gralb|gt3)']
+len(ds)
+ds['.+\.(?!Restart|agcm|CHEMTMP|SYSIN|gralb|gt3).*']
+
+
+- momo.CHEMTMP1
+- momo.CHEMTMP2
+- momo.SYSIN
+- momo.agcm.forward-y2008
+- momo.gralb
+- momo.prod.xco.gt3
+- momo.stderr.1937054.0
+
+ds['[^\.]+\.(?!Restart|agcm|CHEMTMP|SYSIN|gralb|.*gt3|stderr|tcr2).*']
+ns = ds['[^\.]+\.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr|Restart|agcm|CHEMTMP|SYSIN|gralb|.*gt3|stderr|tcr2).*']
+
+for v in sorted(ns): print(v[5:])
+
+#%%
+
+momo = xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2011/01.nc')
+
+momo
+
+#%%
+
+sorted(momo)
+for f in sorted(momo): print(f[5:])
+
+
+#%%
+
+glob('')
+xr.close()
+ds.close()
+import xarray as xr
+xr.open_dataset('/Volumes/MLIA_active_data/data_SUDSAQ/data/momo/2011/01.nc')
+
+momo.close()
+
+#%%
+
+from mlky import Config
+
+Config('research/james/definitions.yml').v4.input.sel.vars
+
+
+#%%
+
+def check(ds):
+    da = flatten(ds)
+    c = da.count('loc')
+    s = sorted(da['variable'][c == 0])
+    print(f'{len(s)} are entirely NaN:')
+    for i in s: print(f'  {i}')
+
+#%%
+
+import numpy as np
+
+a = np.array([0, 2, 5])
+a
+str(a)
