@@ -19,21 +19,26 @@ def toar_match():
 
     # Load in toar and momo data
     Logger.info(f'Loading MOMO')
-    ds = xr.open_mfdataset(config.input.momo.regex, parallel=True)
+    ds = xr.open_mfdataset(config.input.momo.regex, parallel=False)
+    ds = ds.sortby('lon')
 
     Logger.info(f'Loading TOAR ({config.input.toar.parameter})')
     df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
-    # Rename to generic names
-    df = df.rename(columns={
-        'station_lon': 'lon',
-        'station_lat': 'lat'
-    })
-    # Convert from (-180, 180) to (0, 360) longitude format
-    df.lon.loc[df.lon < 0] += 360
+
+    if 'station_lon' in df:
+        # Rename to generic names
+        df = df.rename(columns={
+            'station_lon': 'lon',
+            'station_lat': 'lat'
+        })
+    # # Convert from (-180, 180) to (0, 360) longitude format
+    # df.lon.loc[df.lon < 0] += 360
+    df    = df.rename(columns={'time': 'date'})
+    dates = pd.unique(df['date'])
 
     # Run the generalized matching function
     Logger.info('Matching TOAR with MOMO')
-    return match(ds, df, f'toar.{config.input.toar.parameter}')
+    return match(ds, df, f'toar.{config.input.toar.parameter}', dates=dates)
 
 
 if __name__ == '__main__':
@@ -44,10 +49,9 @@ if __name__ == '__main__':
                                             metavar  = '/path/to/config.yaml',
                                             help     = 'Path to a config.yaml file'
     )
-    parser.add_argument('-s', '--section',  type     = str,
-                                            default  = 'match',
-                                            metavar  = '[section]',
-                                            help     = 'Section of the config to use'
+    parser.add_argument('-i', '--inherit',  nargs    = '?',
+                                            metavar  = 'sect1 sect2',
+                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
     )
 
     init(parser.parse_args())

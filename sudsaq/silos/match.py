@@ -8,12 +8,12 @@ import xarray as xr
 from scipy import stats
 from tqdm  import tqdm
 
-from sudsaq import  Config
-from sudsaq.data   import save_by_month
+from sudsaq      import  Config
+from sudsaq.data import save_by_month
 
 Logger = logging.getLogger('sudsaq/silos/match.py')
 
-def match(ds, df, tag):
+def match(ds, df, tag, dates=None):
     """
     Matches silo data to the MOMO lat/lon grid using silo lat/lon data.
 
@@ -25,7 +25,7 @@ def match(ds, df, tag):
     df: pandas.DataFrame
         Silo dataframe in expected format. Must contain columns: [time, lat, lon]
     tag: str
-        The unique tag for this silo. For example, TOAR is `toar.{config.input.toar.parameter}`
+        The unique tag for this silo. For example, TOAR is `toar.{config.input.toar.variable}`
 
     Returns
     -------
@@ -50,8 +50,9 @@ def match(ds, df, tag):
             return 1
 
     # Collect the dates to process
-    Logger.info('Retrieving unique dates')
-    dates = pd.unique(df.index.get_level_values('date')) # TODO: toar/match.py should handle the index to make this script more generalized
+    if not dates:
+        Logger.info('Retrieving unique dates')
+        dates = pd.unique(df.index.get_level_values('date')) # TODO: toar/match.py should handle the index to make this script more generalized
     Logger.debug(f'Number of dates: {len(dates)}')
 
     # Prepare the Dataset that the matched data will reside in
@@ -63,16 +64,20 @@ def match(ds, df, tag):
         }
     )
     # Prefill the variables
-    Logger.debug('Creating the matched dataset')
     shape = *dates.shape, *ds.lat.shape, *ds.lon.shape
-    for metric in config.metrics:
-        ms[f'{tag}.{config.metric}.{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
+    Logger.debug('Creating the matched dataset')
+    Logger.debug(f'Shape: {shape}')
+    for metric in tqdm(config.metrics, 'Allocating memory'):
+        ms[f'{tag}.{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
 
     # Add end values for the last bin of each lat/lon
-    lat = np.hstack([ds['lat'], 90.])
-    lon = np.hstack([ds['lon'], 360.])
+    lat = np.hstack([ds['lat'],  90.])
+    lon = np.hstack([-180., ds['lon']])
 
-    # For each date, compute the metrics and save into the Dataset
+    Logger.debug(f'Lat: {lat}')
+    Logger.debug(f'Lon: {lon}')
+
+    # # For each date, compute the metrics and save into the Dataset
     for time in tqdm(dates, desc='Processing Dates'):
         tf = df.query('date == @time')
 
@@ -80,19 +85,36 @@ def match(ds, df, tag):
             calc = stats.binned_statistic_2d(
                 tf.lat,
                 tf.lon,
-                tf[config.metric],
+                tf[config.variable],
                 metric,
                 bins = [lat, lon],
                 expand_binnumbers = True
             )
             # Now save the calculation for this time
-            ms.loc[{'time': time}][f'{tag}.{config.metric}.{metric}'][:] = calc.statistic
+            ms.loc[{'time': time}][f'{tag}.{metric}'][:] = calc.statistic
+
+    # for metric in config.metrics:
+    #     calc = stats.binned_statistic_2d(
+    #         df.lat,
+    #         df.lon,
+    #         df[config.variable],
+    #         metric,
+    #         bins = [lat, lon],
+    #         expand_binnumbers = True
+    #     )
+    #     # Now save the calculation for this time
+    #     print(calc.statistic.shape)
+    #     print()
+    #     ms[f'{tag}.{metric}'][:] = calc.statistic
+
+    ms['time'] = pd.DatetimeIndex(ms['time'])
+    Logger.debug(f'Dataset:\n{ms}')
 
     # Save output
     if config.output.by_month:
         save_by_month(ms, config.output.path)
     else:
-        Logger.info(f'Saving to output: {config.output}')
-        ms.to_netcdf(config.output, engine='scipy')
+        Logger.info(f'Saving to output: {config.output.path}')
+        ms.to_netcdf(config.output.path)
 
     return True
