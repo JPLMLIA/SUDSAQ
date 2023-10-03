@@ -1,7 +1,6 @@
 """
 """
 import argparse
-import fasttreeshap
 import logging
 import matplotlib.pyplot as plt
 import multiprocessing   as mp
@@ -21,6 +20,11 @@ from sudsaq.utils  import (
     load_from_run,
     save_objects
 )
+
+try:
+    import fasttreeshap
+except:
+    fasttreeshap = None
 
 # Increase matplotlib's logger to warning to disable the debug spam it makes
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -74,15 +78,23 @@ class Dataset(xr.Dataset):
     """
     __slots__ = () # Required for subclassing
 
-    def to_explanation(self):
+    def to_explanation(self, auto=False, stack={'loc': ['lat', 'lon', 'time']}, transpose=False):
         """
         """
+        if auto:
+            if 'loc' not in self.coords:
+                self = self.stack(**stack)
+                transpose = True
+
+            if transpose:
+                self = self.transpose()
+
         ex = Explanation(
             values        = np.array (self['values']     ),
             base_values   = np.float_(self['base_values']),
             data          = np.array (self['data']       ),
             feature_names = self['variable'].values,
-            _dataset      = data.drop(list(data)).copy()
+            _dataset      = self.drop(list(self)).copy()
         )
 
         return ex
@@ -198,13 +210,15 @@ def explain(model, data, kind='test', output=None):
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
-    # explanation = shap_values(model, X,
-    #     n_jobs   = config.get('n_job', -1),
-    #     _dataset = data[data.coords.keys()].copy()
-    # )
-    explanation = fast_shap_values(model, X,
-        _dataset = Dataset(data.drop(list(data)).copy())
-    )
+    if fasttreeshap is not None:
+        explanation = fast_shap_values(model, X,
+            _dataset = Dataset(data.drop(list(data)).copy())
+        )
+    else:
+        explanation = shap_values(model, X,
+            n_jobs   = config.get('n_job', -1),
+            _dataset = data[data.coords.keys()].copy()
+        )
 
     save_objects(
         output      = output,
@@ -247,7 +261,7 @@ if __name__ == '__main__':
 
     folds = list(Path(config.output.path).glob('[0-9]*'))
     if not folds:
-        Logger.error(f'No folds found for path: {config.a}')
+        Logger.error(f'No folds found for path: {config.output.path}/[0-9]*')
     else:
         Logger.info(f'Running SHAP calculations for {len(folds)} folds')
 
