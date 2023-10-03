@@ -10,7 +10,9 @@ dependencies:
   - netcdf4
   - numpy
   - pandas
+  - panel
   - pyyaml
+  - rioxarray
   - requests
   - scikit-learn
   - seaborn
@@ -19,5 +21,7 @@ dependencies:
   - xarray
   - pip
   - pip:
+    - fasttreeshap # requires g++
+    - mlky
     - ray
     - tables
