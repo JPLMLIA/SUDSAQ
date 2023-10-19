@@ -230,12 +230,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-c', '--config',   type     = str,
-                                            required = True,
                                             metavar  = '/path/to/config.yaml',
+                                            default  = '/scratch/sudsaq/suds-air-quality/sudsaq/configs/definitions.yml',
                                             help     = 'Path to a config.yml file'
     )
     parser.add_argument('-p', '--patch',    nargs    = '?',
                                             metavar  = 'sect1 ... sectN',
+                                            required = True,
                                             help     = 'Patch sections together starting from sect1 to sectN'
     )
     parser.add_argument('-m', '--months',   type     = str,
