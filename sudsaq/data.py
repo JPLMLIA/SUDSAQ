@@ -8,6 +8,7 @@ import os
 import re
 import xarray   as xr
 
+from mlky import Config
 from tqdm import tqdm
 
 Logger = logging.getLogger('sudsaq/select.py')
@@ -19,8 +20,6 @@ try:
 except:
     from glob import glob
     Logger.debug('Failed to load wcmatch, falling back to builtin glob')
-
-from sudsaq import Config
 
 
 h5py._errors.silence_errors()
@@ -343,7 +342,7 @@ def load(config, split=False, lazy=True):
     """
     Logger.info('Collecting files')
     files = []
-    for string in config.input.glob:
+    for string in config.input.glob.values():
         match = glob(string)
         Logger.debug(f'Collected {len(match)} files using "{string}"')
         files += match
