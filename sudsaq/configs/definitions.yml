@@ -48,7 +48,7 @@ default:
   # explain:
   #   resample: True
   output:
-    path: ${.env.output}/${.env.type}/${$ID}/${.month}
+    path: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}
     model        : True
     data         : True
     target       : True
@@ -71,10 +71,10 @@ default:
     #   lat: 16
     #   lon: 32
   log:
-    file: ${.env.output}/${.env.type}/${$ID}/${.month}/run.log
+    file: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}/run.log
     level: debug
     reset: True
-    config: ${.env.output}/${.env.type}/${$ID}/
+    config: ${.env.output}/${.env.type}/${$MODELNAME}/
   dask:
     config:
       distributed.admin.tick.limit: 60s
@@ -104,11 +104,19 @@ mac:
     input: /Volumes/MLIA_active_data/data_SUDSAQ/data
     output: /Volumes/MLIA_active_data/data_SUDSAQ/models
 
+# Model choices
+RFQ:
+  model:
+    kind: RandomForestQuantileRegressor
+    intervals: # % confidence, 95% confidence = 95
+      - 75
+      - 95
+
 # Script-specific arguments (inherit these last)
 
 explain:
   log:
-    file: ${.env.output}/${.env.type}/${$ID}/${.month}/explain.log
+    file: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}/explain.log
 
 # Versions
 
@@ -193,7 +201,7 @@ cap-depth:
 
 # Run Types
 
-bias[median]:
+bias-median:
   target: momo.mda8 - toar.o3.dma8epa.median
   train: (?!toar).+\.(?!o3|mda8).*
   input:
@@ -203,7 +211,7 @@ bias[median]:
   env:
     type: bias
 
-bias[mean]:
+bias-mean:
   target: momo.mda8 - toar.o3.dma8epa.mean
   train: (?!toar).+\.(?!o3|mda8).*
   input:
@@ -333,17 +341,21 @@ dec:
 match-toar:
   metrics:
     - mean
+    - median
+    - std
   variable: o3.mda8
   input:
     toar:
-      file: /Users/jamesmo/projects/suds-air-quality/.local/data/toar/mda8.h5
-      parameter: v2-2
+      file: /Users/jamesmo/projects/sudsaq/dev/.local/data/toar/track-df.mda8.h5
+      parameter: null
     momo:
       regex: ${.env.input}/momo/2012/01.nc
   output:
     by_month: False
-    path: /Users/jamesmo/projects/suds-air-quality/.local/data/toar/matched-mda8.v2-2.nc
+    path: /Users/jamesmo/projects/sudsaq/dev/.local/data/toar/matched-mda8.v2-3.nc
   log:
     file: null
     level: debug
     config: null
+  # mlky:
+  #   debug: [__call__]
