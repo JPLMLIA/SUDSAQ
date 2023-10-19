@@ -5,7 +5,9 @@ dependencies:
   - python=3.9
   - cartopy
   - dask
+  - geoviews
   - h5py
+  - hvplot
   - matplotlib
   - netcdf4
   - numpy
