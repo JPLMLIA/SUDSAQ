@@ -13,6 +13,11 @@ from sklearn.model_selection import (
     KFold
 )
 
+try:
+    from quantile_forest import RandomForestQuantileRegressor
+except:
+    RandomForestQuantileRegressor = None
+
 from sudsaq import (
     Config,
     Section
@@ -27,7 +32,9 @@ from sudsaq.utils      import (
     save_pkl
 )
 
+
 Logger = logging.getLogger('sudsaq/ml/create.py')
+
 
 def prepare(kind, data, target, drop_features=False, align=False):
     """
@@ -79,15 +86,22 @@ def prepare(kind, data, target, drop_features=False, align=False):
 
     return data, target
 
+
 def fit(model, data, target, i=None, test=True):
     """
     Fits a model and analyzes the performance
 
     Parameters
     ----------
-    model:
-    data:
-    target:
+    model: sklearn.ensemble.*
+        An sklearn ensemble model. Tested well with RandomForestRegressor, all
+        other models are experimental
+    data: mlky.Sect
+        Sect object containing the .train and .test splits for this X
+        These splits should be xarray.Dataset
+    target: mlky.Sect
+        Sect object containing the .train and .test splits for this y
+        These splits should be xarray.Dataset
     test: bool, default = None
 
     Notes
@@ -101,33 +115,32 @@ def fit(model, data, target, i=None, test=True):
     Cannot drop NaNs on target prior to kfold as
     X and y wouldn't align raising an exception
     """
-    # Retrieve the config object
-    config = Config()
-
     Logger.info('Preparing data for model training')
 
+    # Prepare the training data
     data.train, target.train = prepare('train', data.train, target.train, align=True)
 
     if data.train is None or target.train is None:
         Logger.error('No train data available, skipping fold')
         return
 
+    # Train the model as well as any Quantile Random Forests if given
     Logger.info('Training model')
     model.fit(data.train, target.train)
 
     # Create a subdirectory if kfold
-    output = config.output.path
+    output = Config.output.path
     if test:
         year = set(target.test.time.dt.year.values).pop()
         Logger.info(f'Testing year: {year}')
         if output:
             output += f'/{year}/'
 
-    if config.output.model:
+    if Config.output.model:
         Logger.info(f'Saving model to {output}/model.pkl')
         save_pkl(model, f'{output}/model.pkl')
 
-    if config.train_performance:
+    if Config.train_performance:
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
     else:
@@ -140,7 +153,7 @@ def fit(model, data, target, i=None, test=True):
         )
 
     if test:
-        data.test, target.test = prepare('test', data.test, target.test, align=config.align_test)
+        data.test, target.test = prepare('test', data.test, target.test, align=Config.align_test)
 
         if data.test is None or target.test is None:
             Logger.error('Test set analysis for this fold is unavailable')
@@ -169,7 +182,7 @@ def fit(model, data, target, i=None, test=True):
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
-            if config.explain:
+            if Config.explain:
                 explain(
                     model  = model,
                     data   = data.test,
@@ -178,6 +191,7 @@ def fit(model, data, target, i=None, test=True):
                 )
         except:
             Logger.exception('SHAP explanations failed:')
+
 
 def hyperoptimize(data, target, model, kfold=None, groups=None):
     """
@@ -196,7 +210,6 @@ def hyperoptimize(data, target, model, kfold=None, groups=None):
         Lambda function that creates an instance of the provided model with the optimized parameters
     """
     Logger.info('Performing hyperparameter optimization (this may take awhile)')
-    config = Config()
 
     # Load all of the data, drop the nans, and align the time dimension
     data, target = xr.align(
@@ -206,10 +219,10 @@ def hyperoptimize(data, target, model, kfold=None, groups=None):
 
     gscv = GridSearchCV(
         estimator   = model(),
-        param_grid  = dict(config.hyperoptimize.param_grid),
+        param_grid  = dict(Config.hyperoptimize.param_grid),
         cv          = kfold,
         error_score = 'raise',
-        **config.hyperoptimize.GridSearchCV
+        **Config.hyperoptimize.GridSearchCV
     )
 
     gscv.fit(data, target, groups=groups)
@@ -218,40 +231,54 @@ def hyperoptimize(data, target, model, kfold=None, groups=None):
     align_print(gscv.best_params_, enum=False, prepend='  ', print=Logger.info)
 
     # Create the predictor
-    return lambda: model(**config.model.params, **gscv.best_params_)
+    return lambda: model(**Config.model.params, **gscv.best_params_)
+
 
 def create():
     """
     Creates and trains a desired model.
     """
-    # Load config and data
-    config       = Config()
+    # Load the data
     data, target = load(config, split=True)
 
-    if config.model.kind in dir(models):
-        Logger.info(f'Selecting {config.model.kind} as model')
-        ensemble = getattr(models, config.model.kind)
+    ## Select a model to use per the config
+    # Sklearn
+    if Config.model.kind in dir(models):
+        Logger.info(f'Selecting {Config.model.kind} as model')
+        ensemble = getattr(models, Config.model.kind)
+
+    # Zillow RandomForestQuantileRegressor
+    elif Config.model.kind == 'RandomForestQuantileRegressor':
+        if RandomForestQuantileRegressor is None:
+            Logger.error('Please install https://github.com/zillow/quantile-forest before using RandomForestQuantileRegressor')
+            return True
+
+        ensemble = RandomForestQuantileRegressor
+
+    # Error, not supported
     else:
-        Logger.info(f'Invalid model selection: {config.model.kind}')
+        Logger.info(f'Invalid model selection: {Config.model.kind}')
         return 1
 
     # If KFold is enabled, set it up
     kfold  = None
     groups = None
-    if config.KFold:
+    if Config.KFold:
         Logger.debug('Using KFold')
-        kfold  = KFold(**config.KFold)
+        kfold  = KFold(**Config.KFold)
+
     # Split using grouped years
-    elif config.GroupKFold:
+    elif Config.GroupKFold:
         Logger.debug('Using GroupKFold')
         kfold  = GroupKFold(n_splits=len(set(data.time.dt.year.values)))
         groups = target.time.dt.year.values
 
-    if config.hyperoptimize:
+    if Config.hyperoptimize:
         model = hyperoptimize(data, target, ensemble, kfold=kfold, groups=groups)
     else:
-        model = lambda: ensemble(**config.model.params)
+        model = lambda: ensemble(**Config.model.params)
 
+    # Start training and testing
     if kfold:
         for fold, (train, test) in enumerate(kfold.split(data, target, groups=groups)):
             input = Section('', {
@@ -269,6 +296,8 @@ def create():
 
             # Recreate the model each fold
             fit(model(), input.data, input.target, i=fold)
+
+    # Not using kfold
     else:
         input = Section({
             'data'  : {'train': data},
@@ -276,6 +305,7 @@ def create():
         })
         fit(model(), input.data, input.target, test=False)
 
+    # Completed successfully
     return True
 
 
@@ -287,14 +317,9 @@ if __name__ == '__main__':
                                             metavar  = '/path/to/config.yaml',
                                             help     = 'Path to a config.yaml file'
     )
-    parser.add_argument('-s', '--section',  type     = str,
-                                            default  = 'create',
-                                            metavar  = '[section]',
-                                            help     = 'Section of the config to use'
-    )
-    parser.add_argument('-i', '--inherit',  nargs    = '?',
-                                            metavar  = 'sect1 sect2',
-                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
+    parser.add_argument('-p', '--patch',    nargs    = '?',
+                                            metavar  = 'sect1 ... sectN',
+                                            help     = 'Patch sections together starting from sect1 to sectN'
     )
     parser.add_argument('--restart',        action   = 'store_true',
                                             help     = 'Will auto restart the run until the state returns True'
