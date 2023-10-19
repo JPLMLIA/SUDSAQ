@@ -12,7 +12,8 @@ import xarray as xr
 from dask.distributed import Client
 from pathlib import Path
 
-from sudsaq      import Config
+from mlky import Config
+
 from sudsaq.data import unstacked
 
 
@@ -34,10 +35,8 @@ def init(args):
             format: str
             datefmt: str
     """
-    if args.inherit:
-        config = Config(args.config, args.inherit)
-    else:
-        config = Config(args.config, args.section)
+    # Initialize quietly to access a few options
+    Config(args.config, args.patch)
 
     levels = {
         'critical': logging.CRITICAL,
@@ -51,43 +50,42 @@ def init(args):
 
     # Create console handler
     sh = logging.StreamHandler(sys.stdout)
-    sh.setLevel(levels.get(config.log.level or '', logging.INFO))
+    sh.setLevel(levels.get(Config.log.level or '', logging.INFO))
     handlers.append(sh)
 
-    if config.log.file:
+    if Config.log.file:
         # Make sure the directory exists first
-        mkdir(config.log.file)
+        mkdir(Config.log.file)
 
-        if config.log.reset and os.path.exists(config.log.file):
-            os.remove(config.log.file)
+        if Config.log.reset and os.path.exists(Config.log.file):
+            os.remove(Config.log.file)
 
         # Add the file logging
-        fh = logging.FileHandler(config.log.file)
+        fh = logging.FileHandler(Config.log.file)
         fh.setLevel(logging.DEBUG)
         handlers.append(fh)
 
     logging.basicConfig(
         level    = logging.DEBUG,
-        format   = config.log.format  or '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt  = config.log.datefmt or '%m-%d %H:%M',
+        format   = Config.log.format  or '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt  = Config.log.datefmt or '%m-%d %H:%M',
         handlers = handlers,
         # force    = True
     )
 
-    # Reinitialize config now that logging is setup
-    if args.inherit:
-        config = Config(args.config, args.inherit)
+    # Reinitialize now that logging is set up
+    Config(args.config, args.patch, **Config.mlky)
 
-    Logger.debug(f'Logging initialized using Config({args.config}, {args.inherit if args.inherit else args.section})')
+    Logger.debug(f'Logging initialized using Config({args.config}, {args.patch})')
 
-    if config.log.config:
-        shutil.copy(args.config, config.log.config)
+    if Config.log.config:
+        shutil.copy(args.config, Config.log.config)
 
     # Logger.debug('Instantiating the Dask cluster')
     # dask.config.set(dict(config.dask.config))
     # config.dask_client = Client(**config.dask.client)
 
-    return args, config
+    return args, Config
 
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
@@ -245,18 +243,16 @@ def save_objects(output, kind, **others):
     Simplifies saving objects by taking a dictionary of {name: obj}
     where obj is an xarray object to be passed to save_netcdf
     """
-    config = Config()
-
     # These objects will be converted to a dataset
     datasets = ['data', 'contributions', 'explanation']
 
     for name, obj in others.items():
-        if config.output[name]:
+        if Config.output[name]:
             save_netcdf(
                 data    = obj,
                 name    = name,
                 output  = f'{output}/{kind}.{name}.nc',
-                reindex = config._reindex,
+                reindex = Config._reindex,
                 dataset = name in datasets
             )
         else:

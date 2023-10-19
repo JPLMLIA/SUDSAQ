@@ -8,7 +8,8 @@ import xarray as xr
 from scipy import stats
 from tqdm  import tqdm
 
-from sudsaq      import  Config
+from mlky import Config
+
 from sudsaq.data import save_by_month
 
 Logger = logging.getLogger('sudsaq/silos/match.py')
@@ -25,7 +26,7 @@ def match(ds, df, tag, dates=None):
     df: pandas.DataFrame
         Silo dataframe in expected format. Must contain columns: [time, lat, lon]
     tag: str
-        The unique tag for this silo. For example, TOAR is `toar.{config.input.toar.variable}`
+        The unique tag for this silo. For example, TOAR is `toar.{Config.input.toar.variable}`
 
     Returns
     -------
@@ -38,13 +39,10 @@ def match(ds, df, tag, dates=None):
     Status Codes:
     1 - An invalid metric to be used in scipy.stats.binned_statistic_2d was provided
     """
-    # Retrieve the config
-    config = Config()
-
     # Validate the metrics requested
-    Logger.info('Validating config metrics')
+    Logger.info('Validating Config metrics')
     valid = ['mean', 'std', 'median', 'count', 'sum', 'min', 'max']
-    for metric in config.metrics:
+    for metric in Config.metrics.values():
         if metric not in valid:
             Logger.error(f'Metric {metric!r} is not in the list of valid options: {valid}')
             return 1
@@ -67,7 +65,7 @@ def match(ds, df, tag, dates=None):
     shape = *dates.shape, *ds.lat.shape, *ds.lon.shape
     Logger.debug('Creating the matched dataset')
     Logger.debug(f'Shape: {shape}')
-    for metric in tqdm(config.metrics, 'Allocating memory'):
+    for metric in tqdm(Config.metrics.values(), 'Allocating memory'):
         ms[f'{tag}.{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
 
     # Add end values for the last bin of each lat/lon
@@ -81,11 +79,11 @@ def match(ds, df, tag, dates=None):
     for time in tqdm(dates, desc='Processing Dates'):
         tf = df.query('date == @time')
 
-        for metric in config.metrics:
+        for metric in Config.metrics.values():
             calc = stats.binned_statistic_2d(
                 tf.lat,
                 tf.lon,
-                tf[config.variable],
+                tf[Config.variable],
                 metric,
                 bins = [lat, lon],
                 expand_binnumbers = True
@@ -93,11 +91,11 @@ def match(ds, df, tag, dates=None):
             # Now save the calculation for this time
             ms.loc[{'time': time}][f'{tag}.{metric}'][:] = calc.statistic
 
-    # for metric in config.metrics:
+    # for metric in Config.metrics:
     #     calc = stats.binned_statistic_2d(
     #         df.lat,
     #         df.lon,
-    #         df[config.variable],
+    #         df[Config.variable],
     #         metric,
     #         bins = [lat, lon],
     #         expand_binnumbers = True
@@ -111,10 +109,10 @@ def match(ds, df, tag, dates=None):
     Logger.debug(f'Dataset:\n{ms}')
 
     # Save output
-    if config.output.by_month:
-        save_by_month(ms, config.output.path)
+    if Config.output.by_month:
+        save_by_month(ms, Config.output.path)
     else:
-        Logger.info(f'Saving to output: {config.output.path}')
-        ms.to_netcdf(config.output.path)
+        Logger.info(f'Saving to output: {Config.output.path}')
+        ms.to_netcdf(Config.output.path)
 
     return True

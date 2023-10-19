@@ -5,7 +5,8 @@ import logging
 import pandas as pd
 import xarray as xr
 
-from sudsaq import Config
+from mlky import Config
+
 from sudsaq.silos.match import match
 from sudsaq.utils       import init
 
@@ -14,16 +15,13 @@ Logger = logging.getLogger('sudsaq/silos/toar/match.py')
 def toar_match():
     """
     """
-    # Retrieve the config
-    config = Config()
-
     # Load in toar and momo data
     Logger.info(f'Loading MOMO')
-    ds = xr.open_mfdataset(config.input.momo.regex, parallel=False)
+    ds = xr.open_mfdataset(Config.input.momo.regex, parallel=False)
     ds = ds.sortby('lon')
 
-    Logger.info(f'Loading TOAR ({config.input.toar.parameter})')
-    df = pd.read_hdf(config.input.toar.file, config.input.toar.parameter)
+    Logger.info(f'Loading TOAR ({Config.input.toar.parameter})')
+    df = pd.read_hdf(Config.input.toar.file, Config.input.toar.parameter)
 
     if 'station_lon' in df:
         # Rename to generic names
@@ -38,7 +36,7 @@ def toar_match():
 
     # Run the generalized matching function
     Logger.info('Matching TOAR with MOMO')
-    return match(ds, df, f'toar.{config.input.toar.parameter}', dates=dates)
+    return match(ds, df, f'toar.{Config.input.toar.parameter}', dates=dates)
 
 
 if __name__ == '__main__':
@@ -46,12 +44,12 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', '--config',   type     = str,
                                             required = True,
-                                            metavar  = '/path/to/config.yaml',
-                                            help     = 'Path to a config.yaml file'
+                                            metavar  = '/path/to/Config.yaml',
+                                            help     = 'Path to a Config.yaml file'
     )
-    parser.add_argument('-i', '--inherit',  nargs    = '?',
-                                            metavar  = 'sect1 sect2',
-                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
+    parser.add_argument('-p', '--patch',    nargs    = '?',
+                                            metavar  = 'sect1 ... sectN',
+                                            help     = 'Patch sections together starting from sect1 to sectN'
     )
 
     init(parser.parse_args())

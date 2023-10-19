@@ -66,6 +66,7 @@ def perm_importance(model, data, target, output=None):
 
     return df
 
+
 def model_importance(model, variables, output=None):
     """
     Retrieves and formats the importances from a RandomForest model
@@ -91,6 +92,7 @@ def model_importance(model, variables, output=None):
         df.to_hdf(output.replace('.txt', '.h5'), 'model')
 
     return df
+
 
 def pbc(model, data):
     """
@@ -148,6 +150,50 @@ def pbc(model, data):
 
     return predict, bias, contributions
 
+
+def quantilePredict(model, data, preds, output=None, kind=None):
+    """
+    Performs extra predictions for RandomForestQuantileRegressor models
+    """
+    predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+    predict[:] = model.predict(data.values, quantiles='mean', aggregate_leaves_first=False)
+
+    # Convert interval percentages to quantile bounds
+    if Config.model.intervals:
+        quantiles = []
+        for percent in intervals:
+            lower = (1 - percent / 100) / 2
+            upper = 1 - lower
+            quant = [lower, upper]
+
+            quantiles += quant
+
+        # Fix any machine precision errors
+        Config.model.quantiles = list(np.round(quantiles, 3))
+
+    if Config.model.quantiles:
+        quantiles = Config.model.quantiles.values()
+        predicts  = model.predict(data.values, quantiles=quantiles)
+
+        # Set name so xr.merge is seamless
+        predict.name = 'predict'
+
+        arrays = [predict]
+        for quantile, data in zip(quantiles, predicts.T):
+            quant      = xr.full_like(predict, np.nan)
+            quant[:]   = data
+            quant.name = str(quantile)
+            arrays.append(quant)
+
+        save_objects(
+            output    = output,
+            kind      = kind,
+            quantiles = xr.merge(arrays)
+        )
+
+    return predict
+
+
 def analyze(model=None, data=None, target=None, kind='input', output=None):
     """
     Analyzes a model using different metrics and plots
@@ -197,12 +243,23 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Prepare the storage variables
     bias, contributions = None, None
-    if not config.not_ti and 'Forest' in str(model):
-        predict, bias, contributions = pbc(model, data)
+    # Quantile forests handle predictions tad differently
+    if 'RandomForestQuantileRegressor' in str(model):
+        predict = quantilePredict(
+            model  = model,
+            data   = data,
+            preds  = predict,
+            output = output,
+            kind   = kind
+        )
     else:
-        Logger.info('Predicting')
-        predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
-        predict[:] = model.predict(data.values)
+        if not config.not_ti and 'Forest' in str(model):
+            predict, bias, contributions = pbc(model, data)
+        else:
+            Logger.info('Predicting')
+            predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+            predict[:] = model.predict(data.values)
+
     stats.predict = predict
 
     if target is not None:
