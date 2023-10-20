@@ -324,7 +324,7 @@ if __name__ == '__main__':
         array   = args.months,
         months  = months,
         script  = args.script,
-        history = history,
+        history = run,
         preview = args.preview
     )
 
