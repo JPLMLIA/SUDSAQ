@@ -63,7 +63,7 @@ conda activate /scratch/sudsaq/micromamba/envs/sudsaq
 # Refresh MLIA_active_data
 ls /projects/mlia-active-data/data_SUDSAQ/data
 
-# Used by mlky.Config to
+# Used by mlky.Config to generate the output directory at runtime
 export MODELNAME={model}
 
 python /scratch/suds-air-quality/sudsaq/ml/{script}.py -c {config} -p "{patch}<-${{month[$SLURM_ARRAY_TASK_ID]}}" {extra}
@@ -88,7 +88,6 @@ def squeue(logs):
     """
     Prints the squeue for the current user
     """
-
     writeScript(
         file   = logs/'squeue.sh',
         script = squeueTemplate
@@ -205,7 +204,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
     (logs / 'oe').mkdir(mode=0o775, parents=True, exist_ok=True)
 
     # Create the utility scripts
-    squeue(logs, user)
+    squeue(logs)
     ls(logs, patch, months)
     tail1(logs, patch, months)
 
