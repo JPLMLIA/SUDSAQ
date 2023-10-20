@@ -9,16 +9,18 @@ import sys
 
 from datetime import datetime as dtt
 
+import numpy as np
+
 from mlky import (
     Config,
     Sect
 )
-import numpy as np
+from mlky.utils import printTable
+
 
 import sudsaq
 
 from sudsaq.utils import (
-    align_print,
     load_pkl,
     save_pkl
 )
@@ -167,8 +169,11 @@ def createJob(config, patch, logs, array, months, script, history, preview):
     """
     # Preprocessing for the job template
     jid   = len(list(logs.glob('*'))) # Relative sudsaq job ID
-    model = '.'.join(patch)            # Model name
+    model = '.'.join(patch)           # Model name
     logs /= f'{jid}.{model}'          # Update logs to be the subdir for this run
+
+    # Insert into the environ so script generation works correctly with mlky.replace reliance
+    os.environ['MODELNAME'] = model
 
     # Extra flags to include for specific scripts
     if script == 'create':
@@ -178,7 +183,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
 
     # Build the SLURM job shell script
     job = SLURM.format(
-        name   = f'({jid}) {model}',
+        name   = f'{jid}.{model}',
         logs   = logs,
         cpu    = 64,
         mem    = 500,
@@ -215,14 +220,14 @@ def createJob(config, patch, logs, array, months, script, history, preview):
     )
 
     Logger.info(f'Launching job {logs}/job.slurm')
-    history['slurmID']  = os.popen(f'sbatch {script}').read().replace('\n', '')
+    history['slurmID']  = ''#os.popen(f'sbatch {script}').read().replace('\n', '')
     history['launched'] = True
     history['sudsaqID'] = jid,
     history['logs']     = logs
 
     Logger.info(f"SLURM ID is {history['slurmID']}, SUDSAQ ID is {history['sudsaqID']}")
-    with open(f'{logs}/info.txt', 'w') as output:
-        align_print(history, prepend='\n', print=output.write)
+    with open(logs/'info.txt', 'w') as output:
+        printTable(history.items(), prepend='\n', print=output.write)
 
 
 if __name__ == '__main__':
