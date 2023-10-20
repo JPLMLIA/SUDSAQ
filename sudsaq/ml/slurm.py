@@ -66,7 +66,7 @@ ls /projects/mlia-active-data/data_SUDSAQ/data
 # Used by mlky.Config to
 export MODELNAME={model}
 
-python /scratch/suds-air-quality/sudsaq/ml/{script}.py -c {config} -i "{patch}<-${{month[$SLURM_ARRAY_TASK_ID]}}" {extra}
+python /scratch/suds-air-quality/sudsaq/ml/{script}.py -c {config} -p "{patch}<-${{month[$SLURM_ARRAY_TASK_ID]}}" {extra}
 """
 
 

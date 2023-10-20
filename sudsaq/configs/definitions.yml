@@ -90,7 +90,7 @@ gattaca:
     parallel: False
   env:
     input: /projects/mlia-active-data/data_SUDSAQ/data
-    output: /scratch_lg_edge/sudsaq/models
+    output: /scratch/sudsaq/models
 
 mlia:
   ^inherit: default
@@ -162,7 +162,7 @@ v6:
       - ${.env.input}/toar/matched/${.range}/${.mon_n}.nc      # TOAR
       - ${.env.input}/gee/modis/*.nc                           # MODIS
       - ${.env.input}/gee/population/pop_2010*.nc              # Population
-      - ${.env.input}/gee/nightlight/${.range}/*${.month}*.nc # Night Light
+      - ${.env.input}/gee/nightlight/${.range}/*${.month}*.nc  # Night Light
     daily:
       modis:
         vars: modis.*
