@@ -41,7 +41,6 @@ SLURM = """\
 #SBATCH -o {logs}/oe/out.%a
 #SBATCH -o {logs}/oe/err.%a
 #SBATCH -c {cpu}
-#SBATCH --mem {mem}GB
 #SBATCH -p defq
 #SBATCH -t 240:00:00
 #SBATCH --array={array}
@@ -186,7 +185,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
         name   = f'{jid}.{model}',
         logs   = logs,
         cpu    = 64,
-        mem    = 500,
+        # mem    = 500,
         array  = array,
         model  = model,
         script = script,
@@ -220,7 +219,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
     )
 
     Logger.info(f'Launching job {logs}/job.slurm')
-    history['slurmID']  = ''#os.popen(f'sbatch {script}').read().replace('\n', '')
+    history['slurmID']  = os.popen(f'sbatch {script}').read().strip().split()[-1]
     history['launched'] = True
     history['sudsaqID'] = jid,
     history['logs']     = logs
