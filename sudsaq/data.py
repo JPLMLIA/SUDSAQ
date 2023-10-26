@@ -1,15 +1,21 @@
 """
 """
+# Builtin
 import logging
 import datetime as dt
-import h5py
-import numpy    as np
 import os
 import re
-import xarray   as xr
+
+# External
+import h5py
+import numpy  as np
+import xarray as xr
 
 from mlky import Config
 from tqdm import tqdm
+
+# Internal
+
 
 Logger = logging.getLogger('sudsaq/select.py')
 

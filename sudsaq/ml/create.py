@@ -6,6 +6,11 @@ import logging
 import numpy  as np
 import xarray as xr
 
+from mlky import (
+    Config,
+    Sect
+)
+
 from sklearn                 import ensemble as models
 from sklearn.model_selection import (
     GridSearchCV,
@@ -18,10 +23,6 @@ try:
 except:
     RandomForestQuantileRegressor = None
 
-from sudsaq import (
-    Config,
-    Section
-)
 from sudsaq.data       import load
 from sudsaq.ml.analyze import analyze
 from sudsaq.ml.explain import explain
@@ -281,7 +282,7 @@ def create():
     # Start training and testing
     if kfold:
         for fold, (train, test) in enumerate(kfold.split(data, target, groups=groups)):
-            input = Section('', {
+            input = Sect('', {
                 'data': {
                     'train': data.isel(loc=train),
                     'test' : data.isel(loc=test)
@@ -299,7 +300,7 @@ def create():
 
     # Not using kfold
     else:
-        input = Section({
+        input = Sect({
             'data'  : {'train': data},
             'target': {'train': target}
         })
@@ -319,7 +320,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-p', '--patch',    nargs    = '?',
                                             metavar  = 'sect1 ... sectN',
-                                            help     = 'Patch sections together starting from sect1 to sectN'
+                                            help     = 'Patch Sects together starting from sect1 to sectN'
     )
     parser.add_argument('--restart',        action   = 'store_true',
                                             help     = 'Will auto restart the run until the state returns True'

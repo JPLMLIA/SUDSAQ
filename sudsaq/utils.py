@@ -1,23 +1,28 @@
 """
 """
-import dask
-# import cf_xarray as cfxr
+# Builtin
 import logging
 import os
 import pickle
 import shutil
 import sys
+
+from pathlib import Path
+
+# External
+import dask
+# import cf_xarray as cfxr
 import xarray as xr
 
 from dask.distributed import Client
-from pathlib import Path
-
 from mlky import Config
 
+# Internal
 from sudsaq.data import unstacked
 
 
 Logger = logging.getLogger('sudsaq/utils.py')
+
 
 def init(args):
     """
@@ -87,6 +92,7 @@ def init(args):
 
     return args, Config
 
+
 def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print=print):
     """
     Pretty prints an iterable in the form {key} = {value} such that the delimiter (=)
@@ -128,6 +134,7 @@ def align_print(iterable, enum=False, delimiter='=', offset=1, prepend='', print
 
     return fmt_list
 
+
 def mkdir(path):
     """
     Attempts to create directories for a given path
@@ -146,6 +153,7 @@ def mkdir(path):
         if not path.exists():
             Logger.error(f'Failed to create directory {dir}')
 
+
 def load_pkl(file):
     """
     Loads data from a pickle
@@ -162,6 +170,7 @@ def load_pkl(file):
     """
     return pickle.load(open(file, 'rb'))
 
+
 def save_pkl(data, output, **kwargs):
     """
     Saves data to a file via pickle
@@ -177,15 +186,18 @@ def save_pkl(data, output, **kwargs):
     with open(output, 'wb') as file:
         pickle.dump(data, file)
 
+
 def encode(data):
     """
     """
     return cfxr.encode_multi_index_as_compress(data, 'loc')
 
+
 def decode(file):
     """
     """
     return cfxr.decode_compress_to_multi_index(xr.open_dataset(file), 'loc')
+
 
 @unstacked
 def save_netcdf(data, name, output, dataset=False, reindex=None):
@@ -238,6 +250,7 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
     Logger.info(f'Saving {name} to {output}')
     data.to_netcdf(output, engine='netcdf4')
 
+
 def save_objects(output, kind, **others):
     """
     Simplifies saving objects by taking a dictionary of {name: obj}
@@ -257,6 +270,7 @@ def save_objects(output, kind, **others):
             )
         else:
             Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')
+
 
 def load_from_run(path, kind=None, objs=None):
     """
@@ -297,6 +311,7 @@ def load_from_run(path, kind=None, objs=None):
                 Logger.error(f'Invalid option: {obj}')
 
     return ret
+
 
 def catch(func):
     """

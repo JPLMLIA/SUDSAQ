@@ -1,6 +1,7 @@
 """
 SLURM job creator for SUDSAQ
 """
+# Builtin
 import argparse
 import logging
 import os
@@ -9,6 +10,7 @@ import sys
 
 from datetime import datetime as dtt
 
+# External
 import numpy as np
 
 from mlky import (
@@ -17,13 +19,14 @@ from mlky import (
 )
 from mlky.utils import printTable
 
-
+# Internal
 import sudsaq
 
 from sudsaq.utils import (
     load_pkl,
     save_pkl
 )
+
 
 logging.basicConfig(
     level    = logging.DEBUG,
@@ -67,7 +70,7 @@ ls /projects/mlia-active-data/data_SUDSAQ/data
 # Used by mlky.Config to generate the output directory at runtime
 export MODELNAME={model}
 
-python /scratch/suds-air-quality/sudsaq/ml/{script}.py -c {config} -p "{patch}<-${{month[$SLURM_ARRAY_TASK_ID]}}" {extra}
+python /scratch/sudsaq/suds-air-quality/sudsaq/ml/{script}.py -c {config} -p "{patch}<-${{month[$SLURM_ARRAY_TASK_ID]}}" {extra}
 """
 
 
@@ -92,6 +95,21 @@ def squeue(logs):
     writeScript(
         file   = logs/'squeue.sh',
         script = squeueTemplate
+    )
+
+launchTemplate = """\
+#!/bin/bash
+
+echo "Cleaning oe/*"
+rm oe/*
+
+echo "Launching job"
+sbatch job.slurm
+"""
+def launch(logs):
+    writeScript(
+        file   = logs/'launch.sh',
+        script = launchTemplate
     )
 
 #%%
@@ -209,6 +227,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
 
     # Create the utility scripts
     squeue(logs)
+    launch(logs)
     ls(logs, patch, months)
     tail1(logs, patch, months)
 

@@ -1,6 +1,9 @@
 """
 """
+# Builtin
 import logging
+
+# External
 import cartopy.crs       as ccrs
 import matplotlib.pyplot as plt
 import numpy             as np
@@ -8,10 +11,11 @@ import pandas            as pd
 import seaborn           as sns
 import xarray            as xr
 
+from mlky  import Config
 from scipy import stats
 
-from sudsaq import  Config
-from sudsaq.utils  import catch
+# Internal
+from sudsaq.utils import catch
 
 # Set seaborn styles
 sns.set_style('darkgrid')
