@@ -313,7 +313,7 @@ def create():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('-c', '--Config',   type     = str,
+    parser.add_argument('-c', '--config',   type     = str,
                                             required = True,
                                             metavar  = '/path/to/Config.yaml',
                                             help     = 'Path to a Config.yaml file'
