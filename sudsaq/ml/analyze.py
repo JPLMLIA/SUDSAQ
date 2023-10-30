@@ -43,12 +43,10 @@ Logger = logging.getLogger('sudsaq/ml/analyze.py')
 def perm_importance(model, data, target, output=None):
     """
     """
-    config = Config()
-
     # Make sure the inputs are aligned first
     data, target = xr.align(data, target)
 
-    permimp = permutation_importance(model, data, target, **config.permutation_importance)
+    permimp = permutation_importance(model, data, target, **Config.permutation_importance)
 
     # Only want the summaries, remove the importances array
     del permimp['importances']
@@ -103,13 +101,11 @@ def pbc(model, data):
     """
     Predict, Bias, Contributions calculations
     """
-    config = Config()
-
     # Only predict specified regions
     regions = []
-    if config.predict_regions:
+    if Config.predict_regions:
         unstacked = data.unstack()
-        for region, bounds in config.predict_regions.items():
+        for region, bounds in Config.predict_regions.items():
             Logger.debug(f'Selecting region {region} using bounds: lat={bounds.lat}, lon={bounds.lon}')
             regions.append(
                 unstacked.sel(
@@ -121,18 +117,18 @@ def pbc(model, data):
         data = flatten(xr.merge(regions)).dropna('loc').transpose('loc', 'variable')
 
     Logger.info('Predicting using TreeInterpreter')
-    if config.split_predict:
-        Logger.debug(f'Using {config.split_predict} splits for prediction')
+    if Config.split_predict:
+        Logger.debug(f'Using {Config.split_predict} splits for prediction')
         predicts = []
         biases   = []
         contribs = []
 
-        for split in tqdm(np.split(data, config.split_predict), desc='Processed Splits'):
+        for split in tqdm(np.split(data, Config.split_predict), desc='Processed Splits'):
             predict       = xr.zeros_like(split.isel(variable=0).drop_vars('variable'))
             bias          = xr.zeros_like(predict)
             contributions = xr.zeros_like(split)
 
-            _predict, bias[:], contributions[:] = ti.predict(model, split, **config.treeinterpreter)
+            _predict, bias[:], contributions[:] = ti.predict(model, split, **Config.treeinterpreter)
 
             predict[:] = _predict.flatten()
 
@@ -149,7 +145,7 @@ def pbc(model, data):
         bias          = xr.zeros_like(predict)
         contributions = xr.zeros_like(data)
 
-        _predict, bias[:], contributions[:] = ti.predict(model, data, **config.treeinterpreter)
+        _predict, bias[:], contributions[:] = ti.predict(model, data, **Config.treeinterpreter)
 
         predict[:] = _predict.flatten()
 
@@ -217,16 +213,14 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     output: str, default = None
         Directory path to output to
     """
-    config = Config()
-
     # Verify there is an output directory, otherwise disable outputting
     if not output:
-        if config.output.path:
-            output = config.output.path
+        if Config.output.path:
+            output = Config.output.path
         else:
             Logger.warning(f'No output provided, disabling saving objects')
-            for key in config.output:
-                config.output[key] = False
+            for key in Config.output:
+                Config.output[key] = False
 
     if output:
         mkdir(output)
@@ -234,14 +228,14 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     # Load the model from a pickle if provided
     if model is None:
         try:
-            model = load_pkl(config.input.model)
+            model = load_pkl(Config.input.model)
         except:
             Logger.exception(f'Failed to load model')
             return 1
 
     # Load data if not provided
     if data is None:
-        data, target = load(config, split=True, lazy=False)
+        data, target = load(Config, split=True, lazy=False)
 
     # Stores information about this analysis
     stats = Section('scores', {})
@@ -258,7 +252,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
             kind   = kind
         )
     else:
-        if not config.not_ti and 'Forest' in str(model):
+        if not Config.not_ti and 'Forest' in str(model):
             predict, bias, contributions = pbc(model, data)
         else:
             Logger.info('Predicting')
@@ -280,7 +274,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
         # Log the scores
         scores = align_print(stats, enum=False, prepend='  ', print=Logger.info)
-        if config.output.scores:
+        if Config.output.scores:
             Logger.info(f'Saving scores to {output}/{kind}.scores.txt')
             with open(f'{output}/{kind}.scores.txt', 'w') as file:
                 file.write('Scores:\n')
@@ -288,20 +282,20 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Feature importances
     impout = None
-    if config.output.importance:
+    if Config.output.importance:
         impout = f'{output}/{kind}.importance.txt'
         Logger.info(f'Saving importances to {impout}')
     if 'Forest' in str(model):
         stats.mimportance = model_importance(model, data['variable'], output=impout)
-    if config.permutation_importance:
+    if Config.permutation_importance:
         try:
             stats.pimportance = perm_importance(model, data, target, output=impout)
         except:
             Logger.exception('Failed to generate permutation importance')
 
     # Create plots if enabled
-    if config.output.plots:
-        if config.plots.importance is not False:
+    if Config.output.plots:
+        if Config.plots.importance is not False:
             if stats.imports is not Null:
                 plots.importance(
                     df   = stats.mimportance,
@@ -310,16 +304,16 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
                 )
 
         if target is not None:
-            if config.plots.compare_target_predict is not False:
+            if Config.plots.compare_target_predict is not False:
                 plots.compare_target_predict(
                     target.unstack().mean('time').sortby('lon'),
                     predict.unstack().mean('time').sortby('lon'),
-                    reindex = config._reindex,
+                    reindex = Config._reindex,
                     title   = f'{kind.capitalize()} Set Performance',
                     save    = f'{output}/{kind}.compare_target_predict.png'
                 )
 
-            if config.plots.truth_vs_predicted is not False:
+            if Config.plots.truth_vs_predicted is not False:
                 plots.truth_vs_predicted(
                     target.dropna('loc'),
                     aligned.dropna('loc'),

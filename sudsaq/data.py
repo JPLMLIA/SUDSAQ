@@ -167,32 +167,32 @@ def scale(x, dims=['loc']):
     return z
 
 
-def split_and_stack(ds, config, lazy=True):
+def split_and_stack(ds, lazy=True):
     """
     Splits the target from the data and stacks both to be 1 or 2d
     """
     # Target is a variable case
-    if config.target in ds:
-        Logger.info(f'Target is {config.target}')
-        target = ds[config.target]
+    if Config.target in ds:
+        Logger.info(f'Target is {Config.target}')
+        target = ds[Config.target]
     # Calculated target case
     else:
-        target = calc(ds, config.target)
-        Logger.info(f'Target is {config.target}')
+        target = calc(ds, Config.target)
+        Logger.info(f'Target is {Config.target}')
 
     Logger.info(f'Creating the stacked training and target objects')
 
     # Save the lat/lon dimensions before dropping na for easy reconstruction later
-    config._reindex = ds[['lat', 'lon']]
+    Config._reindex = ds[['lat', 'lon']]
 
     # Create the stacked objects
-    data = flatten(ds[config.train]).transpose('loc', 'variable')
+    data = flatten(ds[Config.train]).transpose('loc', 'variable')
 
     # Use the locations valid by this variable only, but this variable may be excluded otherwise
-    if config.input.use_locs_of:
-        Logger.debug(f'Using locations from variable: {config.input.use_locs_of}')
+    if Config.input.use_locs_of:
+        Logger.debug(f'Using locations from variable: {Config.input.use_locs_of}')
         # mean('time') removes the time dimension so it is ignored
-        merged = flatten(xr.merge([target, ds[config.input.use_locs_of].mean('time')]))
+        merged = flatten(xr.merge([target, ds[Config.input.use_locs_of].mean('time')]))
         # Replace locs in the target with NaNs if the use_locs_of had a NaN
         merged = merged.where(~merged.isel(variable=1).isnull())
         # Extract the target, garbage collect the other
@@ -203,7 +203,7 @@ def split_and_stack(ds, config, lazy=True):
     Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
     Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
 
-    if config.input.scale:
+    if Config.input.scale:
         Logger.info('Scaling data (X)')
         data = scale(data)
 
@@ -218,7 +218,7 @@ def split_and_stack(ds, config, lazy=True):
     return data, target
 
 
-def daily(ds, config):
+def daily(ds):
     """
     Aligns a dataset to a daily average
     """
@@ -253,10 +253,10 @@ def daily(ds, config):
                 east -= 360
             Timezones[i] = (tz, (west, east))
 
-    # Select time ranges per config
+    # Select time ranges per Config
     time = ds.time.dt.time
     data = []
-    for sect, sel in config.input.daily.items():
+    for sect, sel in Config.input.daily.items():
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
             Logger.debug('-- Using local timezones')
@@ -293,12 +293,12 @@ def daily(ds, config):
 
 def config_sel(ds, sels):
     """
-    Performs custom sel operations defined in the config
+    Performs custom sel operations defined in the Config
 
     Parameters
     ----------
     sels: mlky.Section
-        Selections defined by the config
+        Selections defined by the Config
     """
     for dim, sel in sels.items():
         if dim == 'vars':
@@ -343,12 +343,12 @@ def config_sel(ds, sels):
     return Dataset(ds)
 
 
-def load(config, split=False, lazy=True):
+def load(split=False, lazy=True):
     """
     """
     Logger.info('Collecting files')
     files = []
-    for string in config.input.glob.values():
+    for string in Config.input.glob.values():
         match = glob(string)
         Logger.debug(f'Collected {len(match)} files using "{string}"')
         files += match
@@ -359,16 +359,16 @@ def load(config, split=False, lazy=True):
 
     Logger.info('Lazy loading the dataset')
     ds = xr.open_mfdataset(files,
-        engine   = config.input.get('engine'  , 'netcdf4'),
-        lock     = config.input.get('lock'    , False    ),
-        parallel = config.input.get('parallel', False    ),
-        chunks   = dict(config.input.chunks)
+        engine   = Config.input.get('engine'  , 'netcdf4'),
+        lock     = Config.input.get('lock'    , False    ),
+        parallel = Config.input.get('parallel', False    ),
+        chunks   = dict(Config.input.chunks)
     )
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
     ds = Dataset(ds)
 
-    for key, args in config.input.replace_vals.items():
+    for key, args in Config.input.replace_vals.items():
         left, right = args.bounds
         value       = float(args.value) or np.nan
         Logger.debug(f'Replacing values between ({left}, {right}) with {value} for key {key}')
@@ -378,33 +378,33 @@ def load(config, split=False, lazy=True):
             value
         )
 
-    if config.input.calc:
+    if Config.input.calc:
         Logger.info('Calculating variables')
 
-        for key, string in config.input.calc.items():
+        for key, string in Config.input.calc.items():
             Logger.debug(f'- {key} = {string}')
             ds[key] = calc(ds, string)
 
-    ds = config_sel(ds, config.input.sel)
+    ds = config_sel(ds, Config.input.sel)
 
-    if config.input.daily:
+    if Config.input.daily:
         Logger.info('Aligning to a daily average')
-        ds = daily(ds, config)
+        ds = daily(ds)
 
-    if config.input.resample:
+    if Config.input.resample:
         Logger.info('Resampling data')
-        ds = resample(ds, **config.input.resample)
+        ds = resample(ds, **Config.input.resample)
 
-    if config.input.subsample:
+    if Config.input.subsample:
         Logger.info('Subsampling data')
-        ds = subsample(ds, **config.input.subsample)
+        ds = subsample(ds, **Config.input.subsample)
 
     # `split` is hardcoded by the calling script
-    # If `lazy` is set in the config use that else use the parameter
-    lazy = config.input.get('lazy', lazy)
+    # If `lazy` is set in the Config use that else use the parameter
+    lazy = Config.input.get('lazy', lazy)
     if split:
         Logger.debug('Performing split and stack')
-        return split_and_stack(ds, config, lazy)
+        return split_and_stack(ds, lazy)
 
     if not lazy:
         Logger.info('Loading data into memory')

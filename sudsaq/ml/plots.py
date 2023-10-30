@@ -155,7 +155,7 @@ def importance(df, pdf=None, save=None):
     Logger.info('Generating plot: importance')
 
     # Retrieve the config for this plot type
-    config = Config().plots.importances
+    config = Config.plots.importances
 
     perm = False
     if isinstance(pdf, pd.core.frame.DataFrame):

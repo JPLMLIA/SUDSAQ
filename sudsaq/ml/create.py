@@ -240,7 +240,7 @@ def create():
     Creates and trains a desired model.
     """
     # Load the data
-    data, target = load(config, split=True)
+    data, target = load(split=True)
 
     ## Select a model to use per the config
     # Sklearn
@@ -266,7 +266,7 @@ def create():
     groups = None
     if Config.KFold:
         Logger.debug('Using KFold')
-        kfold  = KFold(**Config.KFold)
+        kfold = KFold(**Config.KFold)
 
     # Split using grouped years
     elif Config.GroupKFold:
@@ -282,7 +282,7 @@ def create():
     # Start training and testing
     if kfold:
         for fold, (train, test) in enumerate(kfold.split(data, target, groups=groups)):
-            input = Sect('', {
+            input = Sect({
                 'data': {
                     'train': data.isel(loc=train),
                     'test' : data.isel(loc=test)
@@ -313,10 +313,10 @@ def create():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('-c', '--config',   type     = str,
+    parser.add_argument('-c', '--Config',   type     = str,
                                             required = True,
-                                            metavar  = '/path/to/config.yaml',
-                                            help     = 'Path to a config.yaml file'
+                                            metavar  = '/path/to/Config.yaml',
+                                            help     = 'Path to a Config.yaml file'
     )
     parser.add_argument('-p', '--patch',    nargs    = '?',
                                             metavar  = 'sect1 ... sectN',
