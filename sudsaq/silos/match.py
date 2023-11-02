@@ -42,7 +42,7 @@ def match(ds, df, tag, dates=None):
     # Validate the metrics requested
     Logger.info('Validating Config metrics')
     valid = ['mean', 'std', 'median', 'count', 'sum', 'min', 'max']
-    for metric in Config.metrics.values():
+    for metric in Config.metrics:
         if metric not in valid:
             Logger.error(f'Metric {metric!r} is not in the list of valid options: {valid}')
             return 1
@@ -65,7 +65,7 @@ def match(ds, df, tag, dates=None):
     shape = *dates.shape, *ds.lat.shape, *ds.lon.shape
     Logger.debug('Creating the matched dataset')
     Logger.debug(f'Shape: {shape}')
-    for metric in tqdm(Config.metrics.values(), 'Allocating memory'):
+    for metric in tqdm(Config.metrics, 'Allocating memory'):
         ms[f'{tag}.{metric}'] = (('time', 'lat', 'lon'), np.full(shape, np.nan))
 
     # Add end values for the last bin of each lat/lon
@@ -79,7 +79,7 @@ def match(ds, df, tag, dates=None):
     for time in tqdm(dates, desc='Processing Dates'):
         tf = df.query('date == @time')
 
-        for metric in Config.metrics.values():
+        for metric in Config.metrics:
             calc = stats.binned_statistic_2d(
                 tf.lat,
                 tf.lon,

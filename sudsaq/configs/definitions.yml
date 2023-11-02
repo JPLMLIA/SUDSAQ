@@ -85,7 +85,7 @@ default:
 # System
 
 gattaca:
-  ^inherit: default
+  .patch: default
   input:
     parallel: False
   env:
@@ -93,13 +93,13 @@ gattaca:
     output: /scratch/sudsaq/models
 
 mlia:
-  ^inherit: default
+  .patch: default
   env:
     input: /data/MLIA_active_data/data_SUDSAQ/data
     output: /data/MLIA_active_data/data_SUDSAQ/models
 
 mac:
-  ^inherit: default
+  .patch: default
   env:
     input: /Volumes/MLIA_active_data/data_SUDSAQ/data
     output: /Volumes/MLIA_active_data/data_SUDSAQ/models
@@ -141,7 +141,7 @@ v4:
         local: True
 
 v5:
-  ^inherit: v4
+  .patch: v4
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
@@ -154,7 +154,7 @@ v5:
         time: 0
 
 v6:
-  ^inherit: v4
+  .patch: v4
   range: 201[3-6]
   input:
     glob:
@@ -249,16 +249,16 @@ oh:
     scale: True
   env:
     type: emulator/oh
-oh[300]:
-  ^inherit: oh
+oh-300:
+  .patch: oh
   target: momo.2d300.OH
   train: momo.2d300.(?!OH).*
-oh[500]:
-  ^inherit: oh
+oh-500:
+  .patch: oh
   target: momo.2d500.OH
   train: momo.2d500.(?!OH).*
-oh[700]:
-  ^inherit: oh
+oh-700:
+  .patch: oh
   target: momo.2d700.OH
   train: momo.2d700.(?!OH).*
 

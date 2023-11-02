@@ -173,7 +173,7 @@ def quantilePredict(model, data, preds, output=None, kind=None):
         Config.model.quantiles = list(np.round(quantiles, 3))
 
     if Config.model.quantiles:
-        quantiles = Config.model.quantiles.values()
+        quantiles = Config.model.quantiles
         predicts  = model.predict(data.values, quantiles=quantiles)
 
         # Set name so xr.merge is seamless
