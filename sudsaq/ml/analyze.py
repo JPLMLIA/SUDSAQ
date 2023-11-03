@@ -152,7 +152,7 @@ def pbc(model, data):
     return predict, bias, contributions
 
 
-def quantilePredict(model, data, preds, output=None, kind=None):
+def quantilePredict(model, data, output=None, kind=None):
     """
     Performs extra predictions for RandomForestQuantileRegressor models
     """
@@ -247,7 +247,6 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         predict = quantilePredict(
             model  = model,
             data   = data,
-            preds  = predict,
             output = output,
             kind   = kind
         )
