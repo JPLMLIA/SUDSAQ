@@ -15,7 +15,12 @@ import dask
 import xarray as xr
 
 from dask.distributed import Client
-from mlky import Config
+from mlky import (
+    Config,
+    Sect,
+)
+
+Sect._opts.convertListTypes = False
 
 # Internal
 from sudsaq.data import unstacked
