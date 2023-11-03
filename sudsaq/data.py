@@ -257,11 +257,10 @@ def daily(ds):
     time = ds.time.dt.time
     data = []
     for sect, sel in Config.input.daily.items():
-        vars = sel.vars.toPrimitive()
-        Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {vars}')
+        Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
             Logger.debug('-- Using local timezones')
-            ns    = ds[vars].sortby('lon')
+            ns    = ds[sel.vars].sortby('lon')
             local = []
             for offset, bounds in tqdm(Timezones, desc='Timezones Processed'):
                 Logger.debug(f'--- Processing offset {offset} for (west, east) bounds {bounds}')
@@ -275,7 +274,7 @@ def daily(ds):
             Logger.debug('-- Merging local averages together (this can take awhile)')
             data.append(xr.merge(local))
         else:
-            sub = select_times(ds[vars], sel.time, time)
+            sub = select_times(ds[sel.vars], sel.time, time)
             data.append(sub)
 
     # Add variables that don't have a time dimension back in
