@@ -238,7 +238,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
         data, target = load(Config, split=True, lazy=False)
 
     # Stores information about this analysis
-    stats = Section('scores', {})
+    stats = Sect()
 
     # Prepare the storage variables
     bias, contributions = None, None
