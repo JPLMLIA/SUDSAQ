@@ -162,7 +162,7 @@ def quantilePredict(model, data, output=None, kind=None):
     # Convert interval percentages to quantile bounds
     if Config.model.intervals:
         quantiles = []
-        for percent in intervals:
+        for percent in Config.model.intervals:
             lower = (1 - percent / 100) / 2
             upper = 1 - lower
             quant = [lower, upper]
