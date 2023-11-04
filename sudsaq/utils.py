@@ -266,6 +266,9 @@ def save_objects(output, kind, **others):
 
     for name, obj in others.items():
         if Config.output[name]:
+            if obj is None:
+                Logger.warning('Object {name!r} is enabled to be saved in the config but was None, skipping')
+                continue
             save_netcdf(
                 data    = obj,
                 name    = name,
@@ -274,7 +277,7 @@ def save_objects(output, kind, **others):
                 dataset = name in datasets
             )
         else:
-            Logger.warning(f'Object {name!r} is not enabled to be saved in the config, skipping')
+            Logger.debug(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
 
 def load_from_run(path, kind=None, objs=None):
