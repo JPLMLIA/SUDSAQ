@@ -59,6 +59,7 @@ default:
     importance   : True
     plots        : True
     explanation  : True
+    quantiles    : True
   plots:
     importances:
       count: 20
@@ -109,6 +110,7 @@ RFQ:
   model:
     kind: RandomForestQuantileRegressor
     intervals: # % confidence, 95% confidence = 95
+      - 50
       - 75
       - 95
 
