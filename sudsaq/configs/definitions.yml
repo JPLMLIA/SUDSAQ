@@ -135,7 +135,7 @@ v4:
         vars: [momo.mda8]
         time: 1
       toar:
-        vars: [toar.o3.dma8epa.mean]
+        vars: [toar.mda8.mean]
         time: 0
       momo:
         vars: momo.(?!mda8).*
@@ -180,7 +180,7 @@ v6:
 
 toar-limited:
   input:
-    use_locs_of: toar.o3.dma8epa.mean
+    use_locs_of: toar.mda8.mean
 
 extended:
   # Only 2005 to 2015
@@ -207,27 +207,27 @@ cap-depth:
 # Run Types
 
 bias-median:
-  target: momo.mda8 - toar.o3.dma8epa.median
+  target: momo.mda8 - toar.mda8.median
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:
       toar:
-        vars: [toar.o3.dma8epa.median]
+        vars: [toar.mda8.median]
   env:
     type: bias
 
 bias-mean:
-  target: momo.mda8 - toar.o3.dma8epa.mean
+  target: momo.mda8 - toar.mda8.mean
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:
       toar:
-        vars: [toar.o3.dma8epa.mean]
+        vars: [toar.mda8.mean]
   env:
     type: bias
 
 toar:
-  target: toar.o3.dma8epa.mean
+  target: toar.mda8.mean
   train: (?!toar).+\.(?!o3|mda8).*
   env:
     type: toar
