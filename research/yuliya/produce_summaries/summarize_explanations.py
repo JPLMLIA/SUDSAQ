@@ -27,6 +27,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import explained_variance_score
 from scipy import stats
+sys.path.insert(0, '/Users/marchett/Documents/SUDS_AQ/analysis_mount/code/suds-air-quality/research/yuliya/produce_summaries')
 import summary_plots as plots
 import read_output as read
 
@@ -82,14 +83,15 @@ def main(sub_dir, a = 20):
     # create one if it's not there
     if not os.path.exists(plots_dir):
         os.makedirs(plots_dir)
-
+    if not os.path.exists(f'{plots_dir}/monthly'):
+        os.makedirs(f'{plots_dir}/monthly')
     
     ### ---------------- the simplest barplot and bubble plots for top X
     importances = read.load_importances(summaries_dir)
     contributions = read.load_contributions(summaries_dir, importances['reference'])
     
     
-    #------------plots for TOP a
+    #------------plots for TOP a variables
     mask_top = get_top_mask(a, var1 = importances['model']['mean'],
                                 var2 = importances['permutation']['mean'],
                                 var3 = contributions['mean'])
@@ -107,9 +109,26 @@ def main(sub_dir, a = 20):
                     var1 = importances['model']['monthly_mean'],
                     key = 'model',
                     var2 = importances['permutation']['monthly_mean'],
-                    var3 = contributions['norm'],
+                    var3 = contributions['monthly_mean'],
                     mask_top = mask_top,
                     plots_dir = plots_dir)
+    
+    #--------------monthly
+    for m in range(len(plots.MONTHS)):
+        plots.imp_barplotv(labels = importances['labels'],
+                         var1 = [importances['model']['monthly_mean'][:,m], 
+                                 importances['model']['monthly_std'][:, m]],
+                         var2 = [importances['permutation']['monthly_mean'][:, m], 
+                                 importances['permutation']['monthly_std'][:, m]],
+                         var3 = [contributions['monthly_mean'][:, m], 
+                                 contributions['monthly_std'][:, m]], 
+                         mask_top = mask_top,
+                         plots_dir = None)
+        ver = f'{plots_dir.split("/")[-7]} {plots_dir.split("/")[-4]}'
+        plt.title(f'top {a} mean importance with std \n {plots.MONTHS[m]}, {ver}')
+        plt.savefig(f'{plots_dir}/monthly/barplot_comb{a}_{plots.MONTHS[m]}.png', 
+                    bbox_inches='tight')
+        plt.close()
     
     
     #--------------plots for all
@@ -126,19 +145,18 @@ def main(sub_dir, a = 20):
                      plots_dir = plots_dir)
     
     keys = ['model_importance', 'permutation_impotrance', 'contributions']
-    for i, metric in enumerate([importances['model']['norm'], 
-                                importances['permutation']['norm'], 
-                                contributions['norm']]):    
-        plots.imp_fullbar(labels = importances['labels'],
-                         var1 = metric,
-                         key = keys[i],
-                         mask_top = mask_top,
-                         plots_dir = plots_dir) 
-    
+    # for i, metric in enumerate([importances['model']['norm'], 
+    #                             importances['permutation']['norm'], 
+    #                             contributions['norm']]):    
+    #     plots.imp_fullbar(labels = importances['labels'],
+    #                      var1 = metric,
+    #                      key = keys[i],
+    #                      mask_top = mask_top,
+    #                      plots_dir = plots_dir) 
     
     for i, metric in enumerate([importances['model']['monthly_mean'], 
                                 importances['permutation']['monthly_mean'], 
-                                contributions['norm']]): 
+                                contributions['monthly_mean']]): 
         plots.imp_bubble(labels = importances['labels'],
                         var1 = metric,
                         key = keys[i],
@@ -260,7 +278,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr_median/v1/')
+    parser.add_argument('--sub_dir', type=str, default = '/bias/local/8hr_median/v4/')
     #parser.add_argument('--months', default = 'all', nargs = '*', type=str)
     parser.add_argument('--a', type=int, default = 20)
 

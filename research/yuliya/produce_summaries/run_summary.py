@@ -6,6 +6,7 @@ Created on Thu Nov 10 14:15:44 2022
 @author: marchett
 """
 import merge_model_output as merge
+import merge_model_yearly as merge_years
 import summarize_performance as evaluate 
 import produce_correlations as correlations
 import make_ml_data as extract
@@ -27,7 +28,10 @@ def main(sub_dir, months = 'all'):
     evaluate.main(sub_dir)
     
     #--produce raw feature correlations (toar locs only)
-    #correlations.main(sub_dir, months)
+    correlations.main(sub_dir, months)
+    
+    #--merge all the cross val years
+    merge_years.main(sub_dir)
     
     
     
