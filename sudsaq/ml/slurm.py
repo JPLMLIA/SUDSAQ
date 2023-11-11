@@ -40,10 +40,11 @@ Logger = logging.getLogger('slurm.py')
 SLURM = """\
 #!/bin/bash
 #SBATCH -J {name}
-#SBATCH -A sudsaq
+##SBATCH -A sudsaq
 #SBATCH -o {logs}/oe/out.%a
 #SBATCH -o {logs}/oe/err.%a
 #SBATCH -c {cpu}
+#SBATCH --mem {mem}gb
 #SBATCH -p defq
 #SBATCH -t 240:00:00
 #SBATCH --array={array}
@@ -203,7 +204,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
         name   = f'{jid}.{model}',
         logs   = logs,
         cpu    = 64,
-        # mem    = 500,
+        mem    = 500,
         array  = array,
         model  = model,
         script = script,
