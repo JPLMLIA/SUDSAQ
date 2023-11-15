@@ -3,6 +3,7 @@ import multiprocessing as mp
 import numpy as np
 import warnings
 
+mp.set_start_method('fork')
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 from functools    import partial
@@ -191,7 +192,7 @@ def predict_forest(model, X, n_jobs=None):
     # Pool(processes=None) is all cores
     n_jobs = {-1: None, None: 1}.get(n_jobs, n_jobs)
 
-    predicts = np.zeros((X.shape[0], 1))
+    predicts = np.zeros(X.shape[0])
     biases   = np.zeros_like(predicts)
     contribs = {}
 
@@ -226,6 +227,9 @@ def predict_forest(model, X, n_jobs=None):
         values   = list(features.values())
         features = list(features)
         contributions[sample, features] = values
+
+    # Reshape to the original TreeInterpreter shape
+    predicts = predicts.reshape(-1, 1)
 
     Logger.debug('Calculations done')
     return predicts, biases, contributions
