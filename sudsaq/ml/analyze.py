@@ -97,6 +97,35 @@ def model_importance(model, variables, output=None):
     return df
 
 
+def predictTI(model, data, *args, **kwargs):
+    """
+    Calls and returns TreeInterpreter.predict(model, X)
+
+    Parameters
+    ----------
+    model: ...
+        A compatible tree model with TreeInterpreter
+    data: xr.DataArray
+        2D data to predict with
+
+    Returns
+    -------
+    (pred, bias, cont): tuple
+        The calculated predictions, biases, and contributions objects from
+        TreeInterpreter
+    """
+    pred = data.isel(variable=0).drop('variable')
+    bias = pred.copy()
+    cont = data.copy()
+
+    p, b, c = ti.predict(model, data, **Config.treeinterpreter)
+    pred[:] = p.ravel()
+    bias[:] = b
+    cont[:] = c
+
+    return pred, bias, cont
+
+
 def pbc(model, data):
     """
     Predict, Bias, Contributions calculations
@@ -119,37 +148,23 @@ def pbc(model, data):
     Logger.info('Predicting using TreeInterpreter')
     if Config.split_predict:
         Logger.debug(f'Using {Config.split_predict} splits for prediction')
-        predicts = []
-        biases   = []
-        contribs = []
+        pred = []
+        bias = []
+        cont = []
 
         for split in tqdm(np.split(data, Config.split_predict), desc='Processed Splits'):
-            predict       = xr.zeros_like(split.isel(variable=0).drop_vars('variable'))
-            bias          = xr.zeros_like(predict)
-            contributions = xr.zeros_like(split)
-
-            _predict, bias[:], contributions[:] = ti.predict(model, split, **Config.treeinterpreter)
-
-            predict[:] = _predict.flatten()
-
-            predicts.append(predict)
-            biases.append(bias)
-            contribs.append(contributions)
+            p, b, c = predictTI(model, split, **Config.treeinterpreter)
+            pred.append(p)
+            bias.append(b)
+            cont.append(c)
 
         Logger.debug('Combining splits')
-        predict       = xr.concat(predicts, 'loc')
-        bias          = xr.concat(biases, 'loc')
-        contributions = xr.concat(contribs, 'loc')
-    else:
-        predict       = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
-        bias          = xr.zeros_like(predict)
-        contributions = xr.zeros_like(data)
+        combine = lambda a: xr.concat(a, 'loc')
 
-        _predict, bias[:], contributions[:] = ti.predict(model, data, **Config.treeinterpreter)
+        return combine(pred), combine(bias), combine(cont)
 
-        predict[:] = _predict.flatten()
-
-    return predict, bias, contributions
+    # Data not split, return on the full set
+    return predictTI(model, data, **Config.treeinterpreter)
 
 
 def quantilePredict(model, data, output=None, kind=None):
