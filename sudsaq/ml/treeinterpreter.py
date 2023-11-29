@@ -96,7 +96,9 @@ def predict_tree(estimator, X=None):
     The contributions are calculated based on the minimal feature contribution paths
     in the tree.
     """
-    # Multiprocessing will set X to global variable DATA to share memory
+    # To save memory space, global variables are shared memory in multiprocessing
+    if isinstance(estimator, int):
+        estimator = MODEL.estimators_[estimator]
     if X is None:
         X = DATA
 
@@ -196,6 +198,10 @@ def predict_forest(model, X, n_jobs=None):
     biases   = np.zeros_like(predicts)
     contribs = {}
 
+    # Insert the entire model into shared memory so its not duplicated
+    global MODEL
+    MODEL = model
+
     # Insert X into global space so that it is shared by processes instead of copied
     global DATA
     DATA = X
@@ -204,7 +210,7 @@ def predict_forest(model, X, n_jobs=None):
 
     total = len(model.estimators_)
     with mp.Pool(processes=n_jobs) as pool:
-        results = pool.imap_unordered(predict_tree, model.estimators_)
+        results = pool.imap_unordered(predict_tree, list(range(total)))
         for i, (p, b, c) in enumerate(results):
             predicts += p
             biases   += b
