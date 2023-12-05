@@ -1,7 +1,9 @@
 """
 """
 # Builtin
+import argparse
 import logging
+import sys
 
 # External
 import numpy  as np
@@ -31,6 +33,8 @@ from sudsaq.ml    import plots
 from sudsaq.ml    import treeinterpreter as ti
 from sudsaq.utils import (
     align_print,
+    init,
+    load_from_run,
     load_pkl,
     mkdir,
     save_objects
@@ -118,7 +122,7 @@ def predictTI(model, data, *args, **kwargs):
     bias = pred.copy()
     cont = data.copy()
 
-    p, b, c = ti.predict(model, data, **Config.treeinterpreter)
+    p, b, c = ti.predict(model, data, *args, **kwargs, **Config.treeinterpreter)
     pred[:] = p.ravel()
     bias[:] = b
     cont[:] = c
@@ -128,7 +132,7 @@ def predictTI(model, data, *args, **kwargs):
 
 def pbc(model, data):
     """
-    Predict, Bias, Contributions calculations
+    Prepares
     """
     # Only predict specified regions
     regions = []
@@ -299,8 +303,10 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     if Config.output.importance:
         impout = f'{output}/{kind}.importance.txt'
         Logger.info(f'Saving importances to {impout}')
+
     if 'Forest' in str(model):
         stats.mimportance = model_importance(model, data['variable'], output=impout)
+
     if Config.permutation_importance:
         try:
             stats.pimportance = perm_importance(model, data, target, output=impout)
@@ -345,3 +351,38 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     )
 
     return stats
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+
+    parser.add_argument('-c', '--config',   type     = str,
+                                            required = True,
+                                            metavar  = '/path/to/Config.yaml',
+                                            help     = 'Path to a Config.yaml file'
+    )
+    parser.add_argument('-p', '--patch',    nargs    = '?',
+                                            metavar  = 'sect1 ... sectN',
+                                            help     = 'Patch Sects together starting from sect1 to sectN'
+    )
+
+    args = parser.parse_args()
+
+    init(args)
+
+    model, data, target = load_from_run(Config.output.path, 'test', ['model', 'data', 'target'], flatten=True, load=True)
+
+    if model is None:
+        Logger.error(f'Missing model from run: {Config.output.path}')
+        sys.exit(1)
+
+    if data is None:
+        Logger.error(f'Missing data from run: {Config.output.path}')
+        sys.exit(2)
+
+    if target is None:
+        Logger.error(f'Missing target from run: {Config.output.path}')
+        sys.exit(3)
+
+    Logger.info('Beginning analysis')
+    analyze(model, data, target, kind='test')

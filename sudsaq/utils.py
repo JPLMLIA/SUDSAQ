@@ -23,8 +23,10 @@ from mlky import (
 Sect._opts.convertListTypes = False
 
 # Internal
-from sudsaq.data import unstacked
-
+from sudsaq.data import (
+    flatten,
+    unstacked
+)
 
 Logger = logging.getLogger('sudsaq/utils.py')
 
@@ -269,7 +271,7 @@ def save_objects(output, kind, **others):
             if obj is None:
                 Logger.warning(f'Object {name!r} is enabled to be saved in the config but was None, skipping')
                 continue
-            
+
             save_netcdf(
                 data    = obj,
                 name    = name,
@@ -281,7 +283,7 @@ def save_objects(output, kind, **others):
             Logger.debug(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
 
-def load_from_run(path, kind=None, objs=None):
+def load_from_run(path, kind=None, objs=None, load=True, flatten=False):
     """
     Loads objects from a given run
     """
@@ -297,27 +299,31 @@ def load_from_run(path, kind=None, objs=None):
 
     ret = []
     for obj, file in files.items():
+        data = None
         if obj in objs:
             if not os.path.exists(file):
-                Logger.error(f'File not found: {file}')
+                Logger.error(f'File not found for object {obj}: {file}')
 
-            if file.endswith('.pkl'):
+            elif file.endswith('.pkl'):
                 Logger.info(f'Loading {obj}: {file}')
-                ret.append(
-                    load_pkl(file)
-                )
+                data = load_pkl(file)
+
             elif file.endswith('.nc'):
                 Logger.info(f'Loading {obj}: {file}')
-                ret.append(
-                    xr.open_dataset(file)
-                )
+                data = xr.open_dataset(file)
+
+                if load:
+                    data = data.load()
+                if flatten:
+                    data = flatten(data)
+
             elif file.endswith('.ec'):
                 Logger.info(f'Loading {obj}: {file}')
-                ret.append(
-                    decode(file)
-                )
+                data = decode(file)
             else:
                 Logger.error(f'Invalid option: {obj}')
+
+            ret.append(data)
 
     return ret
 
