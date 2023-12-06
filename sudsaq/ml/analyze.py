@@ -159,7 +159,7 @@ def pbc(model, data):
         cont = []
 
         for split in tqdm(np.split(data, Config.split_predict), desc='Processed Splits'):
-            p, b, c = predictTI(model, split, **Config.treeinterpreter)
+            p, b, c = predictTI(model, split)
             pred.append(p)
             bias.append(b)
             cont.append(c)
@@ -170,7 +170,7 @@ def pbc(model, data):
         return combine(pred), combine(bias), combine(cont)
 
     # Data not split, return on the full set
-    return predictTI(model, data, **Config.treeinterpreter)
+    return predictTI(model, data)
 
 
 def quantilePredict(model, data, output=None, kind=None):
