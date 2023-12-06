@@ -283,7 +283,7 @@ def save_objects(output, kind, **others):
             Logger.debug(f'Object {name!r} is not enabled to be saved in the config, skipping')
 
 
-def load_from_run(path, kind=None, objs=None, load=True, flatten=False):
+def load_from_run(path, kind=None, objs=None, load=True, stack=False):
     """
     Loads objects from a given run
     """
@@ -314,7 +314,7 @@ def load_from_run(path, kind=None, objs=None, load=True, flatten=False):
 
                 if load:
                     data = data.load()
-                if flatten:
+                if stack:
                     data = flatten(data)
 
             elif file.endswith('.ec'):

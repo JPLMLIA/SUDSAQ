@@ -376,7 +376,7 @@ if __name__ == '__main__':
     Logger.debug(f'Folds discovered: {folds}')
     for fold in folds:
         Logger.info(f'Beginning analysis for fold: {fold}')
-        model, data, target = load_from_run(fold, 'test', ['model', 'data', 'target'], flatten=True, load=True)
+        model, data, target = load_from_run(fold, 'test', ['model', 'data', 'target'], load=True, stack=True)
 
         if model is None:
             Logger.error(f'Missing model file')
