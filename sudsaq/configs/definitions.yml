@@ -258,6 +258,13 @@ oh:
     glob:
       - ${.env.input}/momo/OH/${.range}/${.mon_n}.nc  # MOMO OH
     scale: True
+  permutation_importance: False
+  output:
+    plots: False
+  treeinterpreter:
+    n_jobs: 10
+  log:
+    reset: False
   env:
     type: emulator/oh
 oh-300:

@@ -5,6 +5,8 @@ import argparse
 import logging
 import sys
 
+from glob import glob
+
 # External
 import numpy  as np
 import pandas as pd
@@ -370,19 +372,23 @@ if __name__ == '__main__':
 
     init(args)
 
-    model, data, target = load_from_run(Config.output.path, 'test', ['model', 'data', 'target'], flatten=True, load=True)
+    folds = glob(f'{Config.output.path}/*/')
+    Logger.debug(f'Folds discovered: {folds}')
+    for fold in folds:
+        Logger.info(f'Beginning analysis for fold: {fold}')
+        model, data, target = load_from_run(fold, 'test', ['model', 'data', 'target'], flatten=True, load=True)
 
-    if model is None:
-        Logger.error(f'Missing model from run: {Config.output.path}')
-        sys.exit(1)
+        if model is None:
+            Logger.error(f'Missing model file')
+            continue
 
-    if data is None:
-        Logger.error(f'Missing data from run: {Config.output.path}')
-        sys.exit(2)
+        if data is None:
+            Logger.error(f'Missing data file')
+            continue
 
-    if target is None:
-        Logger.error(f'Missing target from run: {Config.output.path}')
-        sys.exit(3)
+        if target is None:
+            Logger.error(f'Missing target file')
+            continue
 
-    Logger.info('Beginning analysis')
-    analyze(model, data, target, kind='test')
+        analyze(model, data, target, kind='test')
+        Logger.debug(f'Finished fold: {fold}')
