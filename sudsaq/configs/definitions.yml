@@ -200,6 +200,8 @@ extended:
 
 extended-v2:
   range: 20{0[5-9],1[0-5]}
+  treeinterpreter:
+    n_jobs: 5
 
 # Cap sections are to limit a model's parameters likely due to the size of the data we're processing
 # These sometimes need to disable the truth_vs_predicted plot for the same reason
