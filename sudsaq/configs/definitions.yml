@@ -131,7 +131,7 @@ v4:
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO
-      - ${.env.input}/toar/v2/${.range}/${.mon_n}.nc # TOAR
+      - ${.env.input}/toar/v2.1/${.range}/${.mon_n}.nc # TOAR
     sel:
       vars: '[^\.]+\.(?!hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr|Restart|agcm|CHEMTMP|SYSIN|gralb|.*gt3|stderr|tcr2).*'
     scale: True
@@ -152,7 +152,7 @@ v5:
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
-      - ${.env.input}/toar/v2/${.range}/${.mon_n}.nc      # TOAR
+      - ${.env.input}/toar/v2.1/${.range}/${.mon_n}.nc      # TOAR
       - ${.env.input}/gee/modis/*.nc                           # MODIS
       - ${.env.input}/gee/population/pop_2010*.nc              # Population
     daily:
@@ -166,7 +166,7 @@ v6:
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc              # MOMO
-      - ${.env.input}/toar/v2/${.range}/${.mon_n}.nc      # TOAR
+      - ${.env.input}/toar/v2.1/${.range}/${.mon_n}.nc      # TOAR
       - ${.env.input}/gee/modis/*.nc                           # MODIS
       - ${.env.input}/gee/population/pop_2010*.nc              # Population
       - ${.env.input}/gee/nightlight/${.range}/*${.month}*.nc  # Night Light
@@ -183,6 +183,9 @@ v6:
 2005-19:
   range: 20{0[5-9],1[0-9]}
 
+2005-20:
+  range: 20{0[5-9],1[0-9],20}
+
 toar-limited:
   input:
     use_locs_of: toar.mda8.mean
@@ -195,8 +198,8 @@ extended:
       dim: time
       N: 3 # Drop every 3rd sample of time
 
-10features:
-
+extended-v2:
+  range: 20{0[5-9],1[0-5]}
 
 # Cap sections are to limit a model's parameters likely due to the size of the data we're processing
 # These sometimes need to disable the truth_vs_predicted plot for the same reason
