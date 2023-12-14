@@ -204,7 +204,7 @@ def createJob(config, patch, logs, array, months, script, history, preview):
         name   = f'{jid}.{model}',
         logs   = logs,
         cpu    = 64,
-        mem    = 500,
+        mem    = 480,
         array  = array,
         model  = model,
         script = script,
