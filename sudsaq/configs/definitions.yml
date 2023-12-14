@@ -179,12 +179,18 @@ v6-gee:
 # TOAR versions
 
 toar-v1:
+  toar:
+    mean: toar.o3.dma8epa.mean
+    median: toar.o3.dma8epa.median
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc    # MOMO
       - ${.env.input}/toar/v1/${.range}/${.mon_n}.nc # TOAR
 
 toar-v2:
+  toar:
+    mean: toar.mda8.mean
+    median: toar.mda8.median
   input:
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc      # MOMO
@@ -235,27 +241,27 @@ cap-depth:
 # Run Types
 
 bias-median:
-  target: momo.mda8 - toar.mda8.median
+  target: momo.mda8 - ${.toar.median}
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:
       toar:
-        vars: [toar.mda8.median]
+        vars: [${.toar.median}]
   env:
     type: bias
 
 bias-mean:
-  target: momo.mda8 - toar.mda8.mean
+  target: momo.mda8 - ${.toar.mean}
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:
       toar:
-        vars: [toar.mda8.mean]
+        vars: [${.toar.mean}]
   env:
     type: bias
 
 toar:
-  target: toar.mda8.mean
+  target: ${.toar.mean}
   train: (?!toar).+\.(?!o3|mda8).*
   env:
     type: toar
