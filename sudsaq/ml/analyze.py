@@ -262,7 +262,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
     stats = Sect()
 
     # Prepare the storage variables
-    bias, contributions = None, None
+    predict, bias, contributions = None, None, None
     # Quantile forests handle predictions tad differently
     if 'RandomForestQuantileRegressor' in str(model):
         predict = quantilePredict(
@@ -271,13 +271,13 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
             output = output,
             kind   = kind
         )
-    else:
-        if not Config.not_ti and 'Forest' in str(model):
-            predict, bias, contributions = pbc(model, data)
-        else:
-            Logger.info('Predicting')
-            predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
-            predict[:] = model.predict(data.values)
+
+    if not Config.not_ti and 'Forest' in str(model):
+        predict, bias, contributions = pbc(model, data)
+    elif predict is None:
+        Logger.info('Predicting')
+        predict    = xr.zeros_like(data.isel(variable=0).drop_vars('variable'))
+        predict[:] = model.predict(data.values)
 
     stats.predict = predict
 

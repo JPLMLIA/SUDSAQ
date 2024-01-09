@@ -4,10 +4,10 @@ import logging
 import pandas as pd
 
 from glob import glob
+from mlky import Config
 from tqdm import tqdm
 
-from sudsaq import  Config
-from sudsaq.utils  import init
+from sudsaq.utils import init
 
 Logger = logging.getLogger('sudsaq/silos/toar/process.py')
 
