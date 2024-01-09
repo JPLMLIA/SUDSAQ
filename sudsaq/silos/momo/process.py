@@ -6,10 +6,10 @@ import tarfile
 import xarray as xr
 
 from glob import glob
+from mlky import Config
 from tqdm import tqdm
 
-from sudsaq import  Config
-from sudsaq.utils  import init
+from sudsaq.utils import init
 
 
 def individual_folders():
