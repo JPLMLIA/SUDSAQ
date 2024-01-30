@@ -130,7 +130,7 @@ explain:
 v4:
   input:
     glob:
-      - ${.env.input}/momo/${.range}/${.mon_n}.nc         # MOMO
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc    # MOMO
       - ${.env.input}/toar/v1/${.range}/${.mon_n}.nc # TOAR
     sel:
       # This regex drops these keys
@@ -177,40 +177,44 @@ v6-gee:
         time: 0
 
 v6r:
-  sel:
-    vars:
-      - momo.2dsfc.BrOX
-      - momo.2dsfc.C10H16
-      - momo.2dsfc.C2H6
-      - momo.2dsfc.C3H6
-      - momo.2dsfc.C5H8
-      - momo.2dsfc.CH2O
-      - momo.2dsfc.H2O2
-      - momo.2dsfc.HNO3
-      - momo.2dsfc.HO2
-      - momo.2dsfc.N2O5
-      - momo.2dsfc.NH3
-      - momo.2dsfc.OH
-      - momo.2dsfc.PAN
-      - momo.ccover
-      - momo.olr
-      - momo.prcp
-      - momo.co
-      - momo.ps
-      - momo.q
-      - momo.t
-      - momo.u
-      - momo.v
-      - momo.no
-      - momo.no2
-      - momo.PBLH
-      - momo.NOxemi
-      - momo.COemi
-      - momo.SO2emi
-      - momo.RFLUXLD
-      - momo.RFLUXSD
-      - momo.mda8
-      - toar.o3.dma8epa.median
+  input:
+    glob:
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc       # MOMO
+      - ${.env.input}/momo/extra/${.range}/${.mon_n}.nc # MOMO extras
+      - ${.env.input}/toar/v1/${.range}/${.mon_n}.nc    # TOAR
+    sel:
+      vars:
+        - momo.2dsfc.BrOX
+        - momo.2dsfc.C10H16
+        - momo.2dsfc.C2H6
+        - momo.2dsfc.C3H6
+        - momo.2dsfc.C5H8
+        - momo.2dsfc.CH2O
+        - momo.2dsfc.H2O2
+        - momo.2dsfc.HNO3
+        - momo.2dsfc.HO2
+        - momo.2dsfc.N2O5
+        - momo.2dsfc.NH3
+        - momo.2dsfc.OH
+        - momo.2dsfc.PAN
+        - momo.ccover
+        - momo.olr
+        - momo.prcp
+        - momo.co
+        - momo.ps
+        - momo.q
+        - momo.t
+        - momo.u
+        - momo.v
+        - momo.no
+        - momo.no2
+        # - momo.pblh
+        - momo.noxflux.gt3 # momo.NOxemi ?
+        - momo.coflux.gt3 # momo.COemi ?
+        - momo.rfluxld
+        - momo.rfluxsd
+        - momo.mda8
+        - toar.o3.dma8epa.median
 
 # TOAR versions
 
