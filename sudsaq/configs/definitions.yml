@@ -214,7 +214,7 @@ v6r:
         - momo.rfluxld
         - momo.rfluxsd
         - momo.mda8
-        - toar.o3.dma8epa.median
+        - toar.mda8.median
 
 # TOAR versions
 
