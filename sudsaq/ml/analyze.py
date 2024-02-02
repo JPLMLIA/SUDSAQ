@@ -191,11 +191,14 @@ def quantilePredict(model, data, output=None, kind=None):
             quantiles += quant
 
         # Fix any machine precision errors
-        Config.model.quantiles = list(np.round(quantiles, 3))
+        Config.model.quantiles = list(np.unique(np.round(quantiles, 3)))
 
     if Config.model.quantiles:
         quantiles = Config.model.quantiles
-        predicts  = model.predict(data.values, quantiles=quantiles)
+        Logger.debug(f'Predicting quantiles: {quantiles}')
+
+        predicts = model.predict(data.values, quantiles=quantiles)
+        Logger.debug('Finished predicting')
 
         # Set name so xr.merge is seamless
         predict.name = 'predict'
@@ -377,6 +380,8 @@ if __name__ == '__main__':
     for fold in folds:
         Logger.info(f'Beginning analysis for fold: {fold}')
         model, data, target = load_from_run(fold, 'test', ['model', 'data', 'target'], load=True, stack=True)
+        data = data.transpose()
+        target = target.squeeze()
 
         if model is None:
             Logger.error(f'Missing model file')

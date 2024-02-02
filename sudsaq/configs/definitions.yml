@@ -110,6 +110,14 @@ RFQ:
   model:
     kind: RandomForestQuantileRegressor
     intervals: # % confidence, 95% confidence = 95
+      - 0 # Empirical median prediction == .5 quantile
+      - 1
+      - 5
+      - 10
+      - 20
+      - 25
+      - 30
+      - 40
       - 50
       - 60
       - 70
@@ -118,6 +126,7 @@ RFQ:
       - 90
       - 95
       - 99
+  permutation_importance: False
 
 # Script-specific arguments (inherit these last)
 
