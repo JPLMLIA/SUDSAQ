@@ -45,8 +45,8 @@ SLURM = """\
 #SBATCH -o {logs}/oe/err.%a
 #SBATCH -c {cpu}
 #SBATCH --mem {mem}gb
-#SBATCH -p defq
-#SBATCH -t 240:00:00
+#SBATCH -p compute
+#SBATCH -t 30:00:00
 #SBATCH --array={array}
 
 # Utility exports
