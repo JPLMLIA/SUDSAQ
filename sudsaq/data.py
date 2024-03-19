@@ -64,8 +64,26 @@ Timezones = [
 
 def unstacked(func):
     """
-    Unstacks the first parameter of the decorated `func` and restacks it if
-    the incoming `data` is already stacked, otherwise do nothing
+    Unstacks the first parameter of the decorated function and restacks it if
+    the incoming data is already stacked; otherwise, do nothing.
+
+    Parameters
+    ----------
+    func : function
+        The function to be decorated.
+
+    Returns
+    -------
+    function
+        The wrapped function.
+
+    Notes
+    -----
+    This decorator checks if the first parameter of the decorated function (`func`) is
+    stacked along a specific dimension named 'loc'. If it is, it unstacks the data
+    before passing it to the decorated function. After the function call, it checks
+    if the result is a DataArray or Dataset and flattens it along certain dimensions
+    if necessary.
     """
     def wrapped(data, *args, **kwargs):
         loc = False
@@ -88,7 +106,19 @@ def unstacked(func):
 
 def save_by_month(ds, path):
     """
-    Saves an xarray dataset by monthly files
+    Save an xarray dataset into monthly files.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset to be saved.
+    path : str
+        The path to the directory where the monthly files will be saved.
+
+    Notes
+    -----
+    The dataset is grouped by year and then by month, and each group is saved as a separate NetCDF file.
+    Each file name corresponds to the month in the format 'MM.nc'.
     """
     Logger.info('Saving output by month')
     for year, yds in ds.groupby('time.year'):
@@ -105,7 +135,26 @@ def save_by_month(ds, path):
 
 def calc(ds, string):
     """
-    Performs simple calculations to create new features at runtime.
+    Perform simple calculations to create new features at runtime.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset containing the variables to be used in the calculations.
+    string : str
+        The mathematical expression defining the calculation to be performed.
+        Variables in the expression should correspond to the keys in the dataset.
+
+    Returns
+    -------
+    result : xarray.DataArray or xarray.Dataset
+        The result of the calculation.
+
+    Notes
+    -----
+    This function dynamically evaluates the mathematical expression provided in the 'string' parameter.
+    Each variable in the expression is replaced with the corresponding dataset key.
+    The calculation is performed using Python's built-in eval function.
     """
     for key in list(ds):
         # Find this key not followed by a digit or word character (eg. prevents momo.no matching to momo.no2)
@@ -117,6 +166,24 @@ def calc(ds, string):
 
 def flatten(data):
     """
+    Flatten multi-dimensional xarray data along specified dimensions.
+
+    Parameters
+    ----------
+    data : xarray.DataArray or xarray.Dataset
+        The input xarray data to be flattened.
+
+    Returns
+    -------
+    xarray.DataArray
+        The flattened data.
+
+    Notes
+    -----
+    If the input data is a dataset, it will first be converted into a DataArray
+    using the to_array method.
+    The flattening process stacks the data along latitude ('lat') and longitude ('lon') dimensions.
+    If the data contains a 'time' dimension, it will also be stacked along this dimension.
     """
     if isinstance(data, xr.core.dataarray.Dataset):
         data = data.to_array()
@@ -124,12 +191,35 @@ def flatten(data):
     dims = ['lat', 'lon']
     if 'time' in data.dims:
         dims.append('time')
+
     return data.stack({'loc': dims})
 
 
 @unstacked
 def resample(data, freq, how='mean'):
     """
+    Resample time series data to a specified frequency.
+
+    Parameters
+    ----------
+    data : xarray.DataArray or xarray.Dataset
+        The input time series data.
+    freq : str
+        The frequency to which the data will be resampled.
+        This should be a string representing the desired time frequency,
+        such as 'D' for daily, 'W' for weekly, 'M' for monthly, etc.
+    how : str, optional
+        The method used to aggregate the data after resampling.
+        Default is 'mean'. Other options include 'sum', 'min', 'max', etc.
+
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The resampled time series data.
+
+    Notes
+    -----
+    This function relies on the resample method of xarray objects.
     """
     data = data.resample(time=freq)
     data = getattr(data, how)()
@@ -158,8 +248,35 @@ def subsample(data, dim, N):
 
 def scale(x, dims=['loc']):
     """
-    The standard score of a sample x is calculated as:
+    Scale the input data `x` along specified dimensions to have a mean of 0 and a standard deviation of 1.
+
+    Parameters
+    ----------
+    x : xarray.DataArray
+        The input data array to be scaled.
+
+    dims : list, optional
+        The dimensions along which to calculate the mean and standard deviation for scaling.
+        Default is ['loc'].
+
+    Returns
+    -------
+    xarray.DataArray
+        A new DataArray containing the scaled values.
+
+    Notes
+    -----
+    The standard score (z-score) of a sample `x` is calculated as:
         z = (x - u) / s
+    where `u` is the mean and `s` is the standard deviation along the specified dimensions.
+    This function scales the input data along the specified dimensions to have a mean of 0 and a standard deviation of 1.
+
+    Examples
+    --------
+    >>> import xarray as xr
+    >>> import numpy as np
+    >>> data = xr.DataArray(np.random.rand(10, 10), dims=['lat', 'lon'])
+    >>> scaled_data = scale(data, dims=['lat'])
     """
     u = x.mean(skipna=True, dim=dims)
     s = x.std(skipna=True, dim=dims)
@@ -167,9 +284,63 @@ def scale(x, dims=['loc']):
     return z
 
 
+def sel_by_latlon_pair(ds: xr.Dataset, pairs: list, remove: bool=False) -> xr.Dataset:
+    """
+    Selects data from an xarray Dataset based on latitude and longitude pairs.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        The xarray Dataset containing the data.
+
+    pairs : list
+        A list of latitude and longitude pairs used for selection.
+
+    remove : bool, optional
+        If True, remove the specified pairs instead of selecting them.
+        Default is False.
+
+    Returns
+    -------
+    xr.Dataset
+        A new xarray Dataset containing the selected data based on the specified pairs.
+
+    Notes
+    -----
+    This function selects data from the input xarray Dataset based on latitude and longitude pairs.
+    If `remove` is True, it removes the specified pairs from the selection instead of selecting them.
+    """
+    if remove:
+        pairs = list(set(ds['loc'].data) - set(pairs))
+
+    return ds.sel(loc=pairs)
+
+
 def split_and_stack(ds, lazy=True):
     """
-    Splits the target from the data and stacks both to be 1 or 2d
+    Splits the target from the data and stacks both to be 1d
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The input dataset containing both data and target.
+    lazy : bool, optional
+        Whether to lazily load the data into memory. Defaults to True.
+
+    Returns
+    -------
+    data : xarray.DataArray
+        The stacked data.
+    target : xarray.DataArray
+        The stacked target.
+
+    Notes
+    -----
+    Config options used in this function:
+    - Config.target : The target variable name or calculable.
+    - Config.train : The training variables list or regex.
+    - Config.input.use_locs_of : The variable to use for selecting locations.
+    - Config.input.scale : Whether to scale the input data.
     """
     # Target is a variable case
     if Config.target in ds:
@@ -221,10 +392,34 @@ def split_and_stack(ds, lazy=True):
 def daily(ds):
     """
     Aligns a dataset to a daily average
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The input dataset to align.
+
+    Returns
+    -------
+    Dataset
+        The aligned dataset.
     """
     def select_times(ds, sel, time):
         """
         Selects timestamps using integer hours (0-23) over all dates
+
+        Parameters
+        ----------
+        ds : xarray.Dataset
+            The dataset to select timestamps from.
+        sel : int or list of int
+            The hour(s) to select.
+        time : xarray.DataArray
+            The time dimension of the dataset.
+
+        Returns
+        -------
+        xarray.Dataset
+            The dataset with selected timestamps.
         """
         if isinstance(sel, list):
             mask = (dt.time(sel[0]) <= time) & (time <= dt.time(sel[1]))
@@ -345,6 +540,35 @@ def config_sel(ds, sels):
 
 def load(split=False, lazy=True):
     """
+    Loads and preprocesses data from files.
+
+    Parameters
+    ----------
+    split : bool, optional
+        Whether to split and stack the dataset. Defaults to False.
+    lazy : bool, optional
+        Whether to lazily load the dataset into memory. Defaults to True.
+
+    Returns
+    -------
+    Dataset or tuple of Dataset and target
+        The loaded and preprocessed dataset or a tuple containing the dataset and target.
+
+    Notes
+    -----
+    Config options used in this function:
+    - Config.input.glob (list): A list of glob patterns used to collect files. If wcmatch is installed, this can be a complex pattern.
+    - Config.input.engine (str): The engine used to open the files (default is 'netcdf4').
+    - Config.input.lock (bool): Whether to use file locking when opening files.
+    - Config.input.parallel (bool): Whether to use parallel reading when opening files.
+    - Config.input.chunks (dict): Chunk sizes for parallel reading.
+    - Config.input.replace_vals (dict): Replacement values for specified variables.
+    - Config.input.calc (dict): Calculations to perform on variables.
+    - Config.input.sel (dict): Selection criteria for variables.
+    - Config.input.daily (bool): Daily alignment options.
+    - Config.input.resample (dict): Resampling options.
+    - Config.input.subsample (dict): Subsampling options.
+    - Config.input.lazy (bool): Whether to lazily load the dataset into memory.
     """
     Logger.info('Collecting files')
     files = []
