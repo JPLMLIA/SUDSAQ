@@ -150,7 +150,7 @@ v4:
         vars: [momo.mda8]
         time: 1
       toar:
-        vars: [toar.mda8.mean]
+        vars: toar.*
         time: 0
       momo:
         vars: momo.(?!mda8).*
@@ -185,6 +185,7 @@ v6-gee:
         vars: modis.*
         time: 0
 
+# This version leverages the v4 definition, must be used as "v4<-v6r"
 v6r:
   input:
     glob:
@@ -245,7 +246,20 @@ toar-v2:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc      # MOMO
       - ${.env.input}/toar/v2.2/${.range}/${.mon_n}.nc # TOAR
 
+toar-v2.3:
+  toar:
+    mean: toar.mda8.mean
+    median: toar.mda8.median
+  input:
+    glob:
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc      # MOMO
+      - ${.env.input}/toar/v2.3/${.range}/${.mon_n}.nc # TOAR
+
 # Restrictions
+
+extended-no-france-2014:
+  # Match 2005-2013, 2014/without-france, 2015-2020
+  range: "{20{0[5-9],1{[1-3],[5-9]},20},2014/without-france}"
 
 2013-16:
   range: 201[3-6]
@@ -273,6 +287,27 @@ extended-v2:
   treeinterpreter:
     n_jobs: 5
 
+# Disables most features and reduces the data size for development work
+# Usage: python create.py -c ../configs/definitions.yml -p "default<-mac<-bias-median<-v4<-toar-v2.3<-dev-limited<-jan"
+dev-limited:
+  range: 201[4-5] # 2 years
+  toar:
+    median: toar.mda8.median
+  input:
+    sel:
+      vars:
+        - momo.t
+        - momo.u
+        - momo.v
+        - momo.mda8
+        - toar.mda8.median
+  permutation_importance: false
+  treeinterpreter: false
+  output:
+    plots: false
+  env:
+    output: .
+# default<-gattaca<-v4<-v6r<-bias-median<-toar-v2<-RFQ<-extended-v2<-2005-20<-${month[$SLURM_ARRAY_TASK_ID]}
 # Cap sections are to limit a model's parameters likely due to the size of the data we're processing
 # These sometimes need to disable the truth_vs_predicted plot for the same reason
 cap-leaves:

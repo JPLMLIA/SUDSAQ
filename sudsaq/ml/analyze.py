@@ -275,7 +275,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
             kind   = kind
         )
 
-    if not Config.not_ti and 'Forest' in str(model):
+    if Config.treeinterpreter is not False and 'Forest' in str(model):
         predict, bias, contributions = pbc(model, data)
     elif predict is None:
         Logger.info('Predicting')

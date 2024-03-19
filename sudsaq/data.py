@@ -428,6 +428,7 @@ def daily(ds):
             # Floor the times to the day for the groupby operation
             ds.coords['time'] = ds.time.dt.floor('1D')
 
+            # print(ds)
             # Now group as daily taking the mean
             ds = ds.groupby('time').mean()
         else:
