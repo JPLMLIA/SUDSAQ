@@ -7,6 +7,8 @@ import os
 import sys
 import numpy as np
 import xarray as xr
+from region import Dataset
+from region import MOMO_V4_VARS_SEL
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.preprocessing import StandardScaler
 import cartopy.crs as ccrs
@@ -36,7 +38,7 @@ CLUSTER_VARS = [
 ]
 
 
-def main(momo_files, toar_mask_file, n_clusters, out_dir):
+def main(momo_files, toar_mask_file, n_clusters, out_dir, feature_set):
     for f in momo_files:
         if not os.path.exists(f):
             print(f'Input file does not exist: {f}')
@@ -44,6 +46,15 @@ def main(momo_files, toar_mask_file, n_clusters, out_dir):
 
     # Load in MOMO files
     ds = xr.open_mfdataset(momo_files, engine='netcdf4', lock=False, parallel=True)
+    ds = Dataset(ds)
+
+    if feature_set == '15vars':
+        ds = ds[CLUSTER_VARS]
+    elif feature_set == 'momo_v4':
+        ds = ds[MOMO_V4_VARS_SEL]
+    else:
+        raise Exception('Undefined feature set')
+
     ds = ds.sortby('lon')
     lat_arr = np.array(ds['lat'])
     lon_arr = np.array(ds['lon'])
@@ -52,7 +63,7 @@ def main(momo_files, toar_mask_file, n_clusters, out_dir):
     # Load in toar binary mask file
     mask = np.load(toar_mask_file)
 
-    for momo_var in CLUSTER_VARS:
+    for momo_var in list(ds):
         data = np.array(ds[momo_var])
 
         if np.isnan(data).any():
@@ -162,6 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--toar_mask_file', type=str, required=True)
     parser.add_argument('--n_clusters', type=int, default=15)
     parser.add_argument('--out_dir', type=str, required=True)
+    parser.add_argument('--feature_set', type=str, choices=['15vars', 'momo_v4'])
 
     args = parser.parse_args()
     main(**vars(args))

@@ -42,6 +42,7 @@ def main(toar_files, out_dir):
         ds = Dataset(ds)
         ds = ds['toar.mda8.mean']
         ds = ds.sortby('lon')
+        ds = ds.sortby('time')
         mask = ~np.isnan(ds).all(dim='time').values
         mask_list.append(mask)
 
