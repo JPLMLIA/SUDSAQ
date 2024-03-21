@@ -262,7 +262,7 @@ extended-no-france-2014:
     glob:
       - ${.env.input}/momo/${.momo-range}/${.mon_n}.nc       # MOMO
       - ${.env.input}/momo/extra/${.momo-range}/${.mon_n}.nc # MOMO extras
-      - ${.env.input}/toar/v1/${.toar-range}/${.mon_n}.nc    # TOAR
+      - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc    # TOAR
 
 2013-16:
   range: 201[3-6]
