@@ -587,7 +587,8 @@ def load(split=False, lazy=True):
         engine   = Config.input.get('engine'  , 'netcdf4'),
         lock     = Config.input.get('lock'    , False    ),
         parallel = Config.input.get('parallel', False    ),
-        chunks   = dict(Config.input.chunks)
+        chunks   = dict(Config.input.chunks),
+        **Config.input.open_mfdataset
     )
 
     Logger.info('Casting xarray.Dataset to custom Dataset')
