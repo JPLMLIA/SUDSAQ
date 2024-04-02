@@ -222,6 +222,7 @@ v6r:
         - momo.rfluxsd
         - momo.mda8
         - toar.mda8.median
+        - sudsaq.o3.mda8
 
 # TOAR versions
 
@@ -266,6 +267,16 @@ extended-no-france-2014:
     calc:
       patched.mda8: (momo.mda8).combine_first(sudsaq.o3.mda8)
   target: patched.mda8 - ${.toar.median}
+  train: momo\.(?!o3|mda8).*
+  input:
+    daily:
+      toar:
+        vars:
+          - ${.toar.median}
+      mda8:
+        vars:
+          - momo.mda8
+          - sudsaq.o3.mda8
 
 2013-16:
   range: 201[3-6]
