@@ -263,6 +263,9 @@ extended-no-france-2014:
       - ${.env.input}/momo/fixed/${.momo-range}/${.mon_n}.nc       # MOMO
       - ${.env.input}/momo/extra/${.momo-range}/${.mon_n}.nc # MOMO extras
       - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc  # TOAR
+    calc:
+      patched.mda8: (momo.mda8).combine_first(sudsaq.o3.mda8)
+  target: patched.mda8 - ${.toar.median}
 
 2013-16:
   range: 201[3-6]
