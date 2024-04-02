@@ -266,17 +266,13 @@ extended-no-france-2014:
       - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc  # TOAR
     calc:
       patched.mda8: (momo.mda8).combine_first(sudsaq.o3.mda8)
-  target: patched.mda8 - ${.toar.median}
-  train: momo\.(?!o3|mda8).*
-  input:
     daily:
-      toar:
-        vars:
-          - ${.toar.median}
       mda8:
         vars:
           - momo.mda8
           - sudsaq.o3.mda8
+  target: patched.mda8 - ${.toar.median}
+  train: momo\.(?!o3|mda8).*
 
 2013-16:
   range: 201[3-6]
