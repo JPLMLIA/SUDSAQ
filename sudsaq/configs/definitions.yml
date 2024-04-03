@@ -270,8 +270,7 @@ extended-no-france-2014:
     daily:
       mda8:
         vars:
-          - momo.mda8
-          - sudsaq.o3.mda8
+          - patched.mda8
   target: patched.mda8 - ${.toar.median}
   train: momo\.(?!o3|mda8).*
 
