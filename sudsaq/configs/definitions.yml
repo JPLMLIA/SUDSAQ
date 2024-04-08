@@ -259,7 +259,7 @@ toar-v2.3:
 extended-no-france-2014:
   # Match 2005-2013, 2014/without-france, 2015-2020
   momo-range: "20{0[5-9],1[0-9],20}"
-  toar-range: "{20{0[5-9],1{[1-3],[5-9]},20},2014/without-france}"
+  toar-range: "{20{0[5-9],1{[0-3],[5-9]},20},2014/without-france}"
   input:
     glob:
       - ${.env.input}/momo/fixed/${.momo-range}/${.mon_n}.nc # MOMO
