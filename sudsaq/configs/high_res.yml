@@ -107,9 +107,10 @@ v1:
       scale: true
   env:
     type: high_res
+
+local:
     output: .
   treeinterpreter: false
-
 
 # Months
 
