@@ -1,0 +1,166 @@
+default:
+  analyze:
+    train: False
+  model:
+    kind: RandomForestQuantileRegressor
+    intervals: # % confidence, 95% confidence = 95
+      - 0 # Empirical median prediction == .5 quantile
+      - 1
+      - 5
+      - 10
+      - 20
+      - 25
+      - 30
+      - 40
+      - 50
+      - 60
+      - 70
+      - 75
+      - 80
+      - 90
+      - 95
+      - 99
+  permutation_importance: False
+  treeinterpreter:
+    n_jobs: -1
+  output:
+    path: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}
+    model        : True
+    data         : True
+    target       : True
+    predict      : True
+    bias         : True
+    contributions: True
+    scores       : True
+    importance   : True
+    plots        : True
+    explanation  : True
+    quantiles    : True
+  plots:
+    importances:
+      count: 20
+      labelrotation: 90
+  input:
+    lazy: True
+    parallel: True
+  log:
+    file: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}/run.log
+    level: debug
+    reset: True
+    config: ${.env.output}/${.env.type}/${$MODELNAME}/
+  dask:
+    config:
+      distributed.admin.tick.limit: 60s
+      distributed.worker.memory.terminate: 0.98
+    client:
+      dashboard_address: null
+
+# System
+
+gattaca:
+  input:
+    parallel: False
+  env:
+    input: /projects/mlia-active-data/data_SUDSAQ/data
+    output: /scratch/sudsaq/models
+
+mlia:
+  env:
+    input: /data/MLIA_active_data/data_SUDSAQ/data
+    output: /data/MLIA_active_data/data_SUDSAQ/models
+
+mac:
+  env:
+    input: /Volumes/MLIA_active_data/data_SUDSAQ/data
+    output: /Volumes/MLIA_active_data/data_SUDSAQ/models
+
+
+# Script-specific arguments (inherit these last)
+
+explain:
+  log:
+    file: ${.env.output}/${.env.type}/${$MODELNAME}/${.month}/explain.log
+
+# Versions
+
+v1:
+  # range: 20{1[6-9],20}
+  range: 2020
+  target: momo.o3
+  train: momo\.(?!o3).*
+  input:
+    glob:
+      - ${.env.input}/momo/${.range}/${.mon_n}.nc
+    sel:
+      vars:
+        - momo.v
+        - momo.u
+        - momo.t
+        - momo.ps
+        - momo.no2
+        - momo.o3 # target
+    scale: true
+
+    test:
+      glob:
+        - ${.env.input}/momo/high_res.nc
+      scale: true
+  env:
+    type: high_res
+    output: .
+  treeinterpreter: false
+
+
+# Months
+
+jan:
+  month: jan
+  mon_n: '01'
+
+feb:
+  month: feb
+  mon_n: '02'
+  input:
+    sel:
+      drop_date:
+        day: 29
+
+mar:
+  month: mar
+  mon_n: '03'
+
+apr:
+  month: apr
+  mon_n: '04'
+
+may:
+  month: may
+  mon_n: '05'
+
+jun:
+  month: jun
+  mon_n: '06'
+
+jul:
+  month: jul
+  mon_n: '07'
+
+aug:
+  month: aug
+  mon_n: '08'
+
+sep:
+  month: sep
+  mon_n: '09'
+
+oct:
+  month: oct
+  mon_n: '10'
+
+nov:
+  month: nov
+  mon_n: '11'
+
+dec:
+  month: dec
+  mon_n: '12'

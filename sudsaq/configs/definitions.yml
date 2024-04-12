@@ -33,7 +33,8 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 default:
   range: 201[1-5]
-  train_performance: False
+  analyze:
+    train: False
   GroupKFold: True
   model:
     kind: RandomForestRegressor
@@ -273,6 +274,20 @@ extended-no-france-2014:
           - patched.mda8
   target: patched.mda8 - ${.toar.median}
   train: momo\.(?!o3|mda8).*
+
+extended-no-france-2014-gee:
+  input:
+    glob:
+      - ${.env.input}/momo/fixed/${.momo-range}/${.mon_n}.nc  # MOMO
+      - ${.env.input}/momo/extra/${.momo-range}/${.mon_n}.nc  # MOMO extras
+      - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc   # TOAR
+      - ${.env.input}/gee/modis/*.nc                          # MODIS
+      - ${.env.input}/gee/population/pop_2010*.nc             # Population
+      - ${.env.input}/gee/nightlight/${.range}/*${.month}*.nc # Night Light
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
 
 2013-16:
   range: 201[3-6]

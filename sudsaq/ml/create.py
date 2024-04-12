@@ -88,7 +88,7 @@ def prepare(kind, data, target, drop_features=False, align=False):
     return data, target
 
 
-def fit(model, data, target, i=None, test=True):
+def fit(model, data, target, fold=None):
     """
     Fits a model and analyzes the performance
 
@@ -103,7 +103,6 @@ def fit(model, data, target, i=None, test=True):
     target: mlky.Sect
         Sect object containing the .train and .test splits for this y
         These splits should be xarray.Dataset
-    test: bool, default = None
 
     Notes
     -----
@@ -131,7 +130,7 @@ def fit(model, data, target, i=None, test=True):
 
     # Create a subdirectory if kfold
     output = Config.output.path
-    if test:
+    if fold:
         year = set(target.test.time.dt.year.values).pop()
         Logger.info(f'Testing year: {year}')
         if output:
@@ -141,7 +140,8 @@ def fit(model, data, target, i=None, test=True):
         Logger.info(f'Saving model to {output}/model.pkl')
         save_pkl(model, f'{output}/model.pkl')
 
-    if Config.train_performance:
+    # Run analyze on the train set
+    if Config.analyze.train:
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
     else:
@@ -153,7 +153,8 @@ def fit(model, data, target, i=None, test=True):
             target = target.train
         )
 
-    if test:
+    # Run analyze on the test set
+    if Config.analyze.test:
         data.test, target.test = prepare('test', data.test, target.test, align=Config.align_test)
 
         if data.test is None or target.test is None:
@@ -179,7 +180,7 @@ def fit(model, data, target, i=None, test=True):
             )
         except:
             Logger.exception('Test analysis raised an exception')
-            Critical.append(f'Test analysis failed for fold {i}')
+            Critical.append(f'Test analysis failed for fold {fold}')
 
         # Run the explanation module if it's enabled
         try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
@@ -304,7 +305,14 @@ def create():
             'data'  : {'train': data},
             'target': {'train': target}
         })
-        fit(model(), input.data, input.target, test=False)
+
+        # Load a different test set in, if available
+        if Config.input.test:
+            input.data.test, input.target.test = load(input=Config.input.test, split=True)
+        else:
+            Config.analyze.test = False
+
+        fit(model(), input.data, input.target)
 
     # Completed successfully
     return True

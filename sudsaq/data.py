@@ -493,7 +493,7 @@ def config_sel(ds, sels):
 
     Parameters
     ----------
-    sels: mlky.Section
+    sels: mlky.Sect
         Selections defined by the Config
     """
     for dim, sel in sels.items():
@@ -539,7 +539,7 @@ def config_sel(ds, sels):
     return Dataset(ds)
 
 
-def load(split=False, lazy=True):
+def load(split=False, lazy=True, input=None):
     """
     Loads and preprocesses data from files.
 
@@ -571,6 +571,10 @@ def load(split=False, lazy=True):
     - Config.input.subsample (dict): Subsampling options.
     - Config.input.lazy (bool): Whether to lazily load the dataset into memory.
     """
+    # Override the input section with a provided alternative
+    if input:
+        Config.input = input
+
     Logger.info('Collecting files')
     files = []
     for string in Config.input.glob:
