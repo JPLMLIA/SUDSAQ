@@ -109,6 +109,7 @@ v1:
     type: high_res
 
 local:
+  env:
     output: .
   treeinterpreter: false
 
