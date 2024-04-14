@@ -1,7 +1,7 @@
 default:
   analyze:
     train: False
-    train:: True
+    test: True
   model:
     kind: RandomForestQuantileRegressor
     intervals: # % confidence, 95% confidence = 95
