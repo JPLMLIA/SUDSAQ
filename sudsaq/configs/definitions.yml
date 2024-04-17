@@ -263,7 +263,7 @@ extended-no-france-2014:
   toar-range: "{20{0[5-9],1{[0-3],[5-9]},20},2014/without-france}"
   input:
     glob:
-      - ${.env.input}/momo/fixed/${.momo-range}/${.mon_n}.nc # MOMO
+      - ${.env.input}/momo/${.momo-range}/${.mon_n}.nc # MOMO
       - ${.env.input}/momo/extra/${.momo-range}/${.mon_n}.nc # MOMO extras
       - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc  # TOAR
     calc:
@@ -278,7 +278,7 @@ extended-no-france-2014:
 extended-no-france-2014-gee:
   input:
     glob:
-      - ${.env.input}/momo/fixed/${.momo-range}/${.mon_n}.nc  # MOMO
+      - ${.env.input}/momo/${.momo-range}/${.mon_n}.nc  # MOMO
       - ${.env.input}/momo/extra/${.momo-range}/${.mon_n}.nc  # MOMO extras
       - ${.env.input}/toar/v2.3/${.toar-range}/${.mon_n}.nc   # TOAR
       - ${.env.input}/gee/modis/*.nc                          # MODIS
