@@ -297,7 +297,7 @@ def create():
             Logger.debug(f'fold_{fold}:  Test years = {set(input.target.test.time.dt.year.values)}')
 
             # Recreate the model each fold
-            fit(model(), input.data, input.target, i=fold)
+            fit(model(), input.data, input.target, fold=fold)
 
     # Not using kfold
     else:
