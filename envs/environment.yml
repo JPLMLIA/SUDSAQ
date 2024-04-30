@@ -2,7 +2,7 @@ name: sudsaq
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.10
   - cartopy
   - dask
   - geoviews
@@ -25,5 +25,4 @@ dependencies:
   - pip:
     - fasttreeshap # requires g++
     - mlky
-    - ray
     - tables
