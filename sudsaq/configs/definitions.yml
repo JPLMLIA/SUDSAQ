@@ -35,6 +35,7 @@ default:
   range: 201[1-5]
   analyze:
     train: False
+    test: True
   GroupKFold: True
   model:
     kind: RandomForestRegressor

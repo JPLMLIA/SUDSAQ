@@ -145,7 +145,7 @@ def fit(model, data, target, fold=None):
         Logger.info(f'Creating train set performance analysis')
         analyze(model, data.train, target.train, 'train', output)
     else:
-        Logger.debug('Saving train objects')
+        Logger.info(f'Train analysis disabled, saving objects')
         save_objects(
             output = output,
             kind   = 'train',
@@ -154,45 +154,48 @@ def fit(model, data, target, fold=None):
         )
 
     # Run analyze on the test set
-    if Config.analyze.test:
-        data.test, target.test = prepare('test', data.test, target.test, align=Config.align_test)
+    if not Config.analyze.test:
+        Logger.info('Test analysis disabled, skipping')
+        return
 
-        if data.test is None or target.test is None:
-            Logger.error('Test set analysis for this fold is unavailable')
-            return
+    data.test, target.test = prepare('test', data.test, target.test, align=Config.align_test)
 
-        Logger.debug('Saving test objects')
-        save_objects(
-            output  = output,
-            kind    = 'test',
-            data    = data.test,
-            target  = target.test
+    if data.test is None or target.test is None:
+        Logger.error('Test set analysis for this fold is unavailable')
+        return
+
+    Logger.debug('Saving test objects')
+    save_objects(
+        output  = output,
+        kind    = 'test',
+        data    = data.test,
+        target  = target.test
+    )
+
+    Logger.info(f'Creating test set performance analysis')
+    try:
+        analyze(
+            model  = model,
+            data   = data.test,
+            target = target.test,
+            kind   = 'test',
+            output = output
         )
+    except:
+        Logger.exception('Test analysis raised an exception')
+        Critical.append(f'Test analysis failed for fold {fold}')
 
-        Logger.info(f'Creating test set performance analysis')
-        try:
-            analyze(
+    # Run the explanation module if it's enabled
+    try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
+        if Config.explain:
+            explain(
                 model  = model,
                 data   = data.test,
-                target = target.test,
                 kind   = 'test',
                 output = output
             )
-        except:
-            Logger.exception('Test analysis raised an exception')
-            Critical.append(f'Test analysis failed for fold {fold}')
-
-        # Run the explanation module if it's enabled
-        try: # TODO: Remove the try/except, ideally module will handle exceptions itself so this is temporary
-            if Config.explain:
-                explain(
-                    model  = model,
-                    data   = data.test,
-                    kind   = 'test',
-                    output = output
-                )
-        except:
-            Logger.exception('SHAP explanations failed:')
+    except:
+        Logger.exception('SHAP explanations failed:')
 
 
 def hyperoptimize(data, target, model, kfold=None, groups=None):
