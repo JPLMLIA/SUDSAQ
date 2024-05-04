@@ -130,7 +130,7 @@ def fit(model, data, target, fold=None):
 
     # Create a subdirectory if kfold
     output = Config.output.path
-    if fold:
+    if fold is not None:
         year = set(target.test.time.dt.year.values).pop()
         Logger.info(f'Testing year: {year}')
         if output:
