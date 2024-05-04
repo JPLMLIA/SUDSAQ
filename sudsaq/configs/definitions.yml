@@ -141,8 +141,85 @@ v4:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc    # MOMO
       - ${.env.input}/toar/v1/${.range}/${.mon_n}.nc # TOAR
     sel:
-      # This regex drops these keys
-      vars: '[^\.]+\.(?!snow|hno3|oh|pan|q2|sens|so2|T2|taugxs|taugys|taux|tauy|twpc|2dsfc.CFC11|2dsfc.CFC113|2dsfc.CFC12|ch2o|cumf0|2dsfc.dms|2dsfc.HCFC22|2dsfc.H1211|2dsfc.H1301|2dsfc.mc.oc|2dsfc.dflx.bc|2dsfc.dflx.oc|2dsfc.LR.SO2|2dsfc.CH3COOOH|prcpl|2dsfc.C3H7OOH|dqlsc|2dsfc.mc.pm25.salt|2dsfc.CH3COO2|u10|2dsfc.dflx.nh4|2dsfc.mc.nh4|2dsfc.dflx.dust|2dsfc.mc.pm25.dust|osr|osrc|ssrc|v10|2dsfc.OCS|2dsfc.taut|ccoverl|ccoverm|2dsfc.DCDT.HOX|2dsfc.DCDT.OY|2dsfc.DCDT.SO2|slrdc|uvabs|dqcum|dqdad|dqdyn|dqvdf|dtdad|cumf|ccoverh|prcpc|2dsfc.BrCl|2dsfc.Br2|dtcum|2dsfc.mc.sulf|2dsfc.HOBr|dtlsc|2dsfc.Cl2|2dsfc.CH3CCl3|2dsfc.CH3Br|2dsfc.ONMV|2dsfc.MACROOH|2dsfc.MACR|2dsfc.HBr|Restart|agcm|CHEMTMP|SYSIN|gralb|.*gt3|stderr|tcr2).*'
+      vars:
+        - momo.2dsfc.BrONO2
+        - momo.2dsfc.BrOX
+        - momo.2dsfc.C10H16
+        - momo.2dsfc.C2H5OOH
+        - momo.2dsfc.C2H6
+        - momo.2dsfc.C3H6
+        - momo.2dsfc.C5H8
+        - momo.2dsfc.CCl4
+        - momo.2dsfc.CH2O
+        - momo.2dsfc.CH3CHO
+        - momo.2dsfc.CH3COCH3
+        - momo.2dsfc.CH3Cl
+        - momo.2dsfc.CH3O2
+        - momo.2dsfc.CH3OH
+        - momo.2dsfc.CH3OOH
+        - momo.2dsfc.CHBr3
+        - momo.2dsfc.ClONO2
+        - momo.2dsfc.ClOX
+        - momo.2dsfc.DMS
+        - momo.2dsfc.H2O2
+        - momo.2dsfc.HACET
+        - momo.2dsfc.HCl
+        - momo.2dsfc.HNO3
+        - momo.2dsfc.HNO4
+        - momo.2dsfc.HO2
+        - momo.2dsfc.HOCl
+        - momo.2dsfc.HOROOH
+        - momo.2dsfc.ISON
+        - momo.2dsfc.ISOOH
+        - momo.2dsfc.LR.HOX
+        - momo.2dsfc.LR.OY
+        - momo.2dsfc.MGLY
+        - momo.2dsfc.MPAN
+        - momo.2dsfc.N2O5
+        - momo.2dsfc.NALD
+        - momo.2dsfc.NH3
+        - momo.2dsfc.NH4
+        - momo.2dsfc.OH
+        - momo.2dsfc.PAN
+        - momo.2dsfc.PROD.HOX
+        - momo.2dsfc.PROD.OY
+        - momo.2dsfc.SO2
+        - momo.2dsfc.SO4
+        - momo.2dsfc.dflx.hno3
+        - momo.2dsfc.dflx.nh3
+        - momo.2dsfc.dflx.salt
+        - momo.2dsfc.doxdyn
+        - momo.2dsfc.doxphy
+        - momo.2dsfc.mc.bc
+        - momo.2dsfc.mc.dust
+        - momo.2dsfc.mc.nitr
+        - momo.2dsfc.mc.salt
+        - momo.ccover
+        - momo.dtdyn
+        - momo.dtradl
+        - momo.dtrads
+        - momo.dtvdf
+        - momo.evap
+        - momo.olr
+        - momo.olrc
+        - momo.prcp
+        - momo.precw
+        - momo.slrc
+        - momo.snow
+        - momo.aerosol.nh4
+        - momo.aerosol.no3
+        - momo.aerosol.sul
+        - momo.co
+        - momo.ps
+        - momo.q
+        - momo.t
+        - momo.u
+        - momo.v
+        - momo.o3
+        - momo.no
+        - momo.no2
+        - momo.mda8
+        - toar.mda8.median
     scale: True
     daily:
       mda8:
