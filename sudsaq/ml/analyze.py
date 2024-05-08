@@ -259,7 +259,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Load data if not provided
     if data is None:
-        data, target = Loader.load(split=True)
+        data, target = Loader().load(split=True)
 
     # Stores information about this analysis
     stats = Sect()

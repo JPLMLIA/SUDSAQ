@@ -311,7 +311,7 @@ def create():
 
         # Load a different test set in, if available
         if Config.input.test:
-            input.data.test, input.target.test = Loader.load(input=Config.input.test, split=True)
+            input.data.test, input.target.test = Loader(Config.input.test).load(split=True)
         else:
             Config.analyze.test = False
 
