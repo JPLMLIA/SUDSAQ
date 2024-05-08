@@ -91,7 +91,7 @@ def init(args):
     Logger.debug(f'Logging initialized using Config({args.config}, {args.patch})')
 
     if Config.log.config:
-        shutil.copy(args.config, Config.log.config)
+        Config.generateTemplate(f'{Config.log.config}/config.yml')
 
     # Logger.debug('Instantiating the Dask cluster')
     # dask.config.set(dict(config.dask.config))

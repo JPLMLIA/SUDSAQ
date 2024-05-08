@@ -23,7 +23,7 @@ try:
 except:
     RandomForestQuantileRegressor = None
 
-from sudsaq.data       import load
+from sudsaq.data       import Loader
 from sudsaq.ml.analyze import analyze
 from sudsaq.ml.explain import explain
 from sudsaq.utils      import (
@@ -244,7 +244,7 @@ def create():
     Creates and trains a desired model.
     """
     # Load the data
-    data, target = load(split=True)
+    data, target = Loader().load(split=True)
 
     ## Select a model to use per the config
     # Sklearn
@@ -311,7 +311,7 @@ def create():
 
         # Load a different test set in, if available
         if Config.input.test:
-            input.data.test, input.target.test = load(input=Config.input.test, split=True)
+            input.data.test, input.target.test = Loader.load(input=Config.input.test, split=True)
         else:
             Config.analyze.test = False
 

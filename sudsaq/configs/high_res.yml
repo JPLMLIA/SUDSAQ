@@ -88,8 +88,8 @@ v1:
   # range: 20{1[6-9],20}
   range: 2020
   target: momo.o3
-  train: momo\.(?!o3).*
   input:
+    lazy: false
     glob:
       - ${.env.input}/momo/${.range}/${.mon_n}.nc
     sel:
@@ -99,10 +99,10 @@ v1:
         - momo.t
         - momo.ps
         - momo.no2
-        - momo.o3 # target
     scale: true
 
     test:
+      lazy: false
       glob:
         - ${.env.input}/momo/high_res.nc
       scale: true

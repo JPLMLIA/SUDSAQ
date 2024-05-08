@@ -299,8 +299,6 @@ v6r:
         - momo.coflux # momo.COemi ?
         - momo.rfluxld
         - momo.rfluxsd
-        - momo.mda8
-        - toar.mda8.median
 
 # TOAR versions
 
@@ -353,7 +351,7 @@ patched-mda8:
       mda8:
         vars:
           - patched.mda8
-  target: patched.mda8 - ${.toar.median}
+  target: (patched.mda8) - (${.toar.median})
 
 extended-no-france-2014-gee:
   input:
@@ -407,8 +405,6 @@ dev-limited:
         - momo.t
         - momo.u
         - momo.v
-        - momo.mda8
-        - toar.mda8.median
   permutation_importance: false
   treeinterpreter: false
   output:
@@ -433,7 +429,7 @@ cap-depth:
 # Run Types
 
 bias-median:
-  target: momo.mda8 - ${.toar.median}
+  target: (momo.mda8) - (${.toar.median})
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:
@@ -444,7 +440,7 @@ bias-median:
     type: bias
 
 bias-mean:
-  target: momo.mda8 - ${.toar.mean}
+  target: (momo.mda8) - (${.toar.mean})
   train: (?!toar).+\.(?!o3|mda8).*
   input:
     daily:

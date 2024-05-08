@@ -133,35 +133,37 @@ def save_by_month(ds, path):
             mds.to_netcdf(f'{output}/{month:02}.nc', engine='netcdf4')
 
 
-def calc(ds, string):
+def calculate(ds, string, evaluate=False):
     """
-    Perform simple calculations to create new features at runtime.
+    Formats a simple expression by replacing `(key)` with `ds['key']`
 
     Parameters
     ----------
-    ds : xarray.Dataset
-        The dataset containing the variables to be used in the calculations.
+    ds : xr.Dataset
+        The dataset being operated on
     string : str
-        The mathematical expression defining the calculation to be performed.
-        Variables in the expression should correspond to the keys in the dataset.
+        Code to be performed on the Dataset object where keys are surrounded by parenthesis
+    evaluate : bool, default=False
+        Call eval(string) to return instead
 
     Returns
     -------
-    result : xarray.DataArray or xarray.Dataset
-        The result of the calculation.
-
-    Notes
-    -----
-    This function dynamically evaluates the mathematical expression provided in the 'string' parameter.
-    Each variable in the expression is replaced with the corresponding dataset key.
-    The calculation is performed using Python's built-in eval function.
+    string : str or xr.DataArray
+        Formatted string or
+    keys : list
+        List of keys that were used in the string
     """
+    keys = []
     for key in list(ds):
-        # Find this key not followed by a digit or word character (eg. prevents momo.no matching to momo.no2)
-        string = re.sub(fr'({key})(?!\d|\w)', f"ds['{key}']", string)
+        current = string
+        string  = re.sub(f'(\({key}\))', f"ds['{key}']", string)
 
-    Logger.debug(f'Attempting to evaluate: {string!r}')
-    return eval(string)
+        if current != string:
+            keys.append(key)
+
+    if evaluate:
+        return eval(string), keys
+    return string, keys
 
 
 def flatten(data):
@@ -316,80 +318,7 @@ def sel_by_latlon_pair(ds: xr.Dataset, pairs: list, remove: bool=False) -> xr.Da
     return ds.sel(loc=pairs)
 
 
-def split_and_stack(ds, lazy=True):
-    """
-    Splits the target from the data and stacks both to be 1d
-
-    Parameters
-    ----------
-    ds : xarray.Dataset
-        The input dataset containing both data and target.
-    lazy : bool, optional
-        Whether to lazily load the data into memory. Defaults to True.
-
-    Returns
-    -------
-    data : xarray.DataArray
-        The stacked data.
-    target : xarray.DataArray
-        The stacked target.
-
-    Notes
-    -----
-    Config options used in this function:
-    - Config.target : The target variable name or calculable.
-    - Config.train : The training variables list or regex.
-    - Config.input.use_locs_of : The variable to use for selecting locations.
-    - Config.input.scale : Whether to scale the input data.
-    """
-    # Target is a variable case
-    if Config.target in ds:
-        Logger.info(f'Target is {Config.target}')
-        target = ds[Config.target]
-    # Calculated target case
-    else:
-        target = calc(ds, Config.target)
-        Logger.info(f'Target is {Config.target}')
-
-    Logger.info(f'Creating the stacked training and target objects')
-
-    # Save the lat/lon dimensions before dropping na for easy reconstruction later
-    Config._reindex = ds[['lat', 'lon']]
-
-    # Create the stacked objects
-    data = flatten(ds[Config.train]).transpose('loc', 'variable')
-
-    # Use the locations valid by this variable only, but this variable may be excluded otherwise
-    if Config.input.use_locs_of:
-        Logger.debug(f'Using locations from variable: {Config.input.use_locs_of}')
-        # mean('time') removes the time dimension so it is ignored
-        merged = flatten(xr.merge([target, ds[Config.input.use_locs_of].mean('time')]))
-        # Replace locs in the target with NaNs if the use_locs_of had a NaN
-        merged = merged.where(~merged.isel(variable=1).isnull())
-        # Extract the target, garbage collect the other
-        target = merged.isel(variable=0)
-    else:
-        target = flatten(target)
-
-    Logger.debug(f'Target shape: {list(zip(target.dims, target.shape))}')
-    Logger.debug(f'Data   shape: {list(zip(data.dims, data.shape))}')
-
-    if Config.input.scale:
-        Logger.info('Scaling data (X)')
-        data = scale(data)
-
-    if not lazy:
-        Logger.info('Loading data into memory')
-        data.load()
-        target.load()
-        Logger.debug(f'Memory footprint in GB:')
-        Logger.debug(f'- Data   = {data.nbytes / 2**30:.3f}')
-        Logger.debug(f'- Target = {target.nbytes / 2**30:.3f}')
-
-    return data, target
-
-
-def daily(ds):
+def daily(ds, sels):
     """
     Aligns a dataset to a daily average
 
@@ -397,6 +326,15 @@ def daily(ds):
     ----------
     ds : xarray.Dataset
         The input dataset to align.
+    sels : mlky.Sect
+        {key: sel} where
+            key: name of selection
+            sel: Sect containing:
+                time: int or 2 item list
+                    - int: select this exact time
+                    - list:
+                vars: str, list
+                    Variables to operate on
 
     Returns
     -------
@@ -452,7 +390,7 @@ def daily(ds):
     # Select time ranges per Config
     time = ds.time.dt.time
     data = []
-    for sect, sel in Config.input.daily.items():
+    for sect, sel in sels.items():
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
         if sel.local:
             Logger.debug('-- Using local timezones')
@@ -487,163 +425,6 @@ def daily(ds):
     return Dataset(ds)
 
 
-def config_sel(ds, sels):
-    """
-    Performs custom sel operations defined in the Config
-
-    Parameters
-    ----------
-    sels: mlky.Sect
-        Selections defined by the Config
-    """
-    for dim, sel in sels.items():
-        if dim == 'vars':
-            Logger.debug(f'Selecting variables: {sel}')
-            ds = ds[sel]
-
-        # Special integer month support
-        elif dim == 'month':
-            Logger.debug(f'Selecting: month=={sel}')
-            ds = ds.sel(time=ds['time.month']==sel)
-
-        # Support for special drop operations
-        elif dim == 'drop_date':
-            Logger.debug(f'Dropping date:')
-            mask = np.full(ds.time.shape, True)
-            if 'year' in sel:
-                Logger.debug(f" - year = {sel['year']}")
-                mask &= ds.time.dt.year == sel['year']
-            if 'month' in sel:
-                Logger.debug(f" - month = {sel['month']}")
-                mask &= ds.time.dt.month == sel['month']
-            if 'day' in sel:
-                Logger.debug(f" - day = {sel['day']}")
-                mask &= ds.time.dt.day == sel['day']
-
-            if mask.any():
-                ds = ds.sel(time=ds.time[~mask])
-
-        elif isinstance(sel, list):
-            Logger.debug(f'Selecting: {sel[0]} < {dim} < {sel[1]}')
-            ds = ds.sortby(dim)
-            # Enables crossing the 0 lon line
-            if isinstance(sel, list) and sel[1] < sel[0]:
-                ds = ds.where(ds[dim][(sel[0] < ds[dim]) | (ds[dim] < sel[1])])
-            else:
-                ds = ds.sel(**{dim: slice(*sel)})
-
-        else:
-            Logger.debug(f'Selecting: {dim}=={sel}')
-            ds = ds.sel(**{dim: sel})
-
-    return Dataset(ds)
-
-
-def load(split=False, lazy=True, input=None):
-    """
-    Loads and preprocesses data from files.
-
-    Parameters
-    ----------
-    split : bool, optional
-        Whether to split and stack the dataset. Defaults to False.
-    lazy : bool, optional
-        Whether to lazily load the dataset into memory. Defaults to True.
-
-    Returns
-    -------
-    Dataset or tuple of Dataset and target
-        The loaded and preprocessed dataset or a tuple containing the dataset and target.
-
-    Notes
-    -----
-    Config options used in this function:
-    - Config.input.glob (list): A list of glob patterns used to collect files. If wcmatch is installed, this can be a complex pattern.
-    - Config.input.engine (str): The engine used to open the files (default is 'netcdf4').
-    - Config.input.lock (bool): Whether to use file locking when opening files.
-    - Config.input.parallel (bool): Whether to use parallel reading when opening files.
-    - Config.input.chunks (dict): Chunk sizes for parallel reading.
-    - Config.input.replace_vals (dict): Replacement values for specified variables.
-    - Config.input.calc (dict): Calculations to perform on variables.
-    - Config.input.sel (dict): Selection criteria for variables.
-    - Config.input.daily (bool): Daily alignment options.
-    - Config.input.resample (dict): Resampling options.
-    - Config.input.subsample (dict): Subsampling options.
-    - Config.input.lazy (bool): Whether to lazily load the dataset into memory.
-    """
-    # Override the input section with a provided alternative
-    if input:
-        Config.input = input
-
-    Logger.info('Collecting files')
-    files = []
-    for string in Config.input.glob:
-        match = glob(string)
-        Logger.debug(f'Collected {len(match)} files using "{string}"')
-        files += match
-
-    if not files:
-        Logger.error('No files collected, exiting early')
-        return None, None if split else None
-
-    Logger.info('Lazy loading the dataset')
-    ds = xr.open_mfdataset(files,
-        engine   = Config.input.get('engine'  , 'netcdf4'),
-        lock     = Config.input.get('lock'    , False    ),
-        parallel = Config.input.get('parallel', False    ),
-        chunks   = dict(Config.input.chunks),
-        **Config.input.open_mfdataset
-    )
-
-    Logger.info('Casting xarray.Dataset to custom Dataset')
-    ds = Dataset(ds)
-
-    for key, args in Config.input.replace_vals.items():
-        left, right = args.bounds
-        value       = float(args.value) or np.nan
-        Logger.debug(f'Replacing values between ({left}, {right}) with {value} for key {key}')
-
-        ds[key] = ds[key].where(
-            (ds[key] < left) | (right < ds[key]),
-            value
-        )
-
-    if Config.input.calc:
-        Logger.info('Calculating variables')
-
-        for key, string in Config.input.calc.items():
-            Logger.debug(f'- {key} = {string}')
-            ds[key] = calc(ds, string)
-
-    ds = config_sel(ds, Config.input.sel)
-
-    if Config.input.daily:
-        Logger.info('Aligning to a daily average')
-        ds = daily(ds)
-
-    if Config.input.resample:
-        Logger.info('Resampling data')
-        ds = resample(ds, **Config.input.resample)
-
-    if Config.input.subsample:
-        Logger.info('Subsampling data')
-        ds = subsample(ds, **Config.input.subsample)
-
-    # `split` is hardcoded by the calling script
-    # If `lazy` is set in the Config use that else use the parameter
-    lazy = Config.input.get('lazy', lazy)
-    if split:
-        Logger.debug('Performing split and stack')
-        return split_and_stack(ds, lazy)
-
-    if not lazy:
-        Logger.info('Loading data into memory')
-        ds.load()
-
-    Logger.debug('Returning dataset')
-    return ds.sortby('lon')
-
-
 class Dataset(xr.Dataset):
     """
     Small override of xarray.Dataset that enables regex matching names in the variables
@@ -663,3 +444,256 @@ class Dataset(xr.Dataset):
                     Logger.debug(f'Matched {len(keys)} variables with regex {key!r}: {keys}')
                     return super().__getitem__(keys)
             raise e
+
+
+class Loader:
+    def __init__(self, input=None):
+        """
+        """
+        # If a given input section is provided use that, else fallback to default location
+        self.C = input or Config.input
+
+        self.target = Config.target
+
+        # Keys needed for calculating the target variable, if needed
+        self.tkeys = None
+
+    def glob(self):
+        """
+        Globs for input files and opens the dataset
+
+        Config Options
+        --------------
+        .glob: list
+            Glob strings
+        .open_mfdataset: dict
+            kwargs for function
+        .lazy: bool
+            Lazy load dataset or not
+        """
+        Logger.info('Collecting files')
+        files = []
+        for string in self.C.glob:
+            match = glob(string)
+            Logger.debug(f'Collected {len(match)} files using "{string}"')
+            files += match
+
+        if not files:
+            Logger.error('No files collected')
+            return False
+
+        Logger.info('Opening mfdataset')
+        self.ds = xr.open_mfdataset(files, **self.C.open_mfdataset)
+
+        return True
+
+    def select(self):
+        """
+        Performs custom sel operations defined in the Config
+
+        Config Options
+        --------------
+        .sels: Sect
+            {dim: sel} where
+                dim: Dimension to select on
+                This can also be:
+                    'vars': Select specific variables ds[sel]
+                    'month': Select on the time dimension such that time.month == sel
+                    'drop_date': Drop a specific date
+                        sel may contain:
+                            'year': Drop this year
+                            'month': Drop this month
+                            'day': Drop this day
+                        A mask will be constructed using these three keys, ex:
+                            sel:
+                                year: 2004
+                                month: 2
+                                day: 29
+                        This will drop 2004-02-29
+                            sel:
+                                year: 2004
+                                month: 2
+                        This will drop all of February 2004
+                if `dim` is an existing dimension, `sel` can be:
+                    - 2 item list
+                    - A single value
+        """
+        ds = self.ds
+
+        for dim, sel in self.C.sel.items():
+
+            # Select on an existing dimension
+            if dim in ds:
+                if isinstance(sel, list):
+                    if len(sel) > 2:
+                        Logger.error(f'List selection on a dimension must be 2 items in length')
+                        continue
+
+                    i, j = sorted(sel)
+                    bounds = {}
+
+                    # Discover which way to create the slice
+                    a, b = ds[key][[0, -1]]
+
+                    # Increasing
+                    if a < b:
+                        sel[key] = slice(i, j)
+                    # Decreasing
+                    elif a > b:
+                        sel[key] = slice(j, i)
+
+                    Logger.debug(f'Selecting on {dim}: {bounds}')
+
+                    ds = ds.sel(**{dim: slice(*bounds)})
+
+                # Select this specific value on the dimension
+                else:
+                    Logger.debug(f'Selecting: {dim}=={sel}')
+                    ds = ds.sel(**{dim: sel})
+
+            # Select specific variables
+            if dim == 'vars':
+                Logger.debug(f'Selecting variables: {sel}')
+
+                t = None
+                if self.target in ds:
+                    t = self.target, ds[self.target]
+                elif self.tkeys:
+                    t = self.tkeys, ds[self.tkeys]
+
+                ds = Dataset(ds)[sel]
+
+                # Ensure the target is retained
+                if t is not None:
+                    target, t  = t
+                    ds[target] = t
+
+            # Special integer month support
+            elif dim == 'month':
+                Logger.debug(f'Selecting: month=={sel}')
+                ds = ds.sel(time=ds['time.month']==sel)
+
+            # Support for special drop operations
+            elif dim == 'drop_date':
+                Logger.debug(f'Dropping date:')
+                mask = np.full(ds.time.shape, True)
+                if 'year' in sel:
+                    Logger.debug(f" - year = {sel['year']}")
+                    mask &= ds.time.dt.year == sel['year']
+                if 'month' in sel:
+                    Logger.debug(f" - month = {sel['month']}")
+                    mask &= ds.time.dt.month == sel['month']
+                if 'day' in sel:
+                    Logger.debug(f" - day = {sel['day']}")
+                    mask &= ds.time.dt.day == sel['day']
+
+                if mask.any():
+                    ds = ds.sel(time=ds.time[~mask])
+
+            else:
+                valid = list(ds.coords) + ['vars', 'month', 'drop_date']
+                Logger.error(f'Dimension {dim!r} not one of: {valid}')
+
+        self.ds = Dataset(ds)
+
+    def split_and_stack(self):
+        """
+        Splits the target from the data and stacks both to be 1d
+        """
+        Logger.info(f'Creating the stacked training and target objects')
+
+        # Extract the target
+        target  = self.ds[self.target]
+        self.ds = self.ds.drop_vars([self.target])
+
+        # Save the lat/lon dimensions before dropping na for easy reconstruction later down the pipeline
+        Config._reindex = self.ds[['lat', 'lon']]
+
+        # Create the stacked objects
+        self.data   = flatten(self.ds).transpose('loc', 'variable')
+        self.target = flatten(target)
+
+        Logger.debug(f'Data   shape: {self.data.sizes}')
+        Logger.debug(f'Target shape: {self.target.sizes}')
+
+        if self.C.scale:
+            Logger.info('Scaling X data')
+            self.data = scale(self.data)
+
+        # Remove to save space
+        del self.ds
+
+        Logger.debug(f'- Data   = {self.data.nbytes / 2**30:.3f}')
+        Logger.debug(f'- Target = {self.target.nbytes / 2**30:.3f}')
+        return self.data, self.target
+
+    def load(self, split=False):
+        """
+        Loads and preprocesses data from files.
+        """
+
+        if not self.glob():
+            return
+
+        # If this is a calculated target, track which variables are relevant so they don't get dropped
+        if self.target not in self.ds:
+            _, self.tkeys = calculate(self.ds, self.target)
+
+        # Perform subselections
+        self.select()
+
+        # Load into memory after subselections to reduce initial memory footprint
+        if self.C.lazy:
+            Logger.info('Dataset is lazy')
+        else:
+            Logger.info('Loading full dataset into memory')
+            self.ds.load()
+
+        # Replace values for certain keys
+        for key, args in self.C.replace_vals.items():
+            left, right = args.bounds
+            value       = float(args.value) or np.nan
+
+            Logger.debug(f'Replacing values between ({left}, {right}) with {value} for key {key}')
+
+            self.ds[key] = self.ds[key].where(
+                (self.ds[key] < left) | (right < self.ds[key]),
+                value
+            )
+
+        # Calculate new variables per the config
+        if self.C.calc:
+            Logger.info('Calculating variables')
+
+            for key, string in self.C.calc.items():
+                Logger.debug(f'- {key} = {string}')
+                ds[key], _ = calculate(ds, string, evaluate=True)
+
+        if self.C.daily:
+            Logger.info('Aligning to a daily average')
+            self.ds = daily(self.ds, self.C.daily)
+
+        if self.C.resample:
+            Logger.info('Resampling data')
+            self.ds = resample(self.ds, **self.C.resample)
+
+        if self.C.subsample:
+            Logger.info('Subsampling data')
+            self.ds = subsample(self.ds, **self.C.subsample)
+
+        # Try to calculate the target if it doesn't exist
+        if self.target not in self.ds:
+            Logger.debug(f'Target not in ds, attempting to calculate it: {self.target}')
+            self.ds['target'], drop = calc(self.ds, self.target)
+            self.target = 'target'
+
+            Logger.debug(f'Dropping keys as they were used to create the target: {drop}')
+            self.ds = self.ds.drop_vars(drop)
+
+        Logger.debug(f'Memory of ds = {self.ds.nbytes / 2**30:.3f}')
+        Logger.info('Finished loading')
+
+        if split:
+            return self.split_and_stack()
+
+        return self.ds
