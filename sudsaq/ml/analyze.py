@@ -29,7 +29,7 @@ from tqdm import tqdm
 # Internal
 from sudsaq.data  import (
     flatten,
-    load
+    Loader
 )
 from sudsaq.ml    import plots
 from sudsaq.ml    import treeinterpreter as ti
@@ -259,7 +259,7 @@ def analyze(model=None, data=None, target=None, kind='input', output=None):
 
     # Load data if not provided
     if data is None:
-        data, target = load(Config, split=True, lazy=False)
+        data, target = Loader.load(split=True)
 
     # Stores information about this analysis
     stats = Sect()
