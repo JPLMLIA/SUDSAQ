@@ -392,6 +392,12 @@ def daily(ds, sels):
     data = []
     for sect, sel in sels.items():
         Logger.debug(f'- {sect}: Selecting times {sel.time} on variables {sel.vars}')
+        try:
+            ds[sel.vars]
+        except:
+            Logger.error(f'Could not select variables: {sel.vars}, skipping')
+            continue
+
         if sel.local:
             Logger.debug('-- Using local timezones')
             ns    = ds[sel.vars].sortby('lon')
