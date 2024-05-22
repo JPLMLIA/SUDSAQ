@@ -539,14 +539,14 @@ class Loader:
                     bounds = {}
 
                     # Discover which way to create the slice
-                    a, b = ds[key][[0, -1]]
+                    a, b = ds[dim][[0, -1]]
 
                     # Increasing
                     if a < b:
-                        sel[key] = slice(i, j)
+                        sel[dim] = slice(i, j)
                     # Decreasing
                     elif a > b:
-                        sel[key] = slice(j, i)
+                        sel[dim] = slice(j, i)
 
                     Logger.debug(f'Selecting on {dim}: {bounds}')
 
@@ -690,7 +690,7 @@ class Loader:
         # Try to calculate the target if it doesn't exist
         if self.target not in self.ds:
             Logger.debug(f'Target not in ds, attempting to calculate it: {self.target}')
-            self.ds['target'], drop = calc(self.ds, self.target)
+            self.ds['target'], drop = calculate(self.ds, self.target)
             self.target = 'target'
 
             Logger.debug(f'Dropping keys as they were used to create the target: {drop}')
