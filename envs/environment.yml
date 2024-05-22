@@ -1,4 +1,4 @@
-name: sudsaq
+name: sudsaq-test
 channels:
   - conda-forge
 dependencies:
@@ -13,6 +13,7 @@ dependencies:
   - numpy
   - pandas
   - panel
+  - plotly
   - pyyaml
   - rioxarray
   - requests
@@ -25,4 +26,5 @@ dependencies:
   - pip:
     - fasttreeshap # requires g++
     - mlky
+    - ray
     - tables
