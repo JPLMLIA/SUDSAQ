@@ -366,7 +366,6 @@ def daily(ds, sels):
             # Floor the times to the day for the groupby operation
             ds.coords['time'] = ds.time.dt.floor('1D')
 
-            # print(ds)
             # Now group as daily taking the mean
             ds = ds.groupby('time').mean()
         else:
@@ -690,7 +689,7 @@ class Loader:
         # Try to calculate the target if it doesn't exist
         if self.target not in self.ds:
             Logger.debug(f'Target not in ds, attempting to calculate it: {self.target}')
-            self.ds['target'], drop = calculate(self.ds, self.target)
+            self.ds['target'], drop = calculate(self.ds, self.target, evaluate=True)
             self.target = 'target'
 
             Logger.debug(f'Dropping keys as they were used to create the target: {drop}')
