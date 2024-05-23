@@ -535,21 +535,20 @@ class Loader:
                         continue
 
                     i, j = sorted(sel)
-                    bounds = {}
 
                     # Discover which way to create the slice
                     a, b = ds[dim][[0, -1]]
 
                     # Increasing
                     if a < b:
-                        sel[dim] = slice(i, j)
+                        bounds = slice(i, j)
                     # Decreasing
                     elif a > b:
-                        sel[dim] = slice(j, i)
+                        bounds = slice(j, i)
 
                     Logger.debug(f'Selecting on {dim}: {bounds}')
 
-                    ds = ds.sel(**{dim: slice(*bounds)})
+                    ds = ds.sel(**{dim: bounds})
 
                 # Select this specific value on the dimension
                 else:
