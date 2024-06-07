@@ -528,7 +528,7 @@ class Loader:
         for dim, sel in self.C.sel.items():
 
             # Select on an existing dimension
-            if dim in ds:
+            if dim in ds.coords:
                 if isinstance(sel, list):
                     if len(sel) > 2:
                         Logger.error(f'List selection on a dimension must be 2 items in length')

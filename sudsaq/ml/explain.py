@@ -44,6 +44,7 @@ Logger = logging.getLogger('sudsaq/ml/explain.py')
 
 class Explanation(shap.Explanation):
     """
+    Converts a SHAP Explanation to a SUDSAQ Dataset
     """
     def __init__(self, values, _dataset=None, **kwargs):
         """
@@ -78,8 +79,7 @@ class Explanation(shap.Explanation):
 
 class Dataset(xr.Dataset):
     """
-    Small override of xarray.Dataset that enables regex matching names in the variables
-    list
+    Converts a SUDSAQ Dataset to a SHAP Explanation
     """
     __slots__ = () # Required for subclassing
 
@@ -107,6 +107,26 @@ class Dataset(xr.Dataset):
 
 def summary(explanation, data, save=None):
     """
+    Generate and optionally save a SHAP summary plot.
+
+    Parameters
+    ----------
+    explanation : shap.Explanation
+        The SHAP explanation object containing SHAP values and other related data.
+    data : pandas.DataFrame or numpy.ndarray
+        The dataset used to generate the SHAP values.
+    save : str, optional, default=None
+        The file path to save the plot. If None, the plot is displayed instead of being saved
+
+    Returns
+    -------
+    None
+        The function saves or displays the plot, but does not return any value.
+
+    Examples
+    --------
+    >>> summary(explanation, data)
+    >>> summary(explanation, data, save='summary_plot.png')
     """
     # fig, ax = plt.subplots(figsize=(10, 5))
 
@@ -118,8 +138,27 @@ def summary(explanation, data, save=None):
         Logger.info(f'Saving summary plot to {save}')
         plt.savefig(save)
 
+
 def heatmap(explanation, save=None):
     """
+    Generate and optionally save a SHAP heatmap plot.
+
+    Parameters
+    ----------
+    explanation : shap.Explanation
+        The SHAP explanation object containing SHAP values and other related data.
+    save : str, optional, default=None
+        The file path to save the plot. If None, the plot is displayed instead of being saved.
+
+    Returns
+    -------
+    None
+        The function saves or displays the plot, but does not return any value.
+
+    Examples
+    --------
+    >>> heatmap(explanation)
+    >>> heatmap(explanation, save='heatmap_plot.png')
     """
     shap.plots.heatmap(explanation, show=False if save else True)
 
@@ -127,8 +166,27 @@ def heatmap(explanation, save=None):
         Logger.info(f'Saving heatmap plot to {save}')
         plt.savefig(save)
 
+
 def dependence(explanation, save=None):
     """
+    Generate and optionally save a SHAP dependence plot for the first feature.
+
+    Parameters
+    ----------
+    explanation : shap.Explanation
+        The SHAP explanation object containing SHAP values and other related data.
+    save : str, optional, default=None
+        The file path to save the plot. If None, the plot is displayed instead of being saved.
+
+    Returns
+    -------
+    None
+        The function saves or displays the plot, but does not return any value.
+
+    Examples
+    --------
+    >>> dependence(explanation)
+    >>> dependence(explanation, save='dependence_plot.png')
     """
     shap.dependence_plot(0, explanation.values, explanation.data, feature_names=explanation.feature_names, interaction_index=1, show=False)
 
@@ -136,8 +194,26 @@ def dependence(explanation, save=None):
         Logger.info(f'Saving dependence plot to {save}')
         plt.savefig(save)
 
+
 def fast_shap_values(model, data, n_jobs=-1, _dataset=None):
     """
+    Calculate SHAP values quickly using FastTreeSHAP.
+
+    Parameters
+    ----------
+    model : object
+        The tree model to explain
+    data : pandas.DataFrame
+        The dataset for which SHAP values are to be calculated
+    n_jobs : int, optional
+        The number of parallel jobs to run. Default is -1, which means use all processors
+    _dataset : optional
+        Additional dataset information used to cast back to SUDSAQ-compatible xarray object
+
+    Returns
+    -------
+    Explanation
+        An object containing SHAP values, feature names, and the dataset.
     """
     Logger.debug('Performing FastTreeSHAP calculations')
 
@@ -152,8 +228,28 @@ def fast_shap_values(model, data, n_jobs=-1, _dataset=None):
 
     return explanation
 
-def shap_values(model, data, n_jobs=-1, _dataset=None):
+
+def split_shap_values(model, data, n_jobs=-1, _dataset=None):
     """
+    Calculate SHAP values by splitting the dataset for parallel processing.
+
+    Experimental.
+
+    Parameters
+    ----------
+    model : object
+        The tree model to explain
+    data : pandas.DataFrame
+        The dataset for which SHAP values are to be calculated
+    n_jobs : int, optional
+        The number of parallel jobs to run. Default is -1, which means use all processors
+    _dataset : optional
+        Additional dataset information used to cast back to SUDSAQ-compatible xarray object
+
+    Returns
+    -------
+    Explanation
+        An object containing combined SHAP values from all subsets, feature names, and the dataset.
     """
     Logger.debug('Creating explainer')
     explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent')
@@ -192,11 +288,78 @@ def shap_values(model, data, n_jobs=-1, _dataset=None):
 
     return explanation
 
+
+def approx_shap_values(model, data, _dataset=None):
+    """
+    Calculate approximate SHAP values.
+
+    Parameters
+    ----------
+    model : object
+        The tree model to explain
+    data : pandas.DataFrame
+        The dataset for which SHAP values are to be calculated
+    _dataset : optional
+        Additional dataset information used to cast back to SUDSAQ-compatible xarray object
+
+    Returns
+    -------
+    Explanation
+        An object containing approximate SHAP values, feature names, and the dataset.
+    """
+    Logger.debug('Creating explainer')
+    explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent')
+
+    Logger.debug('Performing SHAP calculations')
+    explanation = Explanation(
+        explainer(data),
+        approximate   = True,
+        feature_names = data.columns,
+        _dataset      = _dataset
+    )
+
+    return explanation
+
+
 def explain(model, data, kind='test', output=None):
     """
-    TODO: `data` only supports the kind returned by utils.load_from_run, but
-    this is different than if it were passed by the pipeline during runtime so
-    that needs support
+    Generate SHAP explanations for a given model and dataset.
+
+    This function supports resampling the data if specified in the configuration,
+    and generates SHAP explanations using either FastTreeSHAP or an approximate
+    method depending on availability. The results can be saved and optionally
+    plotted.
+
+    Parameters
+    ----------
+    model : object
+        The machine learning model to explain.
+    data : xarray.DataArray
+        The dataset for which SHAP values are to be calculated. Currently supports
+        the kind returned by `utils.load_from_run`.
+    kind : str, optional
+        The name of the dataset being explained.
+    output : str, optional
+        The directory path where the results and plots will be saved. Default is None.
+
+    Returns
+    -------
+    Explanation
+        An object containing SHAP values, feature names, and the dataset.
+
+    Notes
+    -----
+    - The `data` parameter currently only supports the format returned by
+      `utils.load_from_run`. This is different from the format passed during
+      runtime in the pipeline, which needs to be supported in future versions.
+    - If `config.explain.resample` is True, the data will be resampled to 3-day
+      intervals, and incomplete groups will be removed.
+
+    See Also
+    --------
+    fast_shap_values : Function to calculate SHAP values using FastTreeSHAP.
+    approx_shap_values : Function to calculate approximate SHAP values.
+    utils.load_from_run : Utility function to load data in the supported format.
     """
     config = Config()
 
@@ -215,14 +378,19 @@ def explain(model, data, kind='test', output=None):
 
     Logger.info('Generating SHAP explanation, this may take awhile')
     X = data.to_dataframe().drop(columns=['lat', 'lon', 'time'], errors='ignore')
-    if fasttreeshap is not None:
+
+    if config.shap == 'fast' and fasttreeshap is not None:
         explanation = fast_shap_values(model, X,
             _dataset = Dataset(data.drop(list(data)).copy())
         )
-    else:
-        explanation = shap_values(model, X,
+    elif config.shap == 'split':
+        explanation = split_shap_values(model, X,
             n_jobs   = config.get('n_job', -1),
-            _dataset = data[data.coords.keys()].copy()
+            _dataset = Dataset(data.drop(list(data)).copy())
+        )
+    else:
+        explanation = approx_shap_values(model, X,
+            _dataset = Dataset(data.drop(list(data)).copy())
         )
 
     save_objects(
