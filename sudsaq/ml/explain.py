@@ -251,6 +251,7 @@ def split_shap_values(model, data, n_jobs=-1, _dataset=None):
     Explanation
         An object containing combined SHAP values from all subsets, feature names, and the dataset.
     """
+    Logger.debug('Performing TreeSHAP calculations using method: split')
     Logger.debug('Creating explainer')
     explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent')
 
@@ -307,13 +308,13 @@ def approx_shap_values(model, data, _dataset=None):
     Explanation
         An object containing approximate SHAP values, feature names, and the dataset.
     """
+    Logger.debug('Performing TreeSHAP calculations using method: approx')
     Logger.debug('Creating explainer')
     explainer = shap.TreeExplainer(model, feature_perturbation='tree_path_dependent')
 
     Logger.debug('Performing SHAP calculations')
     explanation = Explanation(
-        explainer(data),
-        approximate   = True,
+        explainer(data, approximate=True),
         feature_names = data.columns,
         _dataset      = _dataset
     )
