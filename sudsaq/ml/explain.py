@@ -314,7 +314,7 @@ def approx_shap_values(model, data, _dataset=None):
 
     Logger.debug('Performing SHAP calculations')
     explanation = Explanation(
-        explainer(data, approximate=True),
+        explainer.shap_values(data, approximate=True),
         feature_names = data.columns,
         _dataset      = _dataset
     )
