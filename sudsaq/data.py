@@ -17,7 +17,7 @@ from tqdm import tqdm
 # Internal
 
 
-Logger = logging.getLogger('sudsaq/select.py')
+Logger = logging.getLogger('sudsaq/data')
 
 try:
     from wcmatch import glob as _glob
@@ -454,6 +454,12 @@ class Dataset(xr.Dataset):
 class Loader:
     def __init__(self, input=None):
         """
+        Data loader class for the SUDSAQ pipeline
+
+        Parameters
+        ----------
+        input: mlky.Sect, default=None
+            Input section to use. If not provided, defaults to Config.input
         """
         # If a given input section is provided use that, else fallback to default location
         self.C = input or Config.input
@@ -634,6 +640,12 @@ class Loader:
     def load(self, split=False):
         """
         Loads and preprocesses data from files.
+
+        Parameters
+        ----------
+        split: bool, default=False
+            Split the data into (data, target), ie. (X, y). This will also
+            stack/flatten the data
         """
 
         if not self.glob():

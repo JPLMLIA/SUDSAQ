@@ -39,7 +39,7 @@ logging.getLogger('fiona').setLevel(logging.WARNING)
 sns.set_style('darkgrid')
 sns.set_context('talk')
 
-Logger = logging.getLogger('sudsaq/ml/explain.py')
+Logger = logging.getLogger('sudsaq/ml/explain')
 
 
 class Explanation(shap.Explanation):
@@ -47,16 +47,14 @@ class Explanation(shap.Explanation):
     Converts a SHAP Explanation to a SUDSAQ Dataset
     """
     def __init__(self, values, _dataset=None, **kwargs):
-        """
-        """
-        if issubclass(type(values), fasttreeshap._explanation.Explanation):
-            e = values
-            super().__init__(
-                values        = e.values,
-                base_values   = e.base_values,
-                data          = e.data,
-                **kwargs
-            )
+        if fasttreeshap and issubclass(type(values), fasttreeshap._explanation.Explanation):
+                e = values
+                super().__init__(
+                    values      = e.values,
+                    base_values = e.base_values,
+                    data        = e.data,
+                    **kwargs
+                )
         else:
             super().__init__(values, **kwargs)
 
@@ -66,6 +64,7 @@ class Explanation(shap.Explanation):
 
     def to_dataset(self):
         """
+        Converts this explanation object to an xarray Dataset object
         """
         if hasattr(self, '_dataset'):
             self._dataset['values']      = ('loc', 'variable'), self.values
@@ -85,6 +84,7 @@ class Dataset(xr.Dataset):
 
     def to_explanation(self, auto=False, stack={'loc': ['lat', 'lon', 'time']}, transpose=False):
         """
+        Converts this dataset to a SHAP Explanation object
         """
         if auto:
             if 'loc' not in self.coords:
@@ -419,10 +419,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--patch',    nargs    = '?',
                                             metavar  = 'sect1 ... sectN',
                                             help     = 'Patch sections together starting from sect1 to sectN'
-    )
-    parser.add_argument('-i', '--inherit',  nargs    = '?',
-                                            metavar  = 'sect1 sect2',
-                                            help     = 'Order of keys to apply inheritance where rightmost takes precedence over left'
     )
     parser.add_argument('-k', '--kind',     type     = str,
                                             default  = 'test',

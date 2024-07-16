@@ -1,0 +1,561 @@
+default:
+  range: 201[1-5]
+  analyze:
+    train: False
+    test: True
+  GroupKFold: True
+  model:
+    kind: RandomForestRegressor
+    params:
+      random_state: 0
+      n_jobs: -1
+  permutation_importance:
+    random_state: 1
+    n_jobs: -1
+  treeinterpreter:
+    n_jobs: -1
+  output:
+    path: ${env.output}/${env.type}/${$MODELNAME}/${month}
+    model        : True
+    data         : True
+    target       : True
+    predict      : True
+    bias         : True
+    contributions: True
+    scores       : True
+    importance   : True
+    plots        : True
+    explanation  : True
+    quantiles    : True
+  plots:
+    importances:
+      count: 20
+      labelrotation: 90
+  input:
+    lazy: True
+    parallel: True
+  log:
+    file: ${env.output}/${env.type}/${$MODELNAME}/${month}/run.log
+    level: debug
+    reset: True
+    config: ${env.output}/${env.type}/${$MODELNAME}/
+  dask:
+    config:
+      distributed.admin.tick.limit: 60s
+      distributed.worker.memory.terminate: 0.98
+    client:
+      dashboard_address: null
+
+# System
+
+gattaca:
+  mlky.patch: default
+  input:
+    parallel: False
+  env:
+    input: /projects/mlia-active-data/data_SUDSAQ/data
+    output: /scratch/sudsaq/models
+
+mlia:
+  mlky.patch: default
+  env:
+    input: /data/MLIA_active_data/data_SUDSAQ/data
+    output: /data/MLIA_active_data/data_SUDSAQ/models
+
+mac:
+  mlky.patch: default
+  env:
+    input: /Volumes/MLIA_active_data/data_SUDSAQ/data
+    output: /Volumes/MLIA_active_data/data_SUDSAQ/models
+
+# Model choices
+RFQ:
+  model:
+    kind: RandomForestQuantileRegressor
+    intervals: # % confidence, 95% confidence = 95
+      - 0 # Empirical median prediction == .5 quantile
+      - 1
+      - 5
+      - 10
+      - 20
+      - 25
+      - 30
+      - 40
+      - 50
+      - 60
+      - 70
+      - 75
+      - 80
+      - 90
+      - 95
+      - 99
+  permutation_importance: False
+
+# Script-specific arguments (inherit these last)
+
+explain:
+  log:
+    file: ${env.output}/${env.type}/${$MODELNAME}/${month}/explain.log
+
+# Versions
+
+v4:
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc    # MOMO
+      - ${env.input}/toar/v1/${range}/${mon_n}.nc # TOAR
+    sel:
+      vars:
+        - momo.2dsfc.BrONO2
+        - momo.2dsfc.BrOX
+        - momo.2dsfc.C10H16
+        - momo.2dsfc.C2H5OOH
+        - momo.2dsfc.C2H6
+        - momo.2dsfc.C3H6
+        - momo.2dsfc.C5H8
+        - momo.2dsfc.CCl4
+        - momo.2dsfc.CH2O
+        - momo.2dsfc.CH3CHO
+        - momo.2dsfc.CH3COCH3
+        - momo.2dsfc.CH3Cl
+        - momo.2dsfc.CH3O2
+        - momo.2dsfc.CH3OH
+        - momo.2dsfc.CH3OOH
+        - momo.2dsfc.CHBr3
+        - momo.2dsfc.ClONO2
+        - momo.2dsfc.ClOX
+        - momo.2dsfc.DMS
+        - momo.2dsfc.H2O2
+        - momo.2dsfc.HACET
+        - momo.2dsfc.HCl
+        - momo.2dsfc.HNO3
+        - momo.2dsfc.HNO4
+        - momo.2dsfc.HO2
+        - momo.2dsfc.HOCl
+        - momo.2dsfc.HOROOH
+        - momo.2dsfc.ISON
+        - momo.2dsfc.ISOOH
+        - momo.2dsfc.LR.HOX
+        - momo.2dsfc.LR.OY
+        - momo.2dsfc.MGLY
+        - momo.2dsfc.MPAN
+        - momo.2dsfc.N2O5
+        - momo.2dsfc.NALD
+        - momo.2dsfc.NH3
+        - momo.2dsfc.NH4
+        - momo.2dsfc.OH
+        - momo.2dsfc.PAN
+        - momo.2dsfc.PROD.HOX
+        - momo.2dsfc.PROD.OY
+        - momo.2dsfc.SO2
+        - momo.2dsfc.SO4
+        - momo.2dsfc.dflx.hno3
+        - momo.2dsfc.dflx.nh3
+        - momo.2dsfc.dflx.salt
+        - momo.2dsfc.doxdyn
+        - momo.2dsfc.doxphy
+        - momo.2dsfc.mc.bc
+        - momo.2dsfc.mc.dust
+        - momo.2dsfc.mc.nitr
+        - momo.2dsfc.mc.salt
+        - momo.ccover
+        - momo.dtdyn
+        - momo.dtradl
+        - momo.dtrads
+        - momo.dtvdf
+        - momo.evap
+        - momo.olr
+        - momo.olrc
+        - momo.prcp
+        - momo.precw
+        - momo.slrc
+        - momo.snow
+        - momo.aerosol.nh4
+        - momo.aerosol.no3
+        - momo.aerosol.sul
+        - momo.co
+        - momo.ps
+        - momo.q
+        - momo.t
+        - momo.u
+        - momo.v
+        - momo.o3
+        - momo.no
+        - momo.no2
+        - momo.mda8
+        - toar.mda8.median
+    scale: True
+    daily:
+      mda8:
+        vars: [momo.mda8]
+        time: 1
+      toar:
+        vars: toar.*
+        time: 0
+      momo:
+        vars: momo.(?!mda8).*
+        time: [8, 15]
+        local: True
+
+v5:
+  mlky.patch: v4
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc              # MOMO
+      - ${env.input}/toar/v2.2/${range}/${mon_n}.nc         # TOAR
+      - ${env.input}/gee/modis/*.nc                           # MODIS
+      - ${env.input}/gee/population/pop_2010*.nc              # Population
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
+
+v6-gee:
+  mlky.patch: v4
+  range: 201[3-6]
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc              # MOMO
+      - ${env.input}/toar/v2.2/${range}/${mon_n}.nc         # TOAR
+      - ${env.input}/gee/modis/*.nc                           # MODIS
+      - ${env.input}/gee/population/pop_2010*.nc              # Population
+      - ${env.input}/gee/nightlight/${range}/*${month}*.nc  # Night Light
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
+
+# This version leverages the v4 definition, must be used as "v4<-v6r"
+v6r:
+  mlky.patch: v4
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc       # MOMO
+      - ${env.input}/momo/extra/${range}/${mon_n}.nc # MOMO extras
+      - ${env.input}/toar/v1/${range}/${mon_n}.nc    # TOAR
+    sel:
+      vars:
+        - momo.2dsfc.BrOX
+        - momo.2dsfc.C10H16
+        - momo.2dsfc.C2H6
+        - momo.2dsfc.C3H6
+        - momo.2dsfc.C5H8
+        - momo.2dsfc.CH2O
+        - momo.2dsfc.H2O2
+        - momo.2dsfc.HNO3
+        - momo.2dsfc.HO2
+        - momo.2dsfc.N2O5
+        - momo.2dsfc.NH3
+        - momo.2dsfc.OH
+        - momo.2dsfc.PAN
+        - momo.ccover
+        - momo.olr
+        - momo.prcp
+        - momo.co
+        - momo.ps
+        - momo.q
+        - momo.t
+        - momo.u
+        - momo.v
+        - momo.no
+        - momo.no2
+        # - momo.pblh
+        - momo.noxflux # momo.NOxemi ?
+        - momo.coflux # momo.COemi ?
+        - momo.rfluxld
+        - momo.rfluxsd
+
+# TOAR versions
+
+toar-v1:
+  toar:
+    mean: toar.o3.dma8epa.mean
+    median: toar.o3.dma8epa.median
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc    # MOMO
+      - ${env.input}/toar/v1/${range}/${mon_n}.nc # TOAR
+
+toar-v2:
+  toar:
+    mean: toar.mda8.mean
+    median: toar.mda8.median
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc      # MOMO
+      - ${env.input}/toar/v2.2/${range}/${mon_n}.nc # TOAR
+
+toar-v2-3:
+  toar:
+    mean: toar.mda8.mean
+    median: toar.mda8.median
+  input:
+    glob:
+      - ${env.input}/momo/${range}/${mon_n}.nc      # MOMO
+      - ${env.input}/toar/v2.3/${range}/${mon_n}.nc # TOAR
+
+# Restrictions
+
+extended-v2:
+  # Match 2005-2013, 2014/without-france, 2015-2020
+  momo-range: "20{0[5-9],1[0-9],20}"
+  toar-range: "{20{0[5-9],1{[0-3],[5-9]},20},2014/without-france}"
+  input:
+    glob:
+      - ${env.input}/momo/${momo-range}/${mon_n}.nc # MOMO
+      - ${env.input}/momo/extra/${momo-range}/${mon_n}.nc # MOMO extras
+      - ${env.input}/toar/v2.3/${toar-range}/${mon_n}.nc  # TOAR
+
+  train: momo\.(?!o3|mda8).*
+
+patched-mda8:
+  input:
+    calc:
+      patched.mda8: (momo.mda8).combine_first(sudsaq.o3.mda8)
+    daily:
+      mda8:
+        vars:
+          - patched.mda8
+  target: (patched.mda8) - (${toar.median})
+
+extended-no-france-2014-gee:
+  input:
+    glob:
+      - ${env.input}/momo/${momo-range}/${mon_n}.nc  # MOMO
+      - ${env.input}/momo/extra/${momo-range}/${mon_n}.nc  # MOMO extras
+      - ${env.input}/toar/v2.3/${toar-range}/${mon_n}.nc   # TOAR
+      - ${env.input}/gee/modis/*.nc                          # MODIS
+      - ${env.input}/gee/population/pop_2010*.nc             # Population
+      - ${env.input}/gee/nightlight/${range}/*${month}*.nc # Night Light
+    daily:
+      modis:
+        vars: modis.*
+        time: 0
+
+2013-16:
+  range: 201[3-6]
+
+2005-19:
+  range: 20{0[5-9],1[0-9]}
+
+2005-20:
+  range: 20{0[5-9],1[0-9],20}
+
+toar-limited:
+  input:
+    use_locs_of: toar.mda8.mean
+
+extended:
+  # Only 2005 to 2015
+  range: 20{0[5-9],1[0-5]}
+  input:
+    subsample:
+      dim: time
+      N: 3 # Drop every 3rd sample of time
+
+extended-v2:
+  range: 20{0[5-9],1[0-5]}
+  treeinterpreter:
+    n_jobs: 5
+
+# Disables most features and reduces the data size for development work
+# Usage: python create.py -c ../configs/definitions.yml -p "default<-mac<-bias-median<-v4<-toar-v2.3<-dev-limited<-jan"
+dev-limited:
+  mlky.patch: v4
+  range: 201[4-5] # 2 years
+  toar:
+    median: toar.mda8.median
+  input:
+    sel:
+      vars:
+        - momo.t
+        - momo.u
+        - momo.v
+  permutation_importance: false
+  treeinterpreter: false
+  output:
+    plots: false
+  env:
+    output: .
+
+# Cap sections are to limit a model's parameters likely due to the size of the data we're processing
+# These sometimes need to disable the truth_vs_predicted plot for the same reason
+cap-leaves:
+  model:
+    params:
+      max_leaf_nodes: 100000
+  plots:
+    truth_vs_predicted: False
+
+cap-depth:
+  model:
+    params:
+      max_depth: 30
+
+# Run Types
+
+bias-median:
+  target: (momo.mda8) - (${toar.median})
+  train: (?!toar).+\.(?!o3|mda8).*
+  input:
+    daily:
+      toar:
+        vars:
+          - ${toar.median}
+  env:
+    type: bias
+
+bias-mean:
+  target: (momo.mda8) - (${toar.mean})
+  train: (?!toar).+\.(?!o3|mda8).*
+  input:
+    daily:
+      toar:
+        vars:
+          - ${toar.mean}
+  env:
+    type: bias
+
+toar:
+  target: ${toar.mean}
+  train: (?!toar).+\.(?!o3|mda8).*
+  env:
+    type: toar
+
+mda8:
+  target: momo.mda8
+  train: momo.(?!o3|mda8).*
+  env:
+    type: emulator/mda8
+
+o3:
+  target: momo.o3
+  train: momo.(?!o3|mda8).*
+  env:
+    type: emulator/o3
+
+oh:
+  range: 201[4-5]
+  input:
+    glob:
+      - ${env.input}/momo/OH/${range}/${mon_n}.nc  # MOMO OH
+    scale: True
+  permutation_importance: False
+  output:
+    plots: False
+  treeinterpreter:
+    n_jobs: 10
+  log:
+    reset: False
+  env:
+    type: emulator/oh
+oh-300:
+  mlky.patch: oh
+  target: momo.2d300.OH
+  train: momo.2d300.(?!OH).*
+oh-500:
+  mlky.patch: oh
+  target: momo.2d500.OH
+  train: momo.2d500.(?!OH).*
+oh-700:
+  mlky.patch: oh
+  target: momo.2d700.OH
+  train: momo.2d700.(?!OH).*
+
+# Regions
+
+NorthAmerica:
+  input:
+    sel:
+      lat: [20, 55]
+      lon: [-125, -70]
+
+Europe:
+  input:
+    sel:
+      lat: [35, 65]
+      lon: [-10, 25]
+
+Asia:
+  input:
+    sel:
+      lat: [20, 50]
+      lon: [100, 145]
+
+# Months
+
+jan:
+  month: jan
+  mon_n: '01'
+
+feb:
+  month: feb
+  mon_n: '02'
+  input:
+    sel:
+      drop_date:
+        day: 29
+
+mar:
+  month: mar
+  mon_n: '03'
+
+apr:
+  month: apr
+  mon_n: '04'
+
+may:
+  month: may
+  mon_n: '05'
+
+jun:
+  month: jun
+  mon_n: '06'
+
+jul:
+  month: jul
+  mon_n: '07'
+
+aug:
+  month: aug
+  mon_n: '08'
+
+sep:
+  month: sep
+  mon_n: '09'
+
+oct:
+  month: oct
+  mon_n: '10'
+
+nov:
+  month: nov
+  mon_n: '11'
+
+dec:
+  month: dec
+  mon_n: '12'
+
+# Preprocessing matching scripts
+
+match-toar:
+  metrics:
+    - mean
+    - median
+    - std
+  variable: o3.mda8
+  input:
+    toar:
+      file: /Users/jamesmo/projects/sudsaq/dev/.local/data/toar/track-df.mda8.h5
+      parameter: null
+    momo:
+      regex: ${env.input}/momo/2012/01.nc
+  output:
+    by_month: False
+    path: /Users/jamesmo/projects/sudsaq/dev/.local/data/toar/matched-mda8.v2-3.nc
+  log:
+    file: null
+    level: debug
+    config: null
+  # mlky:
+  #   debug: [__call__]

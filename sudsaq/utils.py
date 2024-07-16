@@ -4,23 +4,14 @@
 import logging
 import os
 import pickle
-import shutil
 import sys
 
 from pathlib import Path
 
 # External
-import dask
-# import cf_xarray as cfxr
 import xarray as xr
 
-from dask.distributed import Client
-from mlky import (
-    Config,
-    Sect,
-)
-
-Sect._opts.convertListTypes = False
+from mlky import Config
 
 # Internal
 from sudsaq.data import (
@@ -28,7 +19,8 @@ from sudsaq.data import (
     unstacked
 )
 
-Logger = logging.getLogger('sudsaq/utils.py')
+
+Logger = logging.getLogger('sudsaq/utils')
 
 
 def init(args):
@@ -92,10 +84,6 @@ def init(args):
 
     if Config.log.config:
         Config.generateTemplate(f'{Config.log.config}/config.yml')
-
-    # Logger.debug('Instantiating the Dask cluster')
-    # dask.config.set(dict(config.dask.config))
-    # config.dask_client = Client(**config.dask.client)
 
     return args, Config
 
@@ -194,18 +182,6 @@ def save_pkl(data, output, **kwargs):
         pickle.dump(data, file)
 
 
-def encode(data):
-    """
-    """
-    return cfxr.encode_multi_index_as_compress(data, 'loc')
-
-
-def decode(file):
-    """
-    """
-    return cfxr.decode_compress_to_multi_index(xr.open_dataset(file), 'loc')
-
-
 @unstacked
 def save_netcdf(data, name, output, dataset=False, reindex=None):
     """
@@ -249,11 +225,6 @@ def save_netcdf(data, name, output, dataset=False, reindex=None):
     # Correct if lon got mixed up as it normally does during the pipeline
     data = data.sortby('lon')
 
-    # if 'loc' in data.dims:
-    #     Logger.warning(f'The `loc` dimension required being encoded for saving and decoded after loading from file')
-    #     data = encode(data)
-    #     output += '.ec'
-
     Logger.info(f'Saving {name} to {output}')
     data.to_netcdf(output, engine='netcdf4')
 
@@ -262,6 +233,15 @@ def save_objects(output, kind, **others):
     """
     Simplifies saving objects by taking a dictionary of {name: obj}
     where obj is an xarray object to be passed to save_netcdf
+
+    Parameters
+    ----------
+    output: str
+        Output directory path
+    kind: str
+        The kind of data to save, eg. train/test
+    **others: dict
+        {name: object} items to save
     """
     # These objects will be converted to a dataset
     datasets = ['data', 'contributions', 'explanation']
@@ -285,7 +265,25 @@ def save_objects(output, kind, **others):
 
 def load_from_run(path, kind=None, objs=None, load=True, stack=False):
     """
-    Loads objects from a given run
+    Loads objects from a SUDSAQ run
+
+    Parameters
+    ----------
+    path: str
+        Input directory path
+    kind: str, default=None
+        The kind of data from the run to read, eg. test, train
+    objs: list, default=None
+        Objects to retrieve, options: [model, data, target, predict, explanation]
+    load: bool, default=True
+        Load the data into memory, False leaves the data as lazy
+    stack: bool, default=False
+        Objects that are typically stacked will be prior to return
+
+    Returns
+    -------
+    ret: list
+        Requested objects
     """
     files = {
         'model'      : f'{path}/model.pkl',
@@ -298,9 +296,10 @@ def load_from_run(path, kind=None, objs=None, load=True, stack=False):
         objs = files.keys()
 
     ret = []
-    for obj, file in files.items():
+    for obj in objs:
         data = None
-        if obj in objs:
+        file = files.get(obj)
+        if file:
             if not os.path.exists(file):
                 Logger.error(f'File not found for object {obj}: {file}')
 
@@ -317,9 +316,6 @@ def load_from_run(path, kind=None, objs=None, load=True, stack=False):
                 if stack:
                     data = flatten(data)
 
-            elif file.endswith('.ec'):
-                Logger.info(f'Loading {obj}: {file}')
-                data = decode(file)
             else:
                 Logger.error(f'Invalid option: {obj}')
 
