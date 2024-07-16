@@ -141,7 +141,7 @@ import pandas as pd
 
 from tqdm import tqdm
 
-file = '.local/data/toar/v2.mda8.h5'
+file = '.local/data/toar/tracks.v2.mda8.h5'
 
 with h5py.File(file, 'r') as h5:
     keys = list(h5.keys())
@@ -170,10 +170,10 @@ df.sort_values('time')
 
 #% Rename
 df = df.rename(columns={'value': 'o3.mda8'})
-df = pd.read_hdf('.local/data/toar/mda8.h5', 'mda8')
+# df = pd.read_hdf('.local/data/toar/mda8.h5', 'mda8')
 
 #%% Save
-df.to_hdf('.local/data/toar/mda8.h5', 'mda8')
+df.to_hdf('.local/data/toar/track-df.mda8.h5', 'mda8')
 
 # This h5 can now be fed to silos/toar/matched.py, see definitions.yml for an example
 
@@ -183,13 +183,19 @@ df.to_hdf('.local/data/toar/mda8.h5', 'mda8')
 import xarray as xr
 
 # Output matched.py as a single file by disabling save_by_month
-ds = xr.load_dataset('.local/data/toar/v2.matched.nc')
+ds = xr.load_dataset('/Users/jamesmo/projects/sudsaq/dev/.local/data/toar/matched-mda8.v2-3.nc')
+ds = ds.rename({key: key.replace('None', 'mda8') for key in ds})
+
 
 #%% Sometimes the timestamps don't get converted properly in the match script
 ds['time'] = pd.DatetimeIndex(ds.time)
 
 #%% Functions work best on the DataArray instead of the Dataset
+
 da = ds['toar.mda8.mean']
+ds['toar.mda8.mean']   = ds['toar.mda8.mean']  .where(ds['toar.mda8.mean']   > -10)
+ds['toar.mda8.median'] = ds['toar.mda8.median'].where(ds['toar.mda8.median'] > -10)
+ds['toar.mda8.std']    = ds['toar.mda8.std']   .where(ds['toar.mda8.std']    < 5000)
 
 #%% General plotting function, useful in notebook environments like this
 
@@ -219,14 +225,23 @@ def draw(data, ax=None, figsize=(13, 7), title=None, coastlines=True, gridlines=
 
     return ax
 
+
 #%% Filter extreme values
 import numpy as np
 
-filt = da.where(da > -10, np.nan)
+filt = da.where(da > 25)
 
-draw(filt.mean('time'))
+#%%
+ds = ds.where(ds > -10)
+ds['toar.mda8.std'] = da.where(da > 25)
 
-
+"""
+The new TOAR v2.1 is now available at: `data_SUDSAQ/data/toar/v2.1/`. This version includes mean, median, and std.
+I filtered the following values on each:
+- mean > -10, dropped 914 of 4902572 = .02% drop. Changes overall (mean, std) from (15.18, 2901.97) to (28.59, 13.21)
+- median > -10, dropped 522 of 4902572 = .01% drop. Changes overall (mean, std) from (16.84, 2793.90) to (28.55, 13.45)
+- std < 5000, dropped 914 of 4902572 = .02% drop. Changes overall (mean, std) from (14.10, 2503.29) to (2.68, 13.62)
+"""
 #%% Load v1 TOAR for comparing against
 
 v2 = filt # Easy reference name
@@ -348,11 +363,45 @@ ani = FuncAnimation(fig, update, frames=frames)
 
 ani.save('toar.differences.gif', dpi=300, writer=PillowWriter(fps=.3))
 
+#%% Station count by year gif
+from matplotlib.animation import FuncAnimation, PillowWriter
+
+def update(i):
+    """
+    """
+    year = 2005 + i
+    data = years[year]
+
+    ax.clear()
+
+    draw(
+        data.count('time'),
+        ax = ax,
+        add_colorbar = False,
+        vmax  = vmax,
+        vmin  = 0,
+        cmap  = 'bwr',
+        title = int(year),
+        levels = 10
+    )
+
+    plt.tight_layout()
+
+plt.close('all')
+
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(20, 5), subplot_kw={'projection': ccrs.PlateCarree()})
+
+years = dict(da.groupby('time.year'))
+vmax  = int(max([year.count('time').max() for year in years.values()]))
+anim  = FuncAnimation(fig, update, frames=len(years))
+
+anim.save('toar.counts_by_year.gif', dpi=300, writer=PillowWriter(fps=.3))
+
 
 #%%
 from sudsaq.data import save_by_month
 
-save_by_month(ds, '/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/v2/')
+save_by_month(ds, '/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/v2.1/')
 
 #%% Histograms
 
@@ -409,7 +458,7 @@ bounded.plot.hist(figsize=(13, 5), yscale='log')
 #%%
 
 
-save_by_month(ds, '/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/v2/')
+save_by_month(ds, '/Volumes/MLIA_active_data/data_SUDSAQ/data/toar/v2.1/')
 
 v22.to_netcdf('.local/data/toar/fixed/fixed.nc')
 bounded
