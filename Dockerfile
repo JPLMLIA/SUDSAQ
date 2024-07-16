@@ -23,11 +23,3 @@ ENV SHELL=/bin/bash
 # Start the Jupyterlab server
 EXPOSE 8888
 CMD jupyter-lab --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
-
-
-TOAR:
-- reprocess v2 data:
-  - mean, median, stddev
-  need gridded data
-pipeline:
-- do extended 10 year runs
